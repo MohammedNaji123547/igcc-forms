@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IGCC — HR Daily Manpower Report</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0f1117;--surface:#181c27;--surface2:#1e2330;--border:#2a3148;
+  --accent:#4f7cff;--accent-dim:rgba(79,124,255,0.12);
+  --success:#22c98a;--danger:#ff5e5e;--warning:#f0a500;
+  --text:#e8eaf2;--muted:#6b7592;--label:#9aa3c2;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.header-left{display:flex;align-items:center;gap:12px;}
+.logo-badge{background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;font-weight:500;padding:4px 8px;border-radius:4px;letter-spacing:.05em;}
+.header-title{font-size:13px;font-weight:500;color:var(--label);}
+.date-badge{font-family:var(--mono);font-size:12px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:4px;}
+.container{max-width:880px;margin:0 auto;padding:28px 20px 60px;}
+.form-title{font-size:22px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.form-subtitle{font-size:13px;color:var(--muted);margin-bottom:28px;font-family:var(--mono);}
+.section{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:16px;}
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.section-num{width:22px;height:22px;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;font-family:var(--mono);flex-shrink:0;}
+.section-title{font-size:13px;font-weight:500;color:var(--label);text-transform:uppercase;letter-spacing:.08em;}
+.field-row{display:grid;gap:16px;margin-bottom:14px;}
+.field-row.cols-2{grid-template-columns:1fr 1fr;}
+.field-row.cols-3{grid-template-columns:1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:6px;}
+label{font-size:11px;font-weight:500;color:var(--label);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:6px;}
+.required{color:var(--danger);font-size:13px;}
+input,select,textarea{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--sans);font-size:14px;padding:10px 12px;transition:border-color .15s,box-shadow .15s;outline:none;width:100%;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,124,255,.15);}
+input[readonly]{opacity:.6;cursor:not-allowed;}
+select option{background:#1e2330;}
+.field-hint{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.ctr-loading{font-size:12px;color:var(--warning);font-family:var(--mono);padding:4px 0;}
+.ctr-ok{font-size:12px;color:var(--success);font-family:var(--mono);padding:4px 0;}
+.ctr-error{font-size:12px;color:var(--danger);font-family:var(--mono);padding:4px 0;}
+
+/* Resource type toggle */
+.type-toggle{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.type-btn{flex:1;padding:12px 16px;background:transparent;border:none;color:var(--muted);font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;text-align:center;}
+.type-btn.active{background:var(--accent);color:#fff;}
+.type-btn:not(.active):hover{background:var(--surface2);color:var(--text);}
+.type-divider{width:1px;background:var(--border);}
+
+/* Indirect dept badge */
+.indirect-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-family:var(--mono);padding:3px 8px;border-radius:4px;background:rgba(240,165,0,.1);color:var(--warning);border:1px solid rgba(240,165,0,.3);}
+
+.entries-table{width:100%;border-collapse:collapse;margin-bottom:12px;}
+.entries-table thead tr{background:var(--surface2);border-bottom:1px solid var(--border);}
+.entries-table th{text-align:left;font-size:11px;font-weight:500;color:var(--label);letter-spacing:.06em;text-transform:uppercase;padding:10px 12px;}
+.entries-table td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.entries-table tbody tr:last-child td{border-bottom:none;}
+.entries-table input,.entries-table select{padding:7px 9px;font-size:13px;border-radius:5px;}
+.btn-remove{background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:4px 10px;transition:all .15s;}
+.btn-remove:hover{border-color:var(--danger);color:var(--danger);}
+.btn-add{background:var(--accent-dim);border:1px dashed var(--accent);border-radius:6px;color:var(--accent);cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:500;padding:9px 16px;transition:all .15s;width:100%;margin-top:4px;}
+.btn-add:hover{background:rgba(79,124,255,.2);}
+.summary-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.summary-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:center;}
+.summary-num{font-family:var(--mono);font-size:26px;font-weight:500;color:var(--text);line-height:1;margin-bottom:4px;}
+.summary-num.blue{color:var(--accent);}
+.summary-num.orange{color:var(--warning);}
+.summary-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.validation-panel{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:16px;}
+.val-title{font-size:11px;font-weight:500;color:var(--label);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+.val-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);padding:3px 0;font-family:var(--mono);}
+.val-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background .2s;}
+.val-dot.pass{background:var(--success);}
+.val-dot.fail{background:var(--danger);}
+.val-row.pass{color:var(--success);}
+.val-row.fail{color:var(--danger);}
+.btn-submit{background:var(--accent);border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:var(--sans);font-size:15px;font-weight:600;padding:14px 32px;width:100%;transition:opacity .15s,transform .1s;letter-spacing:.02em;}
+.btn-submit:hover{opacity:.92;}
+.btn-submit:active{transform:scale(.99);}
+.btn-submit:disabled{opacity:.4;cursor:not-allowed;}
+.success-screen{display:none;text-align:center;padding:60px 20px;}
+.success-icon{width:64px;height:64px;background:rgba(34,201,138,.15);border:2px solid var(--success);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px;color:var(--success);}
+.success-title{font-size:20px;font-weight:600;margin-bottom:8px;}
+.success-sub{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:28px;}
+.audit-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:left;font-family:var(--mono);font-size:12px;color:var(--muted);max-width:580px;margin:0 auto 24px;}
+.audit-line{padding:3px 0;display:flex;gap:12px;}
+.audit-key{color:var(--label);min-width:140px;}
+.audit-val{color:var(--text);}
+.btn-new{background:none;border:1px solid var(--border);border-radius:8px;color:var(--label);cursor:pointer;font-family:var(--sans);font-size:14px;padding:10px 24px;transition:border-color .15s;}
+.btn-new:hover{border-color:var(--accent);color:var(--accent);}
+.hidden{display:none!important;}
+@media(max-width:600px){.field-row.cols-2,.field-row.cols-3{grid-template-columns:1fr;}.summary-bar{grid-template-columns:1fr;}}
+
+/* Searchable position autocomplete */
+.pos-wrap{position:relative;width:100%;}
+.pos-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--sans);font-size:13px;padding:7px 9px;outline:none;transition:border-color .15s,box-shadow .15s;}
+.pos-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,124,255,.15);}
+.pos-input.selected{border-color:var(--success);}
+.pos-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1px solid var(--accent);border-radius:7px;max-height:180px;overflow-y:auto;z-index:9999;display:none;box-shadow:0 8px 24px rgba(0,0,0,.5);}
+.pos-dropdown.open{display:block;}
+.pos-option{padding:8px 12px;font-size:13px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);}
+.pos-option:last-child{border-bottom:none;}
+.pos-option:hover,.pos-option.kbd{background:var(--accent-dim);color:var(--accent);}
+.pos-option mark{background:none;color:var(--accent);font-weight:600;}
+.pos-none{padding:8px 12px;font-size:12px;color:var(--muted);font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="logo-badge">IGCC</span>
+    <span class="header-title">Cost Control · HR Daily Manpower Report</span>
+  </div>
+  <span class="date-badge" id="today-badge"></span>
+</div>
+
+<div class="container" id="form-container">
+  <div class="form-title">Daily Manpower Submission</div>
+  <div class="form-subtitle" id="form-ref">REF — generating...</div>
+
+  <!-- SECTION 1: Submission details -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div class="section-title">Submission Details</div>
+    </div>
+
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>Submitted by (email) <span class="required">*</span></label>
+        <input type="email" id="submitted-by" placeholder="yourname@igcc.com" oninput="validate()">
+        <span class="field-hint">Enter your company email address</span>
+      </div>
+      <div class="field">
+        <label>Report date <span class="required">*</span></label>
+        <input type="date" id="report-date" oninput="validate()">
+      </div>
+    </div>
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>Direct department <span class="required">*</span></label>
+        <select id="dept-select" onchange="onDeptChange(); validate()">
+          <option value="">Select department...</option>
+        </select>
+        <span id="dept-status" class="ctr-loading">⟳ Fetching master list...</span>
+      </div>
+      <div class="field">
+        <span class="field-hint" style="margin-top:22px;">Select for Direct rows · CTR is assigned per row · Ongoing only</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Manpower entries -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div class="section-title">Manpower Entries</div>
+    </div>
+    <div class="summary-bar">
+      <div class="summary-card">
+        <div class="summary-num blue" id="sum-total">0</div>
+        <div class="summary-label">Total headcount</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num" id="sum-igcc">0</div>
+        <div class="summary-label">IGCC direct</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num orange" id="sum-sub">0</div>
+        <div class="summary-label">Subcontractor</div>
+      </div>
+    </div>
+    <table class="entries-table">
+      <thead>
+        <tr>
+          <th style="width:18%">Position / Role</th>
+          <th style="width:13%">Resource type</th>
+          <th style="width:13%">Department</th>
+          <th style="width:18%">CTR number</th>
+          <th style="width:13%">Employment type</th>
+          <th style="width:7%">HC</th>
+          <th style="width:5%"></th>
+        </tr>
+      </thead>
+      <tbody id="entries-body"></tbody>
+    </table>
+    <button class="btn-add" onclick="addEntry()">+ Add position</button>
+  </div>
+
+  <!-- SECTION 3: Remarks -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div class="section-title">Remarks</div>
+    </div>
+    <div class="field">
+      <label>Notes / Observations</label>
+      <textarea id="remarks" rows="3" placeholder="Any unusual absences, new mobilizations, demobilizations, or site conditions to note..."></textarea>
+    </div>
+  </div>
+
+  <!-- Validation checklist -->
+  <div class="validation-panel">
+    <div class="val-title">Submission checklist</div>
+    <div class="val-row" id="v1"><div class="val-dot" id="d1"></div>Valid email address provided</div>
+    <div class="val-row" id="v2"><div class="val-dot" id="d2"></div>Report date set</div>
+    <div class="val-row" id="v3"><div class="val-dot" id="d3"></div><span id="v3-label">Department selected and CTR assigned (Ongoing only)</span></div>
+    <div class="val-row" id="v4"><div class="val-dot" id="d4"></div>All entries have position, resource type, department, employment type and headcount</div>
+    <div class="val-row" id="v5"><div class="val-dot" id="d5"></div>Direct rows have a CTR assigned · Indirect rows CTR frozen</div>
+    <div class="val-row" id="v6"><div class="val-dot" id="d6"></div>All headcounts are positive numbers</div>
+    <div class="val-row" id="v7"><div class="val-dot" id="d7"></div>Multiple entries per position allowed</div>
+    <div class="val-row" id="v8"><div class="val-dot" id="d8"></div>All headcounts are positive numbers (secondary check)</div>
+  </div>
+
+  <button class="btn-submit" id="btn-submit" onclick="submitForm()" disabled>Submit daily manpower report</button>
+</div>
+
+<!-- Success screen -->
+<div class="success-screen" id="success-screen">
+  <div class="success-icon">✓</div>
+  <div class="success-title">Submission recorded</div>
+  <div class="success-sub" id="success-ref"></div>
+  <div class="audit-box" id="audit-box"></div>
+  <button class="btn-new" onclick="resetForm()">Submit another report</button>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+const INDIRECT_DEPTS = ['QAQC','HSE','Planning','House Keeping','Warehouse','Admin'];
+
+// ── SHEETDB API ───────────────────────────────────────────────────────────────
+const SHEETDB_URL = 'https://sheetdb.io/api/v1/vd56ritkfsu6w';
+
+// ── POSITIONS (paste your sheet data here to refresh) ────────────────────────
+const POSITIONS = [
+  'Project Manager','Deputy Project Manager','Construction Manager','Site Manager',
+  'Civil Engineer','Mechanical Engineer','Electrical Engineer','Instrument Engineer',
+  'Piping Engineer','Structural Engineer','Process Engineer','HSE Engineer',
+  'QA/QC Engineer','QC Inspector','QA Inspector','Welding Inspector',
+  'NDT Technician','Coating Inspector','Civil Inspector',
+  'Site Engineer','Field Engineer','Junior Engineer',
+  'Supervisor','Civil Supervisor','Mechanical Supervisor','Electrical Supervisor',
+  'Instrument Supervisor','Piping Supervisor','Scaffold Supervisor',
+  'Foreman','Civil Foreman','Mechanical Foreman','Electrical Foreman',
+  'Scaffold Foreman','Painting Foreman',
+  'Planner / Scheduler','Senior Planner','Planning Engineer',
+  'Cost Control Engineer','Cost Control Officer',
+  'Document Controller','Document Control Clerk',
+  'Admin / Timekeeper','Administrator','HR Officer','HR Assistant',
+  'HSE Officer','HSE Supervisor','HSE Manager','First Aider','Medic',
+  'Safety Officer','Fire Watcher','Rescue Team Member',
+  'Skilled Technician','Electrician','Instrument Technician','Mechanic',
+  'Welder','Pipefitter','Rigger','Carpenter','Mason','Painter',
+  'Semi-skilled Worker','Helper','General Labourer',
+  'Scaffolder','Scaffold Erector',
+  'Surveyor','Survey Technician',
+  'Warehouse Keeper','Store Keeper','Material Controller',
+  'Driver','Heavy Equipment Operator','Crane Operator','Forklift Operator',
+  'Security Guard','Security Supervisor',
+  'Medical Personnel','Nurse','Doctor',
+  'Camp Boss','Cook','Cleaner / Housekeeper'
+];
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+const today = new Date();
+const pad = n => String(n).padStart(2,'0');
+const dateStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+document.getElementById('today-badge').textContent =
+  today.toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+document.getElementById('report-date').value = dateStr;
+const refCode = `IGCC-HR-${today.getFullYear()}${pad(today.getMonth()+1)}${pad(today.getDate())}-${Math.floor(Math.random()*9000)+1000}`;
+document.getElementById('form-ref').textContent = `REF ${refCode}`;
+
+// ── RESOURCE TYPE ─────────────────────────────────────────────────────────────
+
+// ── CTR MASTER LIST (embedded — last synced from live sheet) ──────────────────
+// To refresh: re-download the form from IGCC Cost Control system
+// Last sync: auto-generated
+const deptMap = {
+  "Civil": [
+    "CN204-PRJ-PWRI2-0369","CN487-PRJ-CPS8-0489-Rev04","CN487-PRJ-PWRI2-0605-Rev01",
+    "CN487-PRJ-PWRI2-0627-Rev02","CN487-PRJ-PWRI2-0628-Rev02","CN487-PRJ-PWRI2-0629-Rev03",
+    "CN487-PRJ-PWRI2-0632-Rev02","CN487-PRJ-PWRI2-1170-Rev01","CN487-PRJ-PWRI2-1222-Rev01",
+    "CN487-PRJ-PWRI2-1236-Rev01","CN487-PRJ-PWRI2-1241-Rev01","CN487-PRJ-PWRI2-1243-Rev04",
+    "CN487-PRJ-PWRI2-1260-Rev01","CN487-PRJ-PWRI2-1298-Rev02","CN487-PRJ-PWRI2-1359-Rev01",
+    "CN487-PRJ-PWRI2-1386-Rev04","CN487-PRJ-PWRI2-1389-Rev01","CN487-PRJ-PWRI2-1445",
+    "CN487-PRJ-PWRI2-1447","CN487-PRJ-PWRI2-1448","CN487-PRJ-PWRI2-1463-Rev01",
+    "CN487-PRJ-PWRI2-1469-Rev03","CN487-PRJ-PWRI2-1474-Rev01","CN487-PRJ-PWRI2-1505-Rev01",
+    "CN487-PRJ-PWRI2-1506-Rev01","CN487-PRJ-PWRI2-1513-Rev03","CN487-PRJ-PWRI2-1514",
+    "CN487-PRJ-PWRI2-1592","CN487-PRJ-PWRI2-1614-Rev01","CN487-PRJ-PWRI2-1618",
+    "CN487-PRJ-PWRI2-0915-Rev01"
+  ],
+  "Electric": [
+    "CN487-PRJ-PWRI2-0635-Rev03","CN487-PRJ-PWRI2-0636-Rev02","CN487-PRJ-PWRI2-0812-Rev03",
+    "CN487-PRJ-PWRI2-0813-Rev04","CN487-PRJ-PWRI2-0881-Rev01","CN487-PRJ-PWRI2-1155-Rev01",
+    "CN487-PRJ-PWRI2-1158-Rev01","CN487-PRJ-PWRI2-1241-Rev01","CN487-PRJ-PWRI2-1457-Rev01",
+    "CN487-PRJ-PWRI2-1458","CN487-PRJ-PWRI2-1461","CN487-PRJ-PWRI2-1462-Rev05",
+    "CN487-PRJ-PWRI2-1464","CN487-PRJ-PWRI2-1512-Rev03","CN487-PRJ-PWRI2-1529",
+    "CN487-PRJ-PWRI2-1565-Rev01","CN487-PRJ-PWRI2-1604-Rev01"
+  ],
+  "Mechanic": [
+    "CN487-PRJ-PWRI2-0622-Rev01","CN487-PRJ-PWRI2-0631-Rev02","CN487-PRJ-PWRI2-0634-Rev03",
+    "CN487-PRJ-PWRI2-0639-Rev02","CN487-PRJ-PWRI2-1242","CN487-PRJ-PWRI2-1364-Rev01",
+    "CN487-PRJ-PWRI2-1362-Rev01","CN487-PRJ-PWRI2-1518-Rev01","CN487-PRJ-PWRI2-1519-Rev01",
+    "CN487-PRJ-PWRI2-1584-Rev04","CN487-PRJ-PWRI2-1585-Rev02","CN487-PRJ-PWRI2-1609-Rev01",
+    "CN546-PRJ-PWRI2-1093"
+  ],
+  "Scafolding": [
+    "CN487-PRJ-PWRI2-0745-Rev06","CN487-PRJ-PWRI2-1292-Rev02",
+    "CN487-PRJ-PWRI2-1608-Rev01","CN487-PRJ-PWRI2-1620-Rev01"
+  ]
+};
+let masterLoaded = true;
+
+function populateDeptDropdown() {
+  const sel = document.getElementById('dept-select');
+  sel.innerHTML = '<option value="">Select department...</option>';
+  const depts = Object.keys(deptMap).sort();
+  depts.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d; opt.textContent = d;
+    sel.appendChild(opt);
+  });
+  const total = Object.values(deptMap).reduce((s,a)=>s+a.length,0);
+  document.getElementById('dept-status').className = 'ctr-ok';
+  document.getElementById('dept-status').textContent =
+    `✓ ${total} ongoing CTRs across ${depts.length} departments · Synced from master list`;
+  validate();
+}
+
+async function loadCTRMasterList() {
+  populateDeptDropdown();
+}
+
+function onDeptChange() {
+  // Header dept change — no longer cascades to rows (rows are self-contained)
+  validate();
+}
+
+// Called when resource type changes in a row
+function onRowTypeChange(id) {
+  const rtype   = document.getElementById(`rtype-${id}`).value;
+  const deptSel = document.getElementById(`dept-row-${id}`);
+  const ctrSel  = document.getElementById(`ctr-row-${id}`);
+
+  const row = document.getElementById(`row-${id}`);
+
+  if (rtype === 'direct') {
+    deptSel.innerHTML = '<option value="">Select dept...</option>';
+    Object.keys(deptMap).sort().forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d; opt.textContent = d;
+      deptSel.appendChild(opt);
+    });
+    deptSel.disabled = false;
+    ctrSel.innerHTML = '<option value="">Select dept first...</option>';
+    ctrSel.disabled = true;
+    ctrSel.style.opacity = '1';
+    if (row) row.style.opacity = '1';
+  } else if (rtype === 'indirect') {
+    deptSel.innerHTML = '<option value="">Select dept...</option>';
+    ['QAQC','HSE','Planning','House Keeping','Warehouse','Admin'].forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d; opt.textContent = d;
+      deptSel.appendChild(opt);
+    });
+    deptSel.disabled = false;
+    ctrSel.innerHTML = '<option value="">— N/A (Indirect)</option>';
+    ctrSel.disabled = true;
+    ctrSel.style.opacity = '0.35';
+    if (row) row.style.opacity = '1';
+  } else if (rtype === 'off') {
+    // OFF day — freeze dept, CTR, emp, qty
+    deptSel.innerHTML = '<option value="OFF">— OFF Day —</option>';
+    deptSel.disabled = true;
+    ctrSel.innerHTML  = '<option value="OFF">— OFF Day —</option>';
+    ctrSel.disabled = true;
+    ctrSel.style.opacity = '0.35';
+    // Set emp to N/A visually
+    const empSel = document.getElementById(`emp-${id}`);
+    if (empSel) { empSel.value = ''; empSel.disabled = true; }
+    const qtySel = document.getElementById(`qty-${id}`);
+    if (qtySel) { qtySel.value = '0'; qtySel.disabled = true; }
+    if (row) row.style.background = 'rgba(240,165,0,0.07)';
+  } else {
+    deptSel.innerHTML = '<option value="">—</option>';
+    deptSel.disabled = true;
+    ctrSel.innerHTML  = '<option value="">—</option>';
+    ctrSel.disabled = true;
+    if (row) row.style.opacity = '1';
+  }
+}
+
+// Called when department changes within a row
+function onRowDeptChange(id) {
+  const rtype  = document.getElementById(`rtype-${id}`).value;
+  const dept   = document.getElementById(`dept-row-${id}`).value;
+  const ctrSel = document.getElementById(`ctr-row-${id}`);
+
+  if (rtype === 'indirect') {
+    // CTR stays frozen for indirect regardless of dept
+    return;
+  }
+
+  ctrSel.innerHTML = '<option value="">Select CTR...</option>';
+  if (!dept || !deptMap[dept]) {
+    ctrSel.disabled = true;
+    return;
+  }
+  deptMap[dept].sort().forEach(ctr => {
+    const opt = document.createElement('option');
+    opt.value = ctr; opt.textContent = ctr;
+    ctrSel.appendChild(opt);
+  });
+  ctrSel.disabled = false;
+  validate();
+}
+
+// ── MANPOWER ENTRIES ──────────────────────────────────────────────────────────
+let entryCount = 0;
+
+// ── SEARCHABLE POSITION AUTOCOMPLETE ─────────────────────────────────────────
+function buildPosAutocomplete(id) {
+  const wrap = document.createElement('div');
+  wrap.className = 'pos-wrap';
+  wrap.innerHTML = `
+    <input type="text" class="pos-input" id="pos-input-${id}"
+      placeholder="Type to search position..."
+      autocomplete="off"
+      oninput="filterPos(${id})"
+      onfocus="openDropdown(${id})"
+      onkeydown="navDropdown(event,${id})">
+    <input type="hidden" id="pos-${id}">
+    <div class="pos-dropdown" id="pos-dd-${id}"></div>`;
+  return wrap;
+}
+
+function filterPos(id) {
+  const q = document.getElementById(`pos-input-${id}`).value.trim().toLowerCase();
+  document.getElementById(`pos-${id}`).value = ''; // clear selected value
+  document.getElementById(`pos-input-${id}`).classList.remove('selected');
+  renderDropdown(id, q);
+  validate();
+}
+
+function renderDropdown(id, q) {
+  const dd = document.getElementById(`pos-dd-${id}`);
+  const matches = q.length === 0
+    ? POSITIONS.slice(0, 40)
+    : POSITIONS.filter(p => p.toLowerCase().includes(q));
+  if (matches.length === 0) {
+    dd.innerHTML = `<div class="pos-none">No match — try different keywords</div>`;
+  } else {
+    dd.innerHTML = matches.map((p,i) => {
+      const hi = q ? p.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark>$1</mark>') : p;
+      return `<div class="pos-option" data-val="${p}" onmousedown="selectPos(event,${id},'${p.replace(/'/g,"\'")}',${i})">${hi}</div>`;
+    }).join('');
+  }
+  dd.classList.add('open');
+}
+
+function openDropdown(id) {
+  const q = document.getElementById(`pos-input-${id}`).value.trim().toLowerCase();
+  renderDropdown(id, q);
+}
+
+function selectPos(e, id, val, idx) {
+  e.preventDefault();
+  document.getElementById(`pos-input-${id}`).value = val;
+  document.getElementById(`pos-input-${id}`).classList.add('selected');
+  document.getElementById(`pos-${id}`).value = val;
+  document.getElementById(`pos-dd-${id}`).classList.remove('open');
+  validate();
+}
+
+function navDropdown(e, id) {
+  const dd = document.getElementById(`pos-dd-${id}`);
+  const opts = dd.querySelectorAll('.pos-option');
+  let cur = [...opts].findIndex(o => o.classList.contains('kbd'));
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (cur >= 0) opts[cur].classList.remove('kbd');
+    cur = Math.min(cur + 1, opts.length - 1);
+    if (opts[cur]) opts[cur].classList.add('kbd');
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (cur >= 0) opts[cur].classList.remove('kbd');
+    cur = Math.max(cur - 1, 0);
+    if (opts[cur]) opts[cur].classList.add('kbd');
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const active = dd.querySelector('.pos-option.kbd') || dd.querySelector('.pos-option');
+    if (active) {
+      document.getElementById(`pos-input-${id}`).value = active.dataset.val;
+      document.getElementById(`pos-input-${id}`).classList.add('selected');
+      document.getElementById(`pos-${id}`).value = active.dataset.val;
+      dd.classList.remove('open');
+      validate();
+    }
+  } else if (e.key === 'Escape') {
+    dd.classList.remove('open');
+  }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', e => {
+  document.querySelectorAll('.pos-dropdown.open').forEach(dd => {
+    if (!dd.closest('.pos-wrap').contains(e.target)) dd.classList.remove('open');
+  });
+});
+
+function addEntry() {
+  entryCount++;
+  const id = entryCount;
+  const tr = document.createElement('tr');
+  tr.className = 'entry-row'; tr.id = `row-${id}`;
+
+  // Build row shell — position cell filled via JS after append
+  tr.innerHTML = `
+    <td id="pos-cell-${id}"></td>
+    <td>
+      <select id="rtype-${id}" onchange="onRowTypeChange(${id}); validate()" style="font-size:12px;">
+        <option value="">Select...</option>
+        <option value="direct">Direct</option>
+        <option value="indirect">Indirect</option>
+        <option value="off">OFF Day</option>
+      </select>
+    </td>
+    <td id="dept-cell-${id}">
+      <select id="dept-row-${id}" onchange="onRowDeptChange(${id}); validate()" style="font-size:12px;" disabled>
+        <option value="">—</option>
+      </select>
+    </td>
+    <td>
+      <select id="ctr-row-${id}" onchange="validate()" style="font-size:12px;" disabled>
+        <option value="">—</option>
+      </select>
+    </td>
+    <td>
+      <select id="emp-${id}" onchange="validate()" style="font-size:12px;">
+        <option value="">Select...</option>
+        <option>IGCC Direct</option>
+        <option>Subcontractor</option>
+      </select>
+    </td>
+<td>
+      <input type="number" id="qty-${id}" min="1" max="9999" placeholder="0" style="font-size:12px;" oninput="updateSummary();validate()">
+    </td>
+    <td>
+      <button class="btn-remove" onclick="removeEntry(${id})">×</button>
+    </td>`;
+  document.getElementById('entries-body').appendChild(tr);
+  document.getElementById(`pos-cell-${id}`).appendChild(buildPosAutocomplete(id));
+  // CTR populated via onRowTypeChange
+  validate();
+}
+
+
+function removeEntry(id) {
+  document.getElementById(`row-${id}`)?.remove();
+  updateSummary(); validate();
+}
+
+function updateSummary() {
+  let total=0, igcc=0, sub=0;
+  document.querySelectorAll('.entry-row').forEach(r => {
+    const id = r.id.replace('row-','');
+    const qty = parseInt(document.getElementById(`qty-${id}`)?.value)||0;
+    const emp = document.getElementById(`emp-${id}`)?.value||'';
+    total += qty;
+    if (emp==='IGCC Direct') igcc += qty;
+    if (emp==='Subcontractor') sub += qty;
+  });
+  document.getElementById('sum-total').textContent = total;
+  document.getElementById('sum-igcc').textContent = igcc;
+  document.getElementById('sum-sub').textContent = sub;
+}
+
+function getRows() {
+  return Array.from(document.querySelectorAll('.entry-row')).map(r => {
+    const id = r.id.replace('row-','');
+    const rtype = document.getElementById(`rtype-${id}`)?.value||'';
+    if (rtype === 'off') {
+      const pos = (document.getElementById(`pos-${id}`)?.value||'').trim();
+      return { rtype, dept:'OFF', ctr:'— OFF Day', pos: pos||'OFF Day', emp:'OFF', qty:'0' };
+    }
+    const dept = document.getElementById(`dept-row-${id}`)?.value||'';
+    const ctr  = rtype === 'indirect' ? '— Indirect' : (document.getElementById(`ctr-row-${id}`)?.value||'');
+    return {
+      rtype, dept,
+      pos: (document.getElementById(`pos-${id}`)?.value||'').trim(),
+      ctr,
+      emp: document.getElementById(`emp-${id}`)?.value||'',
+      qty: document.getElementById(`qty-${id}`)?.value||''
+    };
+  });
+}
+
+// ── VALIDATION ────────────────────────────────────────────────────────────────
+function setVal(i, pass) {
+  document.getElementById(`d${i}`).className = 'val-dot '+(pass?'pass':'fail');
+  document.getElementById(`v${i}`).className  = 'val-row ' +(pass?'pass':'fail');
+}
+
+function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+function validate() {
+  updateSummary();
+  const email = document.getElementById('submitted-by').value.trim();
+  const date  = document.getElementById('report-date').value;
+  const rows  = getRows();
+
+  const checks = [
+    isValidEmail(email),                                          // v1
+    !!date,                                                       // v2
+    rows.length > 0,                                              // v3 (at least one row)
+    rows.every(r => r.rtype === 'off' || (r.pos && r.rtype && r.dept && r.emp && r.qty)), // v4
+    rows.every(r => r.rtype === 'off' || r.rtype !== 'direct' || !!r.ctr.replace('— Indirect','')), // v5
+    rows.every(r => parseInt(r.qty) > 0),                        // v6 positive headcount
+    true,                                                         // v7 duplicates allowed
+    true // v8 — subcontractor field removed
+  ];
+  checks.forEach((pass,i) => setVal(i+1, pass));
+  document.getElementById('btn-submit').disabled = !checks.every(Boolean);
+}
+
+// ── SUBMIT ────────────────────────────────────────────────────────────────────
+async function submitForm() {
+  if (document.getElementById('btn-submit').disabled) return;
+
+  const email   = document.getElementById('submitted-by').value.trim();
+  const date    = document.getElementById('report-date').value;
+  const rows    = getRows();
+  const total   = parseInt(document.getElementById('sum-total').textContent)||0;
+  const igcc    = parseInt(document.getElementById('sum-igcc').textContent)||0;
+  const sub     = parseInt(document.getElementById('sum-sub').textContent)||0;
+  const ts      = new Date().toISOString();
+  const remarks = document.getElementById('remarks').value.trim();
+
+  const record = {
+    ref: refCode, submittedBy: email, timestamp: ts,
+    reportDate: date,
+    totalHeadcount: total, igccDirect: igcc, subcontractor: sub,
+    entries: rows, remarks
+  };
+
+  // Show loading state
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  // ── Send to SheetDB API ───────────────────────────────────────────────────────
+  let saveStatus = 'pending';
+  try {
+    // Build one row per position entry
+    const sheetRows = record.entries.map(entry => ({
+      'Ref':                  record.ref,
+      'Timestamp (UTC)':      record.timestamp,
+      'Submitted By (Email)': record.submittedBy,
+      'Report Date':          record.reportDate,
+      'Resource Type':        entry.rtype || '',
+      'Department':           entry.dept || '',
+      'CTR':                  entry.ctr || '— Indirect',
+      'Position':             entry.pos,
+      'Employment Type':      entry.emp,
+      'Headcount':            entry.qty,
+      'Remarks':              record.remarks || ''
+    }));
+
+    const res = await fetch('https://sheetdb.io/api/v1/vd56ritkfsu6w', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: sheetRows })
+    });
+    const json = await res.json();
+    saveStatus = (json.created > 0 || res.ok) ? 'saved' : 'error';
+  } catch (err) {
+    console.error('SheetDB error:', err);
+    saveStatus = 'error';
+  }
+
+  // ── Show success screen ─────────────────────────────────────────────────────
+  document.getElementById('form-container').style.display='none';
+  document.getElementById('success-screen').style.display='block';
+  document.getElementById('success-ref').textContent = refCode;
+
+  const saveNote = {
+    'saved':   '✓ Saved to Google Sheets',
+    'error':   '⚠ Could not save to Google Sheets — contact Cost Control',
+    'no-url':  '⚠ Apps Script not connected yet — data logged to console only',
+    'pending': ''
+  }[saveStatus];
+
+  const lines = [
+    ['Reference',       refCode],
+    ['Submitted by',    email],
+    ['Timestamp (UTC)', ts],
+    ['Entries',         `${rows.length} row(s) — see sheet for breakdown`],
+    ['Report date',     date],
+    ['Total headcount', `${total}  (IGCC: ${igcc} · Sub: ${sub})`],
+    ['Entries',         `${rows.length} position(s)`],
+    ['Save status',     saveNote],
+    ...(remarks?[['Remarks',remarks]]:[])
+  ];
+  document.getElementById('audit-box').innerHTML = lines.map(
+    ([k,v])=>`<div class="audit-line"><span class="audit-key">${k}</span><span class="audit-val" style="${v.startsWith('✓')?'color:var(--success)':v.startsWith('⚠')?'color:var(--warning)':''}">${v}</span></div>`
+  ).join('');
+}
+
+// ── RESET ─────────────────────────────────────────────────────────────────────
+function resetForm() {
+  document.getElementById('success-screen').style.display='none';
+  document.getElementById('form-container').style.display='block';
+  document.getElementById('submitted-by').value='';
+  document.getElementById('remarks').value='';
+  const deptSel = document.getElementById('dept-select');
+  if (deptSel) deptSel.value='';
+  document.getElementById('entries-body').innerHTML='';
+  entryCount=0;
+  validate(); addEntry();
+}
+
+// ── URL PARAM PRE-FILL ────────────────────────────────────────────────────────
+// When form is opened via email link (?dept=Civil&date=2026-06-01)
+function applyURLParams() {
+  const params = new URLSearchParams(window.location.search);
+  const dept = params.get('dept');
+  const date = params.get('date');
+  if (date) {
+    const dateEl = document.getElementById('report-date');
+    if (dateEl) dateEl.value = date;
+  }
+  if (dept) {
+    // Store for use after master list loads
+    window._prefilledDept = dept;
+  }
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+applyURLParams();
+loadCTRMasterList();
+validate();
+addEntry();
+</script>
+</body>
+</html>
