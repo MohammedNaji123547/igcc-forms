@@ -153,6 +153,21 @@ input:disabled,select:disabled,textarea:disabled{background:var(--surface2);colo
 .audit-val{color:var(--text);}
 
 .hidden{display:none!important;}
+
+/* Searchable select */
+.ss-wrap{position:relative;width:100%;}
+.ss-display{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:14px;padding:10px 12px;outline:none;cursor:pointer;transition:border-color .15s;text-align:left;}
+.ss-display:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(2,132,199,.12);}
+.ss-display.has-value{border-color:var(--success);}
+.ss-dd{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--blue);border-radius:10px;z-index:9999;display:none;box-shadow:var(--shadow-md);}
+.ss-dd.open{display:block;}
+.ss-search-input{width:100%;border:none;border-bottom:1px solid var(--border);padding:9px 12px;font-size:13px;outline:none;border-radius:10px 10px 0 0;font-family:var(--sans);}
+.ss-list{max-height:210px;overflow-y:auto;}
+.ss-opt{padding:9px 12px;font-size:13px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);}
+.ss-opt:last-child{border-bottom:none;}
+.ss-opt:hover,.ss-opt.active{background:var(--blue-dim);color:var(--blue);}
+.ss-opt mark{background:none;color:var(--blue);font-weight:700;}
+.ss-none{padding:9px 12px;font-size:12px;color:var(--muted);font-family:var(--mono);}
 @media(max-width:640px){.field-row.cols-2,.field-row.cols-3{grid-template-columns:1fr;}}
 </style>
 </head>
@@ -530,6 +545,74 @@ input:disabled,select:disabled,textarea:disabled{background:var(--surface2);colo
   </div>
 </div>
 
+  <!-- ══════════ STEP 6: MANAGER EMAIL DECISION ══════════ -->
+  <div class="section locked" id="s6">
+    <div class="section-header">
+      <div class="section-left">
+        <div class="section-num" style="background:var(--blue);">6</div>
+        <div class="section-title">Email Account Decision</div>
+      </div>
+      <span class="section-badge badge-mgr">Direct Manager</span>
+    </div>
+    <div class="info-note" id="s6-summary"></div>
+    <div class="divider"></div>
+    <div class="field">
+      <label>Manager email <span class="required">*</span></label>
+      <input type="email" id="mgr2-email" placeholder="manager@igccgroup-iq.com" oninput="validateStep6()">
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <label>Manager comments</label>
+      <textarea id="mgr2-comments" rows="2" placeholder="Any comments about this new hire..."></textarea>
+    </div>
+    <div class="divider"></div>
+    <div class="email-question" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:18px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;">Does this employee need a company email account? <span class="required">*</span></div>
+      <div style="display:flex;gap:12px;">
+        <button onclick="submitEmailDecision('yes')" id="btn-email-yes"
+          style="flex:1;background:rgba(22,163,74,.1);border:1.5px solid var(--success);border-radius:8px;color:var(--success);cursor:pointer;font-family:var(--sans);font-size:14px;font-weight:600;padding:13px;transition:all .15s;">
+          ✓ Yes — create company email
+        </button>
+        <button onclick="submitEmailDecision('no')" id="btn-email-no"
+          style="flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-family:var(--sans);font-size:14px;font-weight:600;padding:13px;transition:all .15s;">
+          ✗ No — not required
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ STEP 7: IT SETUP ══════════ -->
+  <div class="section locked" id="s7">
+    <div class="section-header">
+      <div class="section-left">
+        <div class="section-num" style="background:var(--purple);">7</div>
+        <div class="section-title">IT Setup</div>
+      </div>
+      <span class="section-badge badge-sm">IT Team</span>
+    </div>
+    <div class="info-note" id="s7-summary"></div>
+    <div class="divider"></div>
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>IT officer email <span class="required">*</span></label>
+        <input type="email" id="it-email" placeholder="it@igccgroup-iq.com" oninput="validateStep7()">
+      </div>
+      <div class="field">
+        <label>Company email created <span class="required">*</span></label>
+        <input type="email" id="it-created-email" placeholder="firstname.lastname@igccgroup-iq.com" oninput="validateStep7()">
+      </div>
+    </div>
+    <div class="field">
+      <label>Systems / access granted</label>
+      <input type="text" id="it-systems" placeholder="e.g. Portal, Email, VPN, ERP">
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <label>IT notes</label>
+      <textarea id="it-notes" rows="2" placeholder="Laptop serial, credentials sent, any setup notes..."></textarea>
+    </div>
+    <div class="val-panel"><div class="val-title">Checklist</div><div id="val-rows-7"></div></div>
+    <button class="btn-approve" id="btn-it-complete" onclick="submitIT()" disabled>✓ Complete IT setup — close case</button>
+  </div>
+
 <!-- SUCCESS -->
 <div class="success-screen" id="success-screen">
   <div class="success-icon" id="success-icon" style="background:rgba(22,163,74,.1);border:2px solid var(--success);">✓</div>
@@ -541,7 +624,7 @@ input:disabled,select:disabled,textarea:disabled{background:var(--surface2);colo
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbwwQwU6qh3M0SWqXoHZHO8WEhAfpv9qBD3KCEEiAQYByt1lRfdeJ9cfWm1JtjNssNROdg/exec';
+const SCRIPT_URL   = 'YOUR_RECRUITMENT_SCRIPT_URL';
 const HR_REG_URL   = 'https://script.google.com/macros/s/AKfycbyWr4pGHzsdUvfHARGhEtTaVNPn3tf4-7YZZLgys0B2KlyR-q1_REOvRvINgUODkW32/exec';
 const CSV_SITES    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSfLmsVdtOnq7zUKzaPX7Uwd-aQ6eiONkQv30vWRS0MO-3XRZzj5liNU08LyRoII522GqAqovxo3Z5N/pub?output=csv';
 
@@ -571,12 +654,14 @@ document.getElementById('contract-date').value = dateStr;
 
 // ── STEP CONFIG ───────────────────────────────────────────────────────────────
 const STEPS = [
-  { id:1, name:'Candidate Info',   role:'Department' },
-  { id:2, name:'Manager Review',   role:'Direct Manager' },
-  { id:3, name:'HR Review',        role:'HR Department' },
-  { id:4, name:'Site Manager',     role:'Site Manager' },
-  { id:5, name:'Contract',         role:'HR Department' },
-  { id:6, name:'Completed',        role:'—' },
+  { id:1, name:'Candidate Info',  role:'Department' },
+  { id:2, name:'Manager Review',  role:'Direct Manager' },
+  { id:3, name:'HR Review',       role:'HR Department' },
+  { id:4, name:'Site Manager',    role:'Site Manager' },
+  { id:5, name:'Contract',        role:'HR Department' },
+  { id:6, name:'Email Decision',  role:'Direct Manager' },
+  { id:7, name:'IT Setup',        role:'IT Team' },
+  { id:8, name:'Completed',       role:'—' },
 ];
 
 function buildStatusBar(step, statusMap={}) {
@@ -595,17 +680,89 @@ function buildStatusBar(step, statusMap={}) {
   }).join('');
 }
 
+// ── SEARCHABLE SELECT ENGINE ─────────────────────────────────────────────────
+function makeSearchable(selectEl) {
+  const id    = selectEl.id;
+  const opts  = Array.from(selectEl.options).map(o=>({ val:o.value, label:o.textContent.trim(), email:o.dataset?.email||'' }));
+  const wrap  = document.createElement('div');
+  wrap.className = 'ss-wrap';
+  wrap.innerHTML = `
+    <button type="button" class="ss-display" id="ss-btn-${id}" onclick="toggleSS('${id}')"
+      aria-haspopup="listbox">Select...</button>
+    <input type="hidden" id="${id}">
+    <div class="ss-dd" id="ss-dd-${id}">
+      <input type="text" class="ss-search-input" id="ss-search-${id}"
+        placeholder="Type to search..." oninput="filterSS('${id}')">
+      <div class="ss-list" id="ss-list-${id}"></div>
+    </div>`;
+  wrap._opts = opts;
+  wrap._selected = { val:'', label:'', email:'' };
+  selectEl.replaceWith(wrap);
+  renderSSList(id, opts, '');
+}
+
+function toggleSS(id) {
+  document.querySelectorAll('.ss-dd.open').forEach(d=>{ if(d.id!==`ss-dd-${id}`) d.classList.remove('open'); });
+  const dd = document.getElementById(`ss-dd-${id}`);
+  dd.classList.toggle('open');
+  if (dd.classList.contains('open')) {
+    const si = document.getElementById(`ss-search-${id}`);
+    si.value=''; si.focus();
+    const wrap = dd.closest('.ss-wrap');
+    renderSSList(id, wrap._opts, '');
+  }
+}
+
+function filterSS(id) {
+  const q    = document.getElementById(`ss-search-${id}`).value.toLowerCase();
+  const wrap = document.getElementById(`ss-dd-${id}`).closest('.ss-wrap');
+  renderSSList(id, wrap._opts, q);
+}
+
+function renderSSList(id, opts, q) {
+  const list = document.getElementById(`ss-list-${id}`);
+  const matches = q ? opts.filter(o=>o.label.toLowerCase().includes(q)) : opts;
+  if (!matches.length) { list.innerHTML=`<div class="ss-none">No results found</div>`; return; }
+  list.innerHTML = matches.filter(o=>o.val!=='').map(o=>{
+    const hi = q ? o.label.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark>$1</mark>') : o.label;
+    return `<div class="ss-opt" onmousedown="selectSS(event,'${id}','${o.val.replace(/'/g,"\'")}','${o.label.replace(/'/g,"\'")}','${o.email.replace(/'/g,"\'")}')"><span>${hi}</span></div>`;
+  }).join('');
+}
+
+function selectSS(e, id, val, label, email) {
+  e.preventDefault();
+  const btn  = document.getElementById(`ss-btn-${id}`);
+  const hidEl= document.getElementById(id);
+  const dd   = document.getElementById(`ss-dd-${id}`);
+  if (btn)   { btn.textContent=label; btn.classList.add('has-value'); }
+  if (hidEl) { hidEl.value=val; hidEl.dataset.email=email; }
+  dd.classList.remove('open');
+  validate();
+}
+
+// Read value from searchable select
+function ssVal(id) { const el=document.getElementById(id); return el?el.value:''; }
+function ssEmail(id) { const el=document.getElementById(id); return el?el.dataset?.email||'':''; }
+
+document.addEventListener('click', e=>{
+  if (!e.target.closest('.ss-wrap')) {
+    document.querySelectorAll('.ss-dd.open').forEach(d=>d.classList.remove('open'));
+  }
+});
+
 // ── LOAD MASTER DATA ──────────────────────────────────────────────────────────
 async function loadMasters() {
   // Positions
   const posSel = document.getElementById('c-position');
   posSel.innerHTML = '<option value="">Select position...</option>';
   POSITIONS_LIST.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;posSel.appendChild(o);});
+  makeSearchable(posSel);
 
   // Departments
   const deptSel = document.getElementById('req-dept');
   deptSel.innerHTML = '<option value="">Select department...</option>';
   DEPTS_LIST.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;deptSel.appendChild(o);});
+  makeSearchable(deptSel);
 
   // Sites
   try {
@@ -615,6 +772,7 @@ async function loadMasters() {
     const siteSel = document.getElementById('c-site');
     siteSel.innerHTML = '<option value="">Select site...</option>';
     sites.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;siteSel.appendChild(o);});
+    makeSearchable(siteSel);
   } catch(e){}
 
   // Employees for manager dropdowns
@@ -633,6 +791,7 @@ async function loadMasters() {
         o.textContent=`${e['Employee ID']} — ${e['Full Name (EN)']} (${e['Position']||'—'})`;
         sel.appendChild(o);
       });
+      makeSearchable(document.getElementById(selId));
     });
   } catch(e){}
 }
@@ -714,15 +873,15 @@ function validate() {
   if (currentStep!==1) return;
   const checks=[
     ['Requester email valid',isEmail(document.getElementById('req-by').value.trim())],
-    ['Department selected',!!document.getElementById('req-dept').value],
-    ['Your direct manager selected',!!document.getElementById('req-mgr').value],
+    ['Department selected',!!ssVal('req-dept')],
+    ['Your direct manager selected',!!ssVal('req-mgr')],
     ['Candidate name provided',!!document.getElementById('c-name').value.trim()],
     ['Gender selected',!!document.getElementById('c-gender').value],
     ['Contact number provided',!!document.getElementById('c-phone').value.trim()],
     ['Nationality selected',!!document.getElementById('c-nationality').value],
-    ['Position selected',!!document.getElementById('c-position').value],
-    ['Site selected',!!document.getElementById('c-site').value],
-    ["Candidate's manager selected",!!document.getElementById('c-mgr').value],
+    ['Position selected',!!ssVal('c-position')],
+    ['Site selected',!!ssVal('c-site')],
+    ["Candidate's manager selected",!!ssVal('c-mgr')],
     ['Pay rate provided',!!document.getElementById('c-payrate').value],
   ];
   renderVal(checks);
@@ -760,9 +919,12 @@ async function submitStep() {
   document.getElementById('btn-submit').textContent='Submitting...';
 
   // Get manager email from selected option
-  const mgrSel = document.getElementById('req-mgr');
-  const mgrEmail = mgrSel.options[mgrSel.selectedIndex]?.dataset?.email||'';
-  const mgrName  = mgrSel.options[mgrSel.selectedIndex]?.textContent||'';
+  const mgrSel   = document.getElementById('req-mgr');
+  const selOpt   = mgrSel.options[mgrSel.selectedIndex];
+  const mgrEmail = selOpt?.dataset?.email || '';
+  const mgrName  = selOpt?.textContent || '';
+  // Also store selected manager ID for lookup
+  const mgrId    = mgrSel.value;
 
   // Convert files to base64
   const fileMeta = [];
@@ -780,9 +942,10 @@ async function submitStep() {
     cGender:document.getElementById('c-gender').value,
     cPhone:document.getElementById('c-phone').value.trim(),
     cNationality:document.getElementById('c-nationality').value,
-    cPosition:document.getElementById('c-position').value,
-    cSite:document.getElementById('c-site').value,
-    cMgr:document.getElementById('c-mgr').value,
+    cPosition:ssVal('c-position'),
+    cSite:ssVal('c-site'),
+    cMgr:ssVal('c-mgr'),
+    cMgrEmail:ssEmail('c-mgr'),
     cStart:document.getElementById('c-start').value,
     payRate:document.getElementById('c-payrate').value,
     currency:document.getElementById('c-currency').value,
@@ -964,18 +1127,20 @@ function showSuccess(icon, title, sub, lines, isRejected=false, isComplete=false
 function activateStep(step) {
   currentStep=step;
   buildStatusBar(step);
-  const titles={1:'New Recruitment Request',2:'Manager Review',3:'HR Review',4:'Site Manager Approval',5:'Contract & Onboarding'};
+  const titles={1:'New Recruitment Request',2:'Manager Review',3:'HR Review',4:'Site Manager Approval',5:'Contract & Onboarding',6:'Email Account Decision',7:'IT Setup'};
   document.getElementById('form-title').textContent=titles[step]||'';
-  ['s1','s2','s3','s4','s5'].forEach((id,i)=>{
-    const sec=document.getElementById(id), n=i+1;
+  ['s1','s2','s3','s4','s5','s6','s7'].forEach((id,i)=>{
+    const sec=document.getElementById(id); if(!sec) return;
+    const n=i+1;
     if(n<step){sec.classList.remove('locked');sec.classList.add('readonly');}
     else if(n===step){sec.classList.remove('locked','readonly');}
     else{sec.classList.add('locked');sec.classList.remove('readonly');}
   });
-  // Build summaries for review steps
   if(step>=2&&caseData.step1) buildSummary(step);
   if(step===1) validate();
   if(step===5) validate5();
+  if(step===6) validateStep6();
+  if(step===7) validateStep7();
 }
 
 function buildSummary(step) {
@@ -985,6 +1150,61 @@ function buildSummary(step) {
     const el=document.getElementById(id);
     if(el) el.innerHTML=summary;
   });
+}
+
+// ── STEP 6 VALIDATION ────────────────────────────────────────────────────────
+function validateStep6() {
+  const email = document.getElementById('mgr2-email').value.trim();
+  const btns = [document.getElementById('btn-email-yes'), document.getElementById('btn-email-no')];
+  btns.forEach(b => { if(b) b.disabled = !isEmail(email); });
+}
+
+async function submitEmailDecision(choice) {
+  const email = document.getElementById('mgr2-email').value.trim();
+  if (!isEmail(email)) { alert('Please enter your email first'); return; }
+  const comments = document.getElementById('mgr2-comments').value.trim();
+  if (choice === 'yes') {
+    await saveToScript({ action:'step6_email_yes', reqId, mgrEmail:email, comments });
+    addHistory('approved','Direct Manager','Email required — forwarded to IT','',email);
+    showSuccess('💻','Email account required','IT team will receive a notification to set up the account',[
+      ['Request ID',reqId],['Action','Email account required'],['Status','Pending IT Setup']
+    ]);
+  } else {
+    await saveToScript({ action:'step6_email_no', reqId, mgrEmail:email, comments });
+    addHistory('approved','Direct Manager','No email needed — case completed','',email);
+    showSuccess('🎉','Case complete!','No IT setup required. Employee is now fully active.',[
+      ['Request ID',reqId],['Action','No email required'],['Status','Completed']
+    ], false, true);
+  }
+}
+
+// ── STEP 7 VALIDATION ────────────────────────────────────────────────────────
+function validateStep7() {
+  const email   = document.getElementById('it-email').value.trim();
+  const created = document.getElementById('it-created-email').value.trim();
+  const checks  = [
+    ['IT email provided', isEmail(email)],
+    ['Company email address created', isEmail(created)],
+  ];
+  renderVal(checks, 'val-rows-7');
+  document.getElementById('btn-it-complete').disabled = !checks.every(c=>c[1]);
+}
+
+async function submitIT() {
+  document.getElementById('btn-it-complete').disabled = true;
+  document.getElementById('btn-it-complete').textContent = 'Processing...';
+  const p = {
+    action:'step7_it_done', reqId,
+    itEmail:    document.getElementById('it-email').value.trim(),
+    createdEmail:document.getElementById('it-created-email').value.trim(),
+    systems:    document.getElementById('it-systems').value.trim(),
+    itNotes:    document.getElementById('it-notes').value.trim(),
+  };
+  await saveToScript(p);
+  addHistory('approved','IT Team','IT setup complete — case closed','',p.itEmail);
+  showSuccess('🎉','Onboarding complete!','Company email created. Employee is fully active.',[
+    ['Request ID',reqId],['Company email',p.createdEmail],['Status','Completed']
+  ], false, true);
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
