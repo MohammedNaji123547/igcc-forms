@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IGCC — IVMS Officer Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0f1117;--surface:#181c27;--surface2:#1e2330;--border:#2a3148;
+  --accent:#4f7cff;--accent-dim:rgba(79,124,255,0.12);
+  --success:#22c98a;--danger:#ff5e5e;--warning:#f0a500;--info:#38bdf8;
+  --text:#e8eaf2;--muted:#6b7592;--label:#9aa3c2;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;}
+
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.header-left{display:flex;align-items:center;gap:12px;}
+.logo-badge{background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;font-weight:500;padding:4px 8px;border-radius:4px;letter-spacing:.05em;}
+.header-title{font-size:13px;font-weight:500;color:var(--label);}
+.last-refresh{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.btn-refresh{background:var(--accent-dim);border:1px solid rgba(79,124,255,.3);border-radius:6px;color:var(--accent);cursor:pointer;font-family:var(--mono);font-size:11px;padding:5px 12px;transition:all .15s;}
+.btn-refresh:hover{background:rgba(79,124,255,.2);}
+
+.container{max-width:1100px;margin:0 auto;padding:24px 20px 60px;}
+
+/* SUMMARY CARDS */
+.summary-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;}
+.summary-num{font-family:var(--mono);font-size:32px;font-weight:500;line-height:1;margin-bottom:6px;}
+.summary-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.num-red{color:var(--danger);}
+.num-orange{color:var(--warning);}
+.num-blue{color:var(--accent);}
+.num-green{color:var(--success);}
+
+/* SECTION HEADERS */
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;margin-top:28px;}
+.section-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.section-title{font-size:13px;font-weight:500;color:var(--label);text-transform:uppercase;letter-spacing:.08em;}
+.section-count{font-family:var(--mono);font-size:12px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:2px 8px;border-radius:3px;}
+
+/* CASE CARDS */
+.case-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:10px;transition:border-color .15s;}
+.case-card:hover{border-color:rgba(79,124,255,.3);}
+.case-card.overdue{border-left:3px solid var(--danger);}
+.case-card.due-today{border-left:3px solid var(--warning);}
+.case-card.pending-ivms{border-left:3px solid var(--info);}
+.case-card.active{border-left:3px solid var(--accent);}
+.case-card.completed{border-left:3px solid var(--success);opacity:.7;}
+
+.card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.card-id{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text);}
+.card-status{font-size:10px;font-family:var(--mono);padding:3px 8px;border-radius:3px;font-weight:500;}
+.status-overdue{background:rgba(255,94,94,.12);color:var(--danger);border:1px solid rgba(255,94,94,.25);}
+.status-today{background:rgba(240,165,0,.1);color:var(--warning);border:1px solid rgba(240,165,0,.25);}
+.status-pending{background:rgba(56,189,248,.1);color:var(--info);border:1px solid rgba(56,189,248,.25);}
+.status-active{background:rgba(79,124,255,.12);color:var(--accent);border:1px solid rgba(79,124,255,.25);}
+.status-completed{background:rgba(34,201,138,.1);color:var(--success);border:1px solid rgba(34,201,138,.25);}
+.status-1day{background:rgba(34,201,138,.1);color:var(--success);border:1px solid rgba(34,201,138,.25);}
+
+.card-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+.meta-item{display:flex;flex-direction:column;gap:3px;}
+.meta-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.meta-value{font-size:13px;color:var(--text);}
+.meta-value.mono{font-family:var(--mono);font-size:12px;}
+
+.card-equipment{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:12px;}
+.eq-row{display:flex;align-items:center;gap:12px;padding:3px 0;font-size:12px;}
+.eq-type{color:var(--text);flex:1;}
+.eq-plate{font-family:var(--mono);color:var(--muted);}
+.eq-period{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.eq-logged{font-size:11px;padding:1px 6px;border-radius:3px;}
+.logged-yes{background:rgba(34,201,138,.1);color:var(--success);}
+.logged-no{background:rgba(255,94,94,.1);color:var(--danger);}
+
+.card-actions{display:flex;gap:8px;}
+.btn-log{background:var(--accent);border:none;border-radius:6px;color:#fff;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:500;padding:8px 16px;transition:opacity .15s;text-decoration:none;display:inline-block;}
+.btn-log:hover{opacity:.85;}
+.btn-log.warn{background:var(--warning);}
+.btn-log.danger{background:var(--danger);}
+.btn-view{background:none;border:1px solid var(--border);border-radius:6px;color:var(--label);cursor:pointer;font-family:var(--sans);font-size:12px;padding:8px 16px;transition:all .15s;text-decoration:none;display:inline-block;}
+.btn-view:hover{border-color:var(--accent);color:var(--accent);}
+
+/* LOADING / EMPTY */
+.loading{text-align:center;padding:60px 20px;color:var(--muted);font-family:var(--mono);font-size:13px;}
+.spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;}
+
+/* DAILY LOG PROGRESS */
+.progress-bar{background:var(--surface2);border-radius:4px;height:6px;overflow:hidden;margin-top:6px;}
+.progress-fill{height:100%;border-radius:4px;transition:width .3s;}
+
+@media(max-width:700px){
+  .summary-bar{grid-template-columns:1fr 1fr;}
+  .card-meta{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="logo-badge">IGCC</span>
+    <span class="header-title">IVMS Officer Dashboard · Equipment Cases</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span class="last-refresh" id="last-refresh">Loading...</span>
+    <button class="btn-refresh" onclick="loadDashboard()">⟳ Refresh</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- SUMMARY -->
+  <div class="summary-bar">
+    <div class="summary-card">
+      <div class="summary-num num-red" id="cnt-overdue">—</div>
+      <div class="summary-label">Overdue logs</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-num num-orange" id="cnt-today">—</div>
+      <div class="summary-label">Due today</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-num num-blue" id="cnt-pending">—</div>
+      <div class="summary-label">Pending IVMS</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-num num-green" id="cnt-completed">—</div>
+      <div class="summary-label">Completed</div>
+    </div>
+  </div>
+
+  <div id="dashboard-content">
+    <div class="loading">
+      <div class="spinner"></div>
+      Loading cases from Google Sheets...
+    </div>
+  </div>
+</div>
+
+<script>
+const SHEETDB_BASE   = 'https://sheetdb.io/api/v1/ssl6hipw5js5j';
+const FORM_URL       = 'https://mohammednaji123547.github.io/igcc-forms/igcc_logistics_form.html';
+const DASHBOARD_URL  = window.location.href;
+
+const today    = new Date();
+const todayStr = fmt(today);
+
+function fmt(d){ return d.toISOString().split('T')[0]; }
+function addDays(dateStr, n){ const d=new Date(dateStr); d.setDate(d.getDate()+n); return fmt(d); }
+function daysBetween(a,b){ return Math.round((new Date(b)-new Date(a))/(1000*60*60*24)); }
+function displayDate(s){ return s?new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'-'; }
+
+// ── LOAD DATA ─────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  document.getElementById('last-refresh').textContent = 'Refreshing...';
+  try {
+    // Fetch all 4 tabs in parallel
+    const [reqRes, asnRes, ivmsRes, dailyRes] = await Promise.all([
+      fetch(SHEETDB_BASE + '?sheet=Requests'),
+      fetch(SHEETDB_BASE + '?sheet=Assignments'),
+      fetch(SHEETDB_BASE + '?sheet=IVMS'),
+      fetch(SHEETDB_BASE + '?sheet=Daily_Log'),
+    ]);
+    const requests    = await reqRes.json();
+    const assignments = await asnRes.json();
+    const ivmsLogs    = await ivmsRes.json();
+    const dailyLogs   = await dailyRes.json();
+
+    buildDashboard(requests, assignments, ivmsLogs, dailyLogs);
+    document.getElementById('last-refresh').textContent =
+      'Last refreshed: ' + new Date().toLocaleTimeString('en-GB');
+  } catch(e) {
+    document.getElementById('dashboard-content').innerHTML =
+      `<div class="empty-state">⚠ Could not load data — check SheetDB connection<br><small style="font-family:var(--mono);color:var(--danger);">${e.message}</small></div>`;
+    document.getElementById('last-refresh').textContent = 'Failed to load';
+  }
+}
+
+// ── BUILD DASHBOARD ───────────────────────────────────────────────────────────
+function buildDashboard(requests, assignments, ivmsLogs, dailyLogs) {
+  // Group requests by Case ID
+  const cases = {};
+  (Array.isArray(requests)?requests:[]).forEach(r => {
+    const id = r['Case ID'];
+    if (!id) return;
+    if (!cases[id]) cases[id] = { id, items:[], assignments:[], ivms:[], daily:[] };
+    cases[id].requestedBy  = r['Submitted By'];
+    cases[id].requestDate  = r['Request Date'];
+    cases[id].dept         = r['Department'];
+    cases[id].ctr          = r['CTR'];
+    cases[id].rtype        = r['Resource Type'];
+    cases[id].items.push({ type:r['Equipment Type'], qty:r['Quantity'], start:r['Start Date'], end:r['End Date'] });
+  });
+
+  (Array.isArray(assignments)?assignments:[]).forEach(r => {
+    const id=r['Case ID']; if(!cases[id])return;
+    cases[id].assignments.push({ plate:r['Plate Number'], make:r['Make / Model'], type:r['Equipment Type'], start:r['Start Date'], end:r['End Date'] });
+    cases[id].ownership = r['Ownership'];
+  });
+
+  (Array.isArray(ivmsLogs)?ivmsLogs:[]).forEach(r => {
+    const id=r['Case ID']; if(!cases[id])return;
+    cases[id].ivmsVerified = true;
+    cases[id].ivmsDate     = r['Verification Date'];
+    cases[id].gpsStatus    = r['Overall GPS'];
+    cases[id].ivms.push(r);
+  });
+
+  (Array.isArray(dailyLogs)?dailyLogs:[]).forEach(r => {
+    const id=r['Case ID']; if(!cases[id])return;
+    cases[id].daily.push({ date:r['Log Date'], plate:r['Plate Number'], status:r['Attendance Status'], hours:r['Working Hours'] });
+  });
+
+  // Classify each case
+  const overdue=[], dueToday=[], pendingIVMS=[], active=[], completed=[];
+
+  Object.values(cases).forEach(c => {
+    // Determine end date (latest across all items)
+    const endDates = c.items.map(i=>i.end).filter(Boolean).sort();
+    const startDates = c.items.map(i=>i.start).filter(Boolean).sort();
+    c.endDate   = endDates[endDates.length-1]||'';
+    c.startDate = startDates[0]||'';
+    const dur   = c.startDate&&c.endDate ? daysBetween(c.startDate,c.endDate) : 0;
+    c.duration  = dur;
+    c.isOneDay  = dur <= 1;
+
+    // Logged dates set
+    const loggedDates = new Set(c.daily.map(d=>d.date));
+    c.loggedDates = loggedDates;
+
+    // Case status
+    if (!c.assignments.length) {
+      // Pending logistics — not our concern here, skip
+      return;
+    }
+
+    if (!c.ivmsVerified) {
+      pendingIVMS.push(c);
+      return;
+    }
+
+    if (c.isOneDay) {
+      completed.push(c);
+      return;
+    }
+
+    // Multi-day: check if all days logged
+    if (c.endDate && todayStr > c.endDate) {
+      // Period ended — check if all working days logged
+      completed.push(c);
+      return;
+    }
+
+    // Still in period — check today's log
+    if (todayStr >= c.startDate && todayStr <= c.endDate) {
+      if (loggedDates.has(todayStr)) {
+        active.push(c); // logged today, still active
+      } else {
+        dueToday.push(c);
+      }
+      // Check overdue (yesterday not logged, was a working day)
+      const yesterday = addDays(todayStr, -1);
+      const yday = new Date(yesterday).toLocaleDateString('en-GB',{weekday:'long'});
+      if (!loggedDates.has(yesterday) && yday !== 'Friday' && yesterday >= c.startDate) {
+        // Move to overdue if not already today
+        const idx = dueToday.indexOf(c);
+        if (idx >= 0) dueToday.splice(idx, 1);
+        overdue.push(c);
+      }
+    } else {
+      active.push(c);
+    }
+  });
+
+  // Update summary counters
+  document.getElementById('cnt-overdue').textContent   = overdue.length;
+  document.getElementById('cnt-today').textContent     = dueToday.length;
+  document.getElementById('cnt-pending').textContent   = pendingIVMS.length;
+  document.getElementById('cnt-completed').textContent = completed.length;
+
+  // Render
+  const html = [];
+
+  if (overdue.length) {
+    html.push(sectionHeader('Overdue — Missing logs', overdue.length, '#ff5e5e'));
+    overdue.forEach(c => html.push(caseCard(c, 'overdue')));
+  }
+
+  if (dueToday.length) {
+    html.push(sectionHeader('Due today — Log required', dueToday.length, '#f0a500'));
+    dueToday.forEach(c => html.push(caseCard(c, 'due-today')));
+  }
+
+  if (pendingIVMS.length) {
+    html.push(sectionHeader('Pending IVMS verification', pendingIVMS.length, '#38bdf8'));
+    pendingIVMS.forEach(c => html.push(caseCard(c, 'pending-ivms')));
+  }
+
+  if (active.length) {
+    html.push(sectionHeader('Active — Logged today', active.length, '#4f7cff'));
+    active.forEach(c => html.push(caseCard(c, 'active')));
+  }
+
+  if (completed.length) {
+    html.push(sectionHeader('Completed', completed.length, '#22c98a'));
+    completed.forEach(c => html.push(caseCard(c, 'completed')));
+  }
+
+  if (!html.length) {
+    html.push('<div class="empty-state">✓ No open cases right now</div>');
+  }
+
+  document.getElementById('dashboard-content').innerHTML = html.join('');
+}
+
+// ── RENDER HELPERS ────────────────────────────────────────────────────────────
+function sectionHeader(title, count, color) {
+  return `<div class="section-header">
+    <div class="section-dot" style="background:${color};"></div>
+    <div class="section-title">${title}</div>
+    <div class="section-count">${count}</div>
+  </div>`;
+}
+
+function caseCard(c, type) {
+  const statusLabels = {
+    'overdue':     ['Overdue','status-overdue'],
+    'due-today':   ['Due today','status-today'],
+    'pending-ivms':['Pending IVMS','status-pending'],
+    'active':      ['Active','status-active'],
+    'completed':   ['Completed','status-completed'],
+  };
+  const [statusLabel, statusClass] = statusLabels[type]||['',''];
+  const oneDayLabel = c.isOneDay ? '<span class="card-status status-1day" style="margin-left:8px;">1-day</span>' : '';
+
+  // Equipment list
+  const eqRows = c.assignments.length
+    ? c.assignments.map((a,i) => {
+        const loggedToday = c.loggedDates.has(todayStr);
+        const logBadge = type!=='pending-ivms'&&type!=='completed'
+          ? `<span class="eq-logged ${loggedToday?'logged-yes':'logged-no'}">${loggedToday?'✓ logged':'not logged'}</span>`
+          : '';
+        return `<div class="eq-row">
+          <span class="eq-type">${a.type||c.items[i]?.type||'—'}</span>
+          <span class="eq-plate">${a.plate||'—'}</span>
+          <span class="eq-period">${displayDate(a.start||c.items[i]?.start)} → ${displayDate(a.end||c.items[i]?.end)}</span>
+          ${logBadge}
+        </div>`;
+      }).join('')
+    : c.items.map(it => `<div class="eq-row">
+        <span class="eq-type">${it.type}</span>
+        <span class="eq-plate">—</span>
+        <span class="eq-period">${displayDate(it.start)} → ${displayDate(it.end)}</span>
+      </div>`).join('');
+
+  // Progress bar for multi-day cases
+  let progressHtml = '';
+  if (!c.isOneDay && c.startDate && c.endDate) {
+    const totalDays = daysBetween(c.startDate, c.endDate);
+    const loggedDays= c.daily.length;
+    const pct = totalDays>0 ? Math.min(100, Math.round(loggedDays/totalDays*100)) : 0;
+    const barColor = pct===100?'var(--success)':pct>50?'var(--accent)':'var(--warning)';
+    progressHtml = `<div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px;">
+        <span>Daily log progress</span><span style="font-family:var(--mono);">${loggedDays}/${totalDays} days</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${barColor};"></div></div>
+    </div>`;
+  }
+
+  // Action buttons
+  const formLink = `${FORM_URL}?case=${encodeURIComponent(c.id)}`;
+  let actions = '';
+  if (type==='pending-ivms') {
+    actions = `<a class="btn-log" href="${formLink}" target="_blank">Verify equipment (Step 3)</a>`;
+  } else if (type==='due-today'||type==='overdue') {
+    const btnClass = type==='overdue'?'danger':'warn';
+    actions = `<a class="btn-log ${btnClass}" href="${formLink}" target="_blank">Log today's attendance</a>`;
+  } else if (type==='active') {
+    actions = `<a class="btn-view" href="${formLink}" target="_blank">View / update</a>`;
+  }
+
+  return `<div class="case-card ${type}">
+    <div class="card-top">
+      <div>
+        <span class="card-id">${c.id}</span>
+        ${oneDayLabel}
+      </div>
+      <span class="card-status ${statusClass}">${statusLabel}</span>
+    </div>
+    <div class="card-meta">
+      <div class="meta-item"><div class="meta-label">Department</div><div class="meta-value">${c.dept||'—'}</div></div>
+      <div class="meta-item"><div class="meta-label">CTR</div><div class="meta-value mono">${c.ctr||'— Indirect'}</div></div>
+      <div class="meta-item"><div class="meta-label">Requested by</div><div class="meta-value">${c.requestedBy||'—'}</div></div>
+      <div class="meta-item"><div class="meta-label">Period</div><div class="meta-value mono">${displayDate(c.startDate)} → ${displayDate(c.endDate)}</div></div>
+    </div>
+    <div class="card-equipment">${eqRows}</div>
+    ${progressHtml}
+    ${actions?`<div class="card-actions">${actions}</div>`:''}
+  </div>`;
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+loadDashboard();
+// Auto-refresh every 5 minutes
+setInterval(loadDashboard, 5 * 60 * 1000);
+</script>
+</body>
+</html>

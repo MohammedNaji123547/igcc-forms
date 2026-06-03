@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IGCC — Organisation Chart</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--surface2:#f8fafc;--border:#dde3ed;
+  --accent:#0284c7;--accent-dim:rgba(2,132,199,0.08);
+  --success:#16a34a;--danger:#dc2626;--warning:#d97706;
+  --text:#0f172a;--muted:#64748b;--label:#475569;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 12px rgba(0,0,0,.1);
+  --card-w:200px;--card-h:88px;--h-gap:24px;--v-gap:60px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;overflow:hidden;}
+
+/* HEADER */
+.header{background:#fff;border-bottom:2px solid var(--accent);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:200;box-shadow:var(--shadow);}
+.header-left{display:flex;align-items:center;gap:12px;}
+.logo-badge{background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;letter-spacing:.05em;}
+.header-title{font-size:13px;font-weight:500;color:var(--label);}
+.header-right{display:flex;align-items:center;gap:10px;}
+
+/* TOOLBAR */
+.toolbar{background:#fff;border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:12px;position:fixed;top:53px;left:0;right:0;z-index:199;box-shadow:var(--shadow);}
+.toolbar-search{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:13px;padding:7px 12px;outline:none;width:240px;transition:border-color .15s;}
+.toolbar-search:focus{border-color:var(--accent);}
+.toolbar-select{background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:13px;padding:7px 12px;outline:none;cursor:pointer;}
+.btn-tool{background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--label);cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:500;padding:7px 14px;transition:all .15s;white-space:nowrap;}
+.btn-tool:hover{border-color:var(--accent);color:var(--accent);}
+.btn-tool.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.btn-tool.primary:hover{background:#0369a1;}
+.separator{width:1px;height:24px;background:var(--border);}
+.stat-pill{font-size:11px;font-family:var(--mono);padding:4px 10px;border-radius:20px;background:var(--accent-dim);color:var(--accent);border:1px solid rgba(2,132,199,.2);}
+
+/* CANVAS */
+.canvas-wrap{position:fixed;top:101px;left:0;right:0;bottom:0;overflow:hidden;cursor:grab;}
+.canvas-wrap.grabbing{cursor:grabbing;}
+.canvas{position:absolute;transform-origin:0 0;}
+
+/* LOADING */
+.loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--muted);}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ORG NODES */
+.org-node{position:absolute;width:var(--card-w);}
+.org-card{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .15s;box-shadow:var(--shadow);position:relative;height:var(--card-h);}
+.org-card:hover{border-color:var(--accent);box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.org-card.selected{border-color:var(--accent);border-width:2px;box-shadow:0 0 0 3px rgba(2,132,199,.15);}
+.org-card.highlighted{border-color:var(--warning);background:rgba(217,119,6,.04);}
+.org-card.dimmed{opacity:.35;}
+.card-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:var(--mono);flex-shrink:0;position:absolute;top:12px;right:12px;}
+.card-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px;padding-right:40px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card-position{font-size:11px;color:var(--muted);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:40px;}
+.card-tags{display:flex;gap:4px;flex-wrap:wrap;}
+.card-tag{font-size:9px;font-family:var(--mono);padding:1px 5px;border-radius:3px;font-weight:500;}
+.tag-dept{background:rgba(2,132,199,.08);color:var(--accent);border:1px solid rgba(2,132,199,.15);}
+.tag-site{background:rgba(22,163,74,.08);color:var(--success);border:1px solid rgba(22,163,74,.15);}
+.expand-btn{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);width:22px;height:22px;background:#fff;border:1.5px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;color:var(--muted);z-index:10;transition:all .2s;}
+.expand-btn:hover{border-color:var(--accent);color:var(--accent);}
+.expand-btn.has-children{background:var(--accent);border-color:var(--accent);color:#fff;}
+.children-count{position:absolute;top:-6px;right:-6px;background:var(--accent);color:#fff;border-radius:10px;font-size:9px;font-family:var(--mono);font-weight:600;padding:1px 5px;min-width:16px;text-align:center;}
+
+/* CONNECTOR SVG */
+.connectors-svg{position:absolute;top:0;left:0;pointer-events:none;overflow:visible;}
+
+/* DETAIL PANEL */
+.detail-panel{position:fixed;right:0;top:101px;bottom:0;width:320px;background:#fff;border-left:1.5px solid var(--border);transform:translateX(100%);transition:transform .3s ease;z-index:150;overflow-y:auto;box-shadow:-4px 0 20px rgba(0,0,0,.08);}
+.detail-panel.open{transform:translateX(0);}
+.detail-header{padding:20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;z-index:1;}
+.detail-avatar-lg{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;font-family:var(--mono);margin-bottom:12px;}
+.detail-name{font-size:17px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.detail-id{font-size:11px;font-family:var(--mono);color:var(--muted);}
+.detail-close{position:absolute;top:16px;right:16px;background:none;border:1.5px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;font-size:16px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.detail-close:hover{border-color:var(--danger);color:var(--danger);}
+.detail-body{padding:20px;}
+.detail-section{margin-bottom:20px;}
+.detail-section-title{font-size:10px;font-weight:600;color:var(--label);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;}
+.detail-row{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;}
+.detail-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.detail-value{font-size:13px;color:var(--text);font-weight:500;}
+.detail-value.mono{font-family:var(--mono);font-size:12px;}
+.report-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:border-color .15s;}
+.report-card:hover{border-color:var(--accent);}
+.report-name{font-size:12px;font-weight:600;color:var(--text);}
+.report-pos{font-size:11px;color:var(--muted);}
+
+/* DEPT COLOR MAP */
+.avatar-civil{background:#dbeafe;color:#1e40af;}
+.avatar-mechanical{background:#dcfce7;color:#166534;}
+.avatar-electrical{background:#fef9c3;color:#854d0e;}
+.avatar-instrument{background:#f3e8ff;color:#6b21a8;}
+.avatar-hse{background:#fee2e2;color:#991b1b;}
+.avatar-qaqc{background:#ffedd5;color:#9a3412;}
+.avatar-planning{background:#e0f2fe;color:#0369a1;}
+.avatar-admin{background:#f1f5f9;color:#475569;}
+.avatar-finance{background:#d1fae5;color:#065f46;}
+.avatar-default{background:#e2e8f0;color:#475569;}
+.avatar-ceo{background:#0f172a;color:#f8fafc;}
+
+/* ZOOM INDICATOR */
+.zoom-indicator{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#fff;border:1.5px solid var(--border);border-radius:20px;padding:6px 14px;font-size:11px;font-family:var(--mono);color:var(--muted);box-shadow:var(--shadow);pointer-events:none;}
+
+/* MINI MAP */
+.minimap{position:fixed;bottom:20px;right:20px;width:160px;height:100px;background:#fff;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:var(--shadow);}
+.minimap-viewport{position:absolute;border:2px solid var(--accent);border-radius:3px;background:rgba(2,132,199,.08);pointer-events:none;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="logo-badge">IGCC</span>
+    <span class="header-title">Human Resources · Organisation Chart</span>
+  </div>
+  <div class="header-right">
+    <span class="stat-pill" id="emp-count">Loading...</span>
+  </div>
+</div>
+
+<div class="toolbar">
+  <input type="text" class="toolbar-search" id="search-input" placeholder="Search employee, position..." oninput="searchEmployees()">
+  <select class="toolbar-select" id="filter-site" onchange="applyFilter()">
+    <option value="">All sites</option>
+  </select>
+  <select class="toolbar-select" id="filter-dept" onchange="applyFilter()">
+    <option value="">All departments</option>
+  </select>
+  <div class="separator"></div>
+  <button class="btn-tool" onclick="zoomIn()">＋ Zoom in</button>
+  <button class="btn-tool" onclick="zoomOut()">－ Zoom out</button>
+  <button class="btn-tool" onclick="resetView()">⊙ Reset view</button>
+  <div class="separator"></div>
+  <button class="btn-tool" onclick="expandAll()">Expand all</button>
+  <button class="btn-tool" onclick="collapseAll()">Collapse all</button>
+  <div class="separator"></div>
+  <button class="btn-tool primary" onclick="loadOrgChart()">⟳ Refresh</button>
+</div>
+
+<div class="canvas-wrap" id="canvas-wrap">
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    Loading organisation chart...
+  </div>
+  <div class="canvas" id="canvas">
+    <svg class="connectors-svg" id="connectors-svg"></svg>
+  </div>
+</div>
+
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-header">
+    <div class="detail-avatar-lg" id="detail-avatar"></div>
+    <div class="detail-name" id="detail-name"></div>
+    <div class="detail-id" id="detail-id"></div>
+    <button class="detail-close" onclick="closeDetail()">×</button>
+  </div>
+  <div class="detail-body" id="detail-body"></div>
+</div>
+
+<div class="zoom-indicator" id="zoom-indicator">100%</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWr4pGHzsdUvfHARGhEtTaVNPn3tf4-7YZZLgys0B2KlyR-q1_REOvRvINgUODkW32/exec';
+const CARD_W = 200, CARD_H = 88, H_GAP = 28, V_GAP = 64;
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let allEmployees  = [];
+let tree          = {};        // { id: { emp, children:[], x, y, visible } }
+let collapsed     = new Set(); // IDs whose children are hidden
+let selectedId    = null;
+let scale         = 1;
+let panX          = 60;
+let panY          = 60;
+let isPanning     = false;
+let panStart      = {x:0,y:0};
+let filterSite    = '';
+let filterDept    = '';
+let searchQ       = '';
+
+// ── LOAD DATA ─────────────────────────────────────────────────────────────────
+async function loadOrgChart() {
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('canvas').innerHTML =
+    '<svg class="connectors-svg" id="connectors-svg"></svg>';
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=read`);
+    const json = await res.json();
+    allEmployees = json.data || [];
+    populateFilters();
+    buildTree();
+    render();
+    document.getElementById('emp-count').textContent =
+      `${allEmployees.length} employees`;
+  } catch(e) {
+    document.getElementById('loading').innerHTML =
+      `<div style="color:var(--danger)">✗ Could not load — check Apps Script connection</div>`;
+  }
+  document.getElementById('loading').style.display = 'none';
+}
+
+// ── POPULATE FILTER DROPDOWNS ─────────────────────────────────────────────────
+function populateFilters() {
+  const sites = [...new Set(allEmployees.map(e=>e['Site']).filter(Boolean))].sort();
+  const depts = [...new Set(allEmployees.map(e=>e['Department']).filter(Boolean))].sort();
+  const siteSel = document.getElementById('filter-site');
+  const deptSel = document.getElementById('filter-dept');
+  siteSel.innerHTML = '<option value="">All sites</option>';
+  deptSel.innerHTML = '<option value="">All departments</option>';
+  sites.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;siteSel.appendChild(o);});
+  depts.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;deptSel.appendChild(o);});
+}
+
+// ── BUILD TREE ────────────────────────────────────────────────────────────────
+function buildTree() {
+  tree = {};
+  const emps = getFilteredEmployees();
+
+  // Build node map
+  emps.forEach(e => {
+    tree[e['Employee ID']] = { emp:e, children:[], x:0, y:0 };
+  });
+
+  // Link children to parents — CEO is a virtual root node
+  const roots = [];
+  const ceoChildren = [];
+
+  emps.forEach(e => {
+    const mgr = e['Reports To'];
+    if (mgr === 'CEO') {
+      ceoChildren.push(e['Employee ID']);
+    } else if (mgr && tree[mgr]) {
+      tree[mgr].children.push(e['Employee ID']);
+    } else {
+      roots.push(e['Employee ID']);
+    }
+  });
+
+  // Add virtual CEO node at top if anyone reports to CEO
+  if (ceoChildren.length > 0) {
+    tree['CEO'] = {
+      emp: {
+        'Employee ID': 'CEO',
+        'Full Name (EN)': 'Chief Executive Officer',
+        'Position': 'CEO',
+        'Department': 'Executive',
+        'Site': 'HQ',
+        'Status': 'Active',
+        'Reports To': '',
+        'Contract Type': '',
+        'Nationality': '',
+      },
+      children: ceoChildren,
+      x: 0, y: 0
+    };
+    roots.unshift('CEO');
+  }
+
+  // Layout: assign x/y positions
+  let nextLeafX = 0;
+  function layout(id, depth) {
+    const node = tree[id];
+    if (!node) return 0;
+    const visible = !collapsed.has(id);
+    const children = visible ? node.children : [];
+    if (children.length === 0) {
+      node.x = nextLeafX * (CARD_W + H_GAP);
+      node.y = depth * (CARD_H + V_GAP);
+      nextLeafX++;
+      return node.x;
+    }
+    const childXs = children.map(c => layout(c, depth+1));
+    node.x = (childXs[0] + childXs[childXs.length-1]) / 2;
+    node.y = depth * (CARD_H + V_GAP);
+    return node.x;
+  }
+
+  nextLeafX = 0;
+  roots.forEach(id => layout(id, 0));
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  const canvas   = document.getElementById('canvas');
+  const svg      = document.getElementById('connectors-svg');
+  // Remove old nodes but keep svg
+  Array.from(canvas.children).forEach(c => {
+    if (c !== svg) c.remove();
+  });
+  svg.innerHTML = '';
+
+  const emps = getFilteredEmployees();
+  const maxX  = Math.max(...emps.map(e => (tree[e['Employee ID']]?.x||0))) + CARD_W + 80;
+  const maxY  = Math.max(...emps.map(e => (tree[e['Employee ID']]?.y||0))) + CARD_H + 80;
+  svg.setAttribute('width', maxX);
+  svg.setAttribute('height', maxY);
+
+  // Draw connectors first
+  emps.forEach(e => {
+    const id  = e['Employee ID'];
+    const node= tree[id];
+    if (!node) return;
+    const visible = !collapsed.has(id);
+    if (!visible) return;
+    node.children.forEach(childId => {
+      const child = tree[childId];
+      if (!child) return;
+      const x1 = node.x  + CARD_W/2;
+      const y1 = node.y  + CARD_H;
+      const x2 = child.x + CARD_W/2;
+      const y2 = child.y;
+      const mid= (y1+y2)/2;
+      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d',`M${x1},${y1} C${x1},${mid} ${x2},${mid} ${x2},${y2}`);
+      path.setAttribute('fill','none');
+      path.setAttribute('stroke','#cbd5e1');
+      path.setAttribute('stroke-width','1.5');
+      svg.appendChild(path);
+    });
+  });
+
+  // Draw nodes
+  emps.forEach(e => {
+    const id   = e['Employee ID'];
+    const node = tree[id];
+    if (!node) return;
+
+    const div = document.createElement('div');
+    div.className = 'org-node';
+    div.id = `node-${id}`;
+    div.style.left = node.x + 'px';
+    div.style.top  = node.y + 'px';
+
+    const initials = getInitials(e['Full Name (EN)']);
+    const avatarClass = getAvatarClass(e['Department']);
+    const hasChildren = node.children.length > 0;
+    const isCollapsed = collapsed.has(id);
+
+    const isCEO = id === 'CEO';
+    div.innerHTML = `
+      <div class="org-card${isCEO?' style="border-color:#0f172a;border-width:2px;background:#0f172a;"':''}" id="card-${id}" onclick="selectNode('${id}')">
+        <div class="card-avatar ${avatarClass}">${initials}</div>
+        <div class="card-name" style="${isCEO?'color:#f8fafc;':''}" title="${e['Full Name (EN)']||''}">${e['Full Name (EN)']||'—'}</div>
+        <div class="card-position" style="${isCEO?'color:#94a3b8;':''}" title="${e['Position']||''}">${e['Position']||'—'}</div>
+        <div class="card-tags">
+          ${e['Department']?`<span class="card-tag tag-dept">${e['Department']}</span>`:''}
+          ${e['Site']?`<span class="card-tag tag-site">${shortSite(e['Site'])}</span>`:''}
+        </div>
+        ${hasChildren?`<span class="children-count">${node.children.length}</span>`:''}
+      </div>
+      ${hasChildren?`<div class="expand-btn has-children" onclick="toggleCollapse(event,'${id}')" title="${isCollapsed?'Expand':'Collapse'}">${isCollapsed?'▼':'▲'}</div>`:''}`;
+
+    canvas.appendChild(div);
+  });
+
+  applySearch();
+  updateCanvas();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function getFilteredEmployees() {
+  return allEmployees.filter(e => {
+    const matchSite = !filterSite || e['Site']===filterSite;
+    const matchDept = !filterDept || e['Department']===filterDept;
+    return matchSite && matchDept && e['Status']!=='Inactive';
+  });
+}
+
+function getInitials(name) {
+  return (name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+}
+
+function shortSite(site) {
+  // Abbreviate long site names
+  return site.length > 12 ? site.slice(0,11)+'…' : site;
+}
+
+function getAvatarClass(dept) {
+  const d = (dept||'').toLowerCase();
+  if (d.includes('executive'))   return 'avatar-ceo';
+  if (d.includes('civil'))       return 'avatar-civil';
+  if (d.includes('mechanic'))    return 'avatar-mechanical';
+  if (d.includes('electric'))    return 'avatar-electrical';
+  if (d.includes('instrument'))  return 'avatar-instrument';
+  if (d.includes('hse'))         return 'avatar-hse';
+  if (d.includes('qa')||d.includes('qc')) return 'avatar-qaqc';
+  if (d.includes('plan'))        return 'avatar-planning';
+  if (d.includes('admin'))       return 'avatar-admin';
+  if (d.includes('finance')||d.includes('account')) return 'avatar-finance';
+  return 'avatar-default';
+}
+
+// ── SELECT NODE ───────────────────────────────────────────────────────────────
+function selectNode(id) {
+  // Deselect previous
+  if (selectedId) {
+    document.getElementById(`card-${selectedId}`)?.classList.remove('selected');
+  }
+  selectedId = id;
+  document.getElementById(`card-${id}`)?.classList.add('selected');
+  openDetail(id);
+}
+
+// ── DETAIL PANEL ──────────────────────────────────────────────────────────────
+function openDetail(id) {
+  const node = tree[id];
+  if (!node) return;
+  const e = node.emp;
+  const initials     = getInitials(e['Full Name (EN)']);
+  const avatarClass  = getAvatarClass(e['Department']);
+
+  document.getElementById('detail-avatar').className = `detail-avatar-lg ${avatarClass}`;
+  document.getElementById('detail-avatar').textContent = initials;
+  document.getElementById('detail-name').textContent = e['Full Name (EN)']||'—';
+  document.getElementById('detail-id').textContent   = `${e['Employee ID']||'—'} · ${e['Status']||'Active'}`;
+
+  // Find manager info — handle CEO virtual node
+  const mgr = e['Reports To'] === 'CEO'
+    ? { 'Employee ID':'CEO','Full Name (EN)':'Chief Executive Officer','Position':'CEO','Department':'Executive' }
+    : allEmployees.find(m=>m['Employee ID']===e['Reports To']);
+  // Find direct reports
+  const reports = node.children.map(cid => tree[cid]?.emp).filter(Boolean);
+
+  const contractBadge = {
+    'Rotation':            'background:rgba(22,163,74,.1);color:#166534',
+    'Fixed-term contract': 'background:rgba(2,132,199,.1);color:#0369a1',
+    'Daily Wages':         'background:rgba(100,116,139,.1);color:#475569',
+  }[e['Contract Type']]||'background:var(--surface2);color:var(--muted)';
+
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-section">
+      <div class="detail-section-title">Position & Assignment</div>
+      <div class="detail-row"><div class="detail-label">Position</div><div class="detail-value">${e['Position']||'—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Department</div><div class="detail-value">${e['Department']||'—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Site</div><div class="detail-value">${e['Site']||'—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Nationality</div><div class="detail-value">${e['Nationality']||'—'} ${e['Country']?`(${e['Country']})`:''}</div></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Contract</div>
+      <div class="detail-row">
+        <div class="detail-label">Contract type</div>
+        <div class="detail-value"><span style="font-size:11px;padding:2px 8px;border-radius:20px;font-family:var(--mono);${contractBadge}">${e['Contract Type']||'—'}</span></div>
+      </div>
+      <div class="detail-row"><div class="detail-label">Start date</div><div class="detail-value mono">${e['Start Date']||'—'}</div></div>
+      ${e['Contract End Date']?`<div class="detail-row"><div class="detail-label">End date</div><div class="detail-value mono">${e['Contract End Date']}</div></div>`:''}
+      ${e['Rotation Days Off']?`<div class="detail-row"><div class="detail-label">Rotation days off</div><div class="detail-value">${e['Rotation Days Off']} days/month</div></div>`:''}
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Reporting Line</div>
+      ${mgr?`
+        <div style="margin-bottom:10px;">
+          <div class="detail-label" style="margin-bottom:6px;">Reports to</div>
+          <div class="report-card" onclick="selectNode('${mgr['Employee ID']}');centerOn('${mgr['Employee ID']}')">
+            <div class="report-name">↑ ${mgr['Full Name (EN)']}</div>
+            <div class="report-pos">${mgr['Position']||'—'} · ${mgr['Department']||'—'}</div>
+          </div>
+        </div>`:`<div class="detail-row"><div class="detail-value" style="color:var(--muted);">Top level — no manager</div></div>`}
+      ${reports.length?`
+        <div class="detail-label" style="margin-bottom:6px;">Direct reports (${reports.length})</div>
+        ${reports.map(r=>`
+          <div class="report-card" onclick="selectNode('${r['Employee ID']}');centerOn('${r['Employee ID']}')">
+            <div class="report-name">↓ ${r['Full Name (EN)']}</div>
+            <div class="report-pos">${r['Position']||'—'} · ${r['Department']||'—'}</div>
+          </div>`).join('')}`:''}
+    </div>
+    ${e['Phone']||e['Email']?`
+    <div class="detail-section">
+      <div class="detail-section-title">Contact</div>
+      ${e['Phone']?`<div class="detail-row"><div class="detail-label">Phone</div><div class="detail-value mono">${e['Phone']}</div></div>`:''}
+      ${e['Email']?`<div class="detail-row"><div class="detail-label">Email</div><div class="detail-value mono">${e['Email']}</div></div>`:''}
+    </div>`:''}`;
+
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('open');
+  if (selectedId) {
+    document.getElementById(`card-${selectedId}`)?.classList.remove('selected');
+    selectedId = null;
+  }
+}
+
+// ── COLLAPSE / EXPAND ─────────────────────────────────────────────────────────
+function toggleCollapse(e, id) {
+  e.stopPropagation();
+  if (collapsed.has(id)) collapsed.delete(id);
+  else collapsed.add(id);
+  buildTree();
+  render();
+}
+
+function expandAll()  { collapsed.clear(); buildTree(); render(); }
+function collapseAll() {
+  allEmployees.forEach(e => {
+    const id = e['Employee ID'];
+    if (tree[id]?.children.length) collapsed.add(id);
+  });
+  buildTree(); render();
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────────────────
+function searchEmployees() {
+  searchQ = document.getElementById('search-input').value.toLowerCase();
+  applySearch();
+}
+
+function applySearch() {
+  if (!searchQ) {
+    document.querySelectorAll('.org-card').forEach(c => {
+      c.classList.remove('highlighted','dimmed');
+    });
+    return;
+  }
+  allEmployees.forEach(e => {
+    const id   = e['Employee ID'];
+    const card = document.getElementById(`card-${id}`);
+    if (!card) return;
+    const match =
+      (e['Full Name (EN)']||'').toLowerCase().includes(searchQ) ||
+      (e['Position']||'').toLowerCase().includes(searchQ) ||
+      (e['Department']||'').toLowerCase().includes(searchQ) ||
+      (e['Employee ID']||'').toLowerCase().includes(searchQ);
+    card.classList.toggle('highlighted', match);
+    card.classList.toggle('dimmed', !match);
+  });
+}
+
+function applyFilter() {
+  filterSite = document.getElementById('filter-site').value;
+  filterDept = document.getElementById('filter-dept').value;
+  buildTree();
+  render();
+}
+
+// ── ZOOM & PAN ────────────────────────────────────────────────────────────────
+function updateCanvas() {
+  const canvas = document.getElementById('canvas');
+  canvas.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+  document.getElementById('zoom-indicator').textContent = Math.round(scale*100)+'%';
+}
+
+function zoomIn()  { scale = Math.min(2, scale+0.1); updateCanvas(); }
+function zoomOut() { scale = Math.max(0.2, scale-0.1); updateCanvas(); }
+
+function resetView() {
+  scale=1; panX=60; panY=60; updateCanvas();
+}
+
+function centerOn(id) {
+  const node = tree[id];
+  if (!node) return;
+  const wrap  = document.getElementById('canvas-wrap');
+  const cx    = wrap.clientWidth/2;
+  const cy    = wrap.clientHeight/2;
+  panX = cx - (node.x + CARD_W/2)*scale;
+  panY = cy - (node.y + CARD_H/2)*scale;
+  updateCanvas();
+}
+
+// Mouse pan
+const wrap = document.getElementById('canvas-wrap');
+wrap.addEventListener('mousedown', e => {
+  if (e.target.closest('.org-card,.expand-btn')) return;
+  isPanning=true; panStart={x:e.clientX-panX,y:e.clientY-panY};
+  wrap.classList.add('grabbing');
+});
+window.addEventListener('mousemove', e => {
+  if (!isPanning) return;
+  panX=e.clientX-panStart.x; panY=e.clientY-panStart.y;
+  updateCanvas();
+});
+window.addEventListener('mouseup', () => {
+  isPanning=false;
+  wrap.classList.remove('grabbing');
+});
+
+// Wheel zoom
+wrap.addEventListener('wheel', e => {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -0.08 : 0.08;
+  const rect  = wrap.getBoundingClientRect();
+  const mx    = e.clientX - rect.left;
+  const my    = e.clientY - rect.top;
+  const newScale = Math.max(0.2, Math.min(2, scale+delta));
+  panX = mx - (mx-panX) * (newScale/scale);
+  panY = my - (my-panY) * (newScale/scale);
+  scale = newScale;
+  updateCanvas();
+}, {passive:false});
+
+// Touch pan
+let lastTouch = null;
+wrap.addEventListener('touchstart', e => {
+  if (e.touches.length===1) lastTouch={x:e.touches[0].clientX,y:e.touches[0].clientY};
+});
+wrap.addEventListener('touchmove', e => {
+  if (e.touches.length===1 && lastTouch) {
+    panX += e.touches[0].clientX - lastTouch.x;
+    panY += e.touches[0].clientY - lastTouch.y;
+    lastTouch = {x:e.touches[0].clientX,y:e.touches[0].clientY};
+    updateCanvas();
+  }
+});
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+loadOrgChart();
+</script>
+</body>
+</html>

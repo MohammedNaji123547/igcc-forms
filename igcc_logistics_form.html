@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IGCC — Logistics Equipment Request</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f0f4f8;--surface:#ffffff;--surface2:#f8fafc;--border:#dde3ed;
+  --accent:#16a34a;--accent-dim:rgba(22,163,74,0.08);--accent-mid:rgba(22,163,74,0.15);
+  --success:#16a34a;--danger:#dc2626;--warning:#d97706;--info:#0284c7;
+  --text:#0f172a;--muted:#64748b;--label:#475569;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.05);
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;}
+
+/* HEADER */
+.header{background:#fff;border-bottom:2px solid var(--accent);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.header-left{display:flex;align-items:center;gap:12px;}
+.logo-badge{background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;letter-spacing:.05em;}
+.header-title{font-size:13px;font-weight:500;color:var(--label);}
+.case-id-badge{font-family:var(--mono);font-size:12px;color:var(--accent);background:var(--accent-dim);border:1px solid rgba(22,163,74,.25);padding:5px 12px;border-radius:6px;font-weight:600;}
+
+/* STATUS BAR */
+.status-bar{background:#fff;border-bottom:1px solid var(--border);padding:16px 24px;box-shadow:var(--shadow);}
+.status-steps{display:flex;align-items:center;max-width:900px;margin:0 auto;}
+.step{display:flex;align-items:center;gap:8px;flex:1;}
+.step-circle{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;font-family:var(--mono);flex-shrink:0;border:2px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .3s;}
+.step-circle.done{background:var(--success);border-color:var(--success);color:#fff;}
+.step-circle.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 0 3px rgba(22,163,74,.2);}
+.step-info{flex:1;}
+.step-name{font-size:12px;font-weight:500;color:var(--muted);}
+.step-name.active{color:var(--text);font-weight:600;}
+.step-name.done{color:var(--success);}
+.step-role{font-size:10px;font-family:var(--mono);color:var(--muted);}
+.step-connector{flex:1;height:2px;background:var(--border);margin:0 6px;transition:background .3s;max-width:40px;}
+.step-connector.done{background:var(--success);}
+
+/* CONTAINER */
+.container{max-width:900px;margin:0 auto;padding:28px 20px 60px;}
+.form-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.form-subtitle{font-size:13px;color:var(--muted);margin-bottom:24px;font-family:var(--mono);}
+
+/* SECTIONS */
+.section{background:#fff;border:1px solid var(--border);border-radius:12px;padding:22px 26px;margin-bottom:16px;box-shadow:var(--shadow);}
+.section.readonly{background:var(--surface2);pointer-events:none;}
+.section.locked{display:none;}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--bg);}
+.section-header-left{display:flex;align-items:center;gap:10px;}
+.section-num{width:24px;height:24px;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--mono);flex-shrink:0;}
+.section-num.done{background:var(--success);}
+.section-num.waiting{background:var(--border);color:var(--muted);}
+.section-title{font-size:13px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:.07em;}
+.section-badge{font-size:11px;font-family:var(--mono);padding:3px 10px;border-radius:20px;font-weight:500;}
+.badge-requester{background:rgba(2,132,199,.1);color:#0284c7;border:1px solid rgba(2,132,199,.2);}
+.badge-logistics{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(22,163,74,.2);}
+.badge-ivms{background:rgba(124,58,237,.08);color:#7c3aed;border:1px solid rgba(124,58,237,.2);}
+.badge-readonly{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+
+/* FIELDS */
+.field-row{display:grid;gap:16px;margin-bottom:14px;}
+.field-row.cols-2{grid-template-columns:1fr 1fr;}
+.field-row.cols-3{grid-template-columns:1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:5px;}
+label{font-size:11px;font-weight:600;color:var(--label);letter-spacing:.06em;text-transform:uppercase;}
+.required{color:var(--danger);font-size:13px;}
+input,select,textarea{background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:14px;padding:10px 12px;transition:border-color .15s,box-shadow .15s;outline:none;width:100%;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(22,163,74,.12);}
+input[readonly],input:disabled,select:disabled{background:var(--surface2);color:var(--muted);cursor:not-allowed;border-color:var(--border);}
+select option{background:#fff;color:var(--text);}
+.field-hint{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.status-ok{font-size:11px;color:var(--success);font-family:var(--mono);}
+.status-err{font-size:11px;color:var(--danger);font-family:var(--mono);}
+.status-loading{font-size:11px;color:var(--warning);font-family:var(--mono);}
+
+/* SEARCHABLE AUTOCOMPLETE */
+.ac-wrap{position:relative;width:100%;}
+.ac-input{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:13px;padding:8px 11px;outline:none;transition:border-color .15s,box-shadow .15s;}
+.ac-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(22,163,74,.12);}
+.ac-input.selected{border-color:var(--success);}
+.ac-input:disabled{background:var(--surface2);color:var(--muted);cursor:not-allowed;}
+.ac-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--accent);border-radius:10px;max-height:200px;overflow-y:auto;z-index:9999;display:none;box-shadow:var(--shadow-md);}
+.ac-dropdown.open{display:block;}
+.ac-option{padding:9px 13px;font-size:13px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);}
+.ac-option:last-child{border-bottom:none;}
+.ac-option:hover,.ac-option.kbd{background:var(--accent-dim);color:var(--accent);}
+.ac-option mark{background:none;color:var(--accent);font-weight:700;}
+.ac-none{padding:9px 13px;font-size:12px;color:var(--muted);font-family:var(--mono);}
+
+/* EQUIPMENT TABLE */
+.eq-wrap{border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px;}
+.eq-table{width:100%;border-collapse:collapse;}
+.eq-table thead tr{background:var(--surface2);}
+.eq-table th{text-align:left;font-size:11px;font-weight:600;color:var(--label);letter-spacing:.06em;text-transform:uppercase;padding:10px 12px;border-bottom:1.5px solid var(--border);}
+.eq-table td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.eq-table tbody tr:last-child td{border-bottom:none;}
+.eq-table tbody tr:hover{background:var(--surface2);}
+.eq-table input,.eq-table select{padding:7px 9px;font-size:12px;border-radius:6px;}
+.btn-remove{background:none;border:1.5px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:4px 10px;transition:all .15s;}
+.btn-remove:hover{border-color:var(--danger);color:var(--danger);background:rgba(220,38,38,.05);}
+.btn-add{background:var(--accent-dim);border:1.5px dashed var(--accent);border-radius:8px;color:var(--accent);cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:600;padding:10px 16px;transition:all .15s;width:100%;margin-top:4px;}
+.btn-add:hover{background:var(--accent-mid);}
+
+/* ROW TYPE STYLES */
+.eq-row-direct{border-left:3px solid var(--info);}
+.eq-row-indirect{border-left:3px solid var(--warning);}
+.eq-row-off{background:rgba(217,119,6,.04);}
+
+/* READ-ONLY DISPLAY */
+.ro-field{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text);min-height:40px;}
+.ro-highlight{border-color:rgba(22,163,74,.3);background:rgba(22,163,74,.04);}
+
+/* INFO NOTE */
+.info-note{background:rgba(2,132,199,.06);border:1px solid rgba(2,132,199,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--info);margin-bottom:14px;}
+
+/* DAILY LOG */
+.daily-wrap{border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px;}
+.daily-table{width:100%;border-collapse:collapse;}
+.daily-table thead tr{background:var(--surface2);}
+.daily-table th{text-align:left;font-size:11px;font-weight:600;color:var(--label);letter-spacing:.06em;text-transform:uppercase;padding:9px 10px;border-bottom:1.5px solid var(--border);}
+.daily-table td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px;}
+.daily-table tbody tr:last-child td{border-bottom:none;}
+.daily-table input,.daily-table select{padding:6px 8px;font-size:12px;border-radius:6px;}
+
+/* VALIDATION */
+.validation-panel{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:16px;box-shadow:var(--shadow);}
+.val-title{font-size:11px;font-weight:600;color:var(--label);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;}
+.val-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);padding:4px 0;font-family:var(--mono);}
+.val-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background .2s;}
+.val-dot.pass{background:var(--success);}
+.val-dot.fail{background:var(--danger);}
+.val-row.pass{color:var(--success);}
+.val-row.fail{color:var(--danger);}
+
+/* BUTTONS */
+.btn-primary{background:var(--accent);border:none;border-radius:10px;color:#fff;cursor:pointer;font-family:var(--sans);font-size:15px;font-weight:600;padding:14px 32px;width:100%;transition:all .15s;box-shadow:0 2px 4px rgba(22,163,74,.3);}
+.btn-primary:hover{background:#15803d;box-shadow:0 4px 8px rgba(22,163,74,.35);}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+.btn-secondary{background:#fff;border:1.5px solid var(--border);border-radius:10px;color:var(--label);cursor:pointer;font-family:var(--sans);font-size:14px;padding:11px 24px;transition:all .15s;width:100%;margin-top:8px;}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+
+/* SUCCESS */
+.success-screen{display:none;text-align:center;padding:60px 20px;}
+.success-icon{width:68px;height:68px;background:rgba(22,163,74,.1);border:2px solid var(--success);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 20px;color:var(--success);}
+.success-title{font-size:22px;font-weight:700;margin-bottom:8px;color:var(--text);}
+.success-sub{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:28px;}
+.audit-box{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:18px;text-align:left;font-family:var(--mono);font-size:12px;color:var(--muted);max-width:580px;margin:0 auto 24px;box-shadow:var(--shadow);}
+.audit-line{padding:4px 0;display:flex;gap:12px;border-bottom:1px solid var(--border);}
+.audit-line:last-child{border-bottom:none;}
+.audit-key{color:var(--label);min-width:140px;font-weight:500;}
+.audit-val{color:var(--text);}
+
+.divider{border:none;border-top:1.5px solid var(--bg);margin:18px 0;}
+.hidden{display:none!important;}
+@media(max-width:640px){.field-row.cols-2,.field-row.cols-3{grid-template-columns:1fr;}.status-steps{flex-wrap:wrap;gap:8px;}.step-connector{display:none;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="logo-badge">IGCC</span>
+    <span class="header-title">Cost Control · Logistics Equipment Request</span>
+  </div>
+  <span class="case-id-badge" id="case-id-display">Generating...</span>
+</div>
+
+<div class="status-bar">
+  <div class="status-steps">
+    <div class="step"><div class="step-circle active" id="sc1">1</div><div class="step-info"><div class="step-name active" id="sn1">Request</div><div class="step-role">Requester</div></div></div>
+    <div class="step-connector" id="conn1"></div>
+    <div class="step"><div class="step-circle" id="sc2">2</div><div class="step-info"><div class="step-name" id="sn2">Logistics</div><div class="step-role">Logistics team</div></div></div>
+    <div class="step-connector" id="conn2"></div>
+    <div class="step"><div class="step-circle" id="sc3">3</div><div class="step-info"><div class="step-name" id="sn3">IVMS verify</div><div class="step-role">IVMS officer</div></div></div>
+    <div class="step-connector" id="conn3"></div>
+    <div class="step"><div class="step-circle" id="sc4">4</div><div class="step-info"><div class="step-name" id="sn4">Daily log</div><div class="step-role">IVMS officer</div></div></div>
+    <div class="step-connector" id="conn4"></div>
+    <div class="step"><div class="step-circle" id="sc5">5</div><div class="step-info"><div class="step-name" id="sn5">Completed</div><div class="step-role">Cost Control</div></div></div>
+  </div>
+</div>
+
+<div class="container" id="form-container">
+  <div class="form-title" id="form-title">Equipment Request</div>
+  <div class="form-subtitle" id="form-ref">Generating case ID...</div>
+
+  <!-- ═══════════ STEP 1: REQUESTER ═══════════ -->
+  <div class="section" id="step1-section">
+    <div class="section-header">
+      <div class="section-header-left">
+        <div class="section-num" id="s1num">1</div>
+        <div class="section-title">Equipment Request</div>
+      </div>
+      <span class="section-badge badge-requester">Requester</span>
+    </div>
+
+    <div class="field-row cols-3">
+      <div class="field">
+        <label>Requested by (email) <span class="required">*</span></label>
+        <input type="email" id="req-email" placeholder="name@igcc.com" oninput="v1()">
+      </div>
+      <div class="field">
+        <label>Request date <span class="required">*</span></label>
+        <input type="date" id="req-date" oninput="v1()">
+      </div>
+      <div class="field">
+        <label>Site / Cost Centre <span class="required">*</span></label>
+        <select id="req-site" onchange="v1()">
+          <option value="">Loading...</option>
+        </select>
+        <span id="site-status" class="status-loading">⟳ Loading sites...</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="info-note">Add one row per equipment type. Select resource type and CTR per row — Logistics will assign plate numbers.</div>
+
+    <div class="eq-wrap">
+      <table class="eq-table">
+        <thead><tr>
+          <th style="width:18%">Equipment type</th>
+          <th style="width:12%">Resource type</th>
+          <th style="width:16%">Department</th>
+          <th style="width:18%">CTR</th>
+          <th style="width:8%">Qty</th>
+          <th style="width:11%">Start date</th>
+          <th style="width:11%">End date</th>
+          <th style="width:6%"></th>
+        </tr></thead>
+        <tbody id="eq-body"></tbody>
+      </table>
+    </div>
+    <button class="btn-add" onclick="addEqRow()">+ Add equipment row</button>
+
+    <div class="divider"></div>
+    <div class="field">
+      <label>Justification / remarks</label>
+      <textarea id="req-remarks" rows="2" placeholder="Reason for request, work scope, any specific requirements..."></textarea>
+    </div>
+  </div>
+
+  <!-- ═══════════ STEP 2: LOGISTICS ═══════════ -->
+  <div class="section locked" id="step2-section">
+    <div class="section-header">
+      <div class="section-header-left">
+        <div class="section-num waiting" id="s2num">2</div>
+        <div class="section-title">Logistics Assignment</div>
+      </div>
+      <span class="section-badge badge-logistics">Logistics team</span>
+    </div>
+    <div class="info-note">📋 Request details (read-only)</div>
+    <div id="step1-readonly"></div>
+    <div class="divider"></div>
+
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>Assigned by (email) <span class="required">*</span></label>
+        <input type="email" id="log-email" placeholder="logistics@igcc.com" oninput="v2()">
+      </div>
+      <div class="field">
+        <label>Assignment date <span class="required">*</span></label>
+        <input type="date" id="log-date" oninput="v2()">
+      </div>
+    </div>
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>Ownership <span class="required">*</span></label>
+        <select id="log-ownership" onchange="v2()">
+          <option value="">Select...</option>
+          <option>IGCC Owned</option>
+          <option>Rented</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Vendor (if rented)</label>
+        <div class="ac-wrap">
+          <input type="text" class="ac-input" id="vendor-input" placeholder="Search vendor..." oninput="filterAC('vendor')" onfocus="openAC('vendor')" onkeydown="navAC(event,'vendor')" autocomplete="off">
+          <input type="hidden" id="vendor-val">
+          <div class="ac-dropdown" id="vendor-dd"></div>
+        </div>
+        <span id="vendor-status" class="status-loading">⟳ Loading vendors...</span>
+      </div>
+    </div>
+
+    <div class="info-note">Fill plate number and make/model for each equipment item below.</div>
+    <div id="log-items"></div>
+
+    <div class="field">
+      <label>Logistics notes</label>
+      <textarea id="log-notes" rows="2" placeholder="Delivery conditions, access requirements, driver details..."></textarea>
+    </div>
+  </div>
+
+  <!-- ═══════════ STEP 3: IVMS ═══════════ -->
+  <div class="section locked" id="step3-section">
+    <div class="section-header">
+      <div class="section-header-left">
+        <div class="section-num waiting" id="s3num">3</div>
+        <div class="section-title">IVMS Verification</div>
+      </div>
+      <span class="section-badge badge-ivms">IVMS officer</span>
+    </div>
+    <div class="info-note">📋 Assignment details (read-only)</div>
+    <div id="step2-readonly"></div>
+    <div class="divider"></div>
+
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>Verified by (email) <span class="required">*</span></label>
+        <input type="email" id="ivms-email" placeholder="ivms@igcc.com" oninput="v3()">
+      </div>
+      <div class="field">
+        <label>Verification date <span class="required">*</span></label>
+        <input type="date" id="ivms-date" oninput="v3()">
+      </div>
+    </div>
+    <div id="ivms-items"></div>
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>Overall GPS confirmation <span class="required">*</span></label>
+        <select id="ivms-gps" onchange="v3()">
+          <option value="">Select...</option>
+          <option value="confirmed">Confirmed — all equipment on site</option>
+          <option value="partial">Partial — some discrepancies</option>
+          <option value="not-found">Not found — equipment not detected</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>IVMS system reference</label>
+        <input type="text" id="ivms-ref" placeholder="IVMS record / tracking ID" oninput="v3()">
+      </div>
+    </div>
+    <div class="field">
+      <label>IVMS notes</label>
+      <textarea id="ivms-notes" rows="2" placeholder="GPS discrepancies, on-site remarks..."></textarea>
+    </div>
+  </div>
+
+  <!-- ═══════════ STEP 4: DAILY LOG ═══════════ -->
+  <div class="section locked" id="step4-section">
+    <div class="section-header">
+      <div class="section-header-left">
+        <div class="section-num waiting" id="s4num">4</div>
+        <div class="section-title">Daily Attendance Log</div>
+      </div>
+      <span class="section-badge badge-ivms">IVMS officer · daily</span>
+    </div>
+    <div class="info-note">📋 Fill start and end times for each equipment piece for today.</div>
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>Log date <span class="required">*</span></label>
+        <input type="date" id="log-day" oninput="v4()">
+      </div>
+      <div class="field">
+        <label>Logged by (email) <span class="required">*</span></label>
+        <input type="email" id="log-by" placeholder="ivms@igcc.com" oninput="v4()">
+      </div>
+    </div>
+    <div id="daily-log-table"></div>
+  </div>
+
+  <!-- VALIDATION -->
+  <div class="validation-panel" id="val-panel">
+    <div class="val-title">Submission checklist</div>
+    <div id="val-rows"></div>
+  </div>
+  <button class="btn-primary" id="btn-submit" onclick="submitStep()" disabled>Submit request</button>
+</div>
+
+<!-- SUCCESS -->
+<div class="success-screen" id="success-screen">
+  <div class="success-icon">✓</div>
+  <div class="success-title" id="success-title">Submitted</div>
+  <div class="success-sub" id="success-sub"></div>
+  <div class="audit-box" id="audit-box"></div>
+  <button class="btn-secondary" style="max-width:420px;margin:0 auto;" id="btn-continue" onclick="continueNext()">Continue</button>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const SHEETDB_BASE = 'https://sheetdb.io/api/v1/ssl6hipw5js5j';
+const SHEETDB_TABS = {
+  requests:    SHEETDB_BASE + '?sheet=Requests',
+  assignments: SHEETDB_BASE + '?sheet=Assignments',
+  ivms:        SHEETDB_BASE + '?sheet=IVMS',
+  daily:       SHEETDB_BASE + '?sheet=Daily_Log'
+};
+
+const CSV_CTR      = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vThe2Huy18W_ynocBDQ1FQoI45gGU18pu33KD4iibTl3VU9WppGE1HwSHmuHViVWbPXd2g0GL4Yds6w/pub?gid=0&single=true&output=csv';
+const CSV_EQUIPMENT= 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQuddYxbfTTwrn1dK0UZccQ6ONvSq76EpuYe0Pb8elh2sx3WeC2bx8Z-JVxuuV6pvRbnV8fikMWreul/pub?gid=0&single=true&output=csv';
+const CSV_VENDOR   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSK9VXWFueVbNARESyYOtWZxQD6rO77CP66yONxGarpVbiikJ9V8flS3Y22UP4d90eq_PgFWeByHl8z/pub?gid=0&single=true&output=csv';
+const CSV_SITE     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSfLmsVdtOnq7zUKzaPX7Uwd-aQ6eiONkQv30vWRS0MO-3XRZzj5liNU08LyRoII522GqAqovxo3Z5N/pub?output=csv';
+
+const INDIRECT_DEPTS = ['QAQC','HSE','Planning','House Keeping','Warehouse','Admin'];
+const EQ_TYPES = ['Excavator','Bulldozer','Crane (mobile)','Crane (tower)','Forklift','Loader','Grader','Compactor','Concrete mixer','Concrete pump','Generator','Welding machine','Air compressor','Light vehicle','Bus / crew transport','Water tanker','Fuel tanker','Flatbed truck','Dump truck','Picker / cherry picker','Scaffolding system','Dewatering pump','Other'];
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+const today   = new Date();
+const pad     = n => String(n).padStart(2,'0');
+const dateStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+const caseId  = `LOG-${today.getFullYear()}-${Math.floor(Math.random()*9000)+1000}`;
+
+document.getElementById('case-id-display').textContent = caseId;
+document.getElementById('form-ref').textContent = `CASE ${caseId}  ·  ${today.toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
+document.getElementById('req-date').value  = dateStr;
+document.getElementById('log-date').value  = dateStr;
+document.getElementById('ivms-date').value = dateStr;
+document.getElementById('log-day').value   = dateStr;
+
+let currentStep = 1;
+let deptMap     = {};
+let equipList   = [];
+let vendorList  = [];
+let caseData    = {};
+
+// ── CSV LOADERS ───────────────────────────────────────────────────────────────
+async function fetchCSV(url) {
+  const res  = await fetch(url);
+  const text = await res.text();
+  return text.trim().split('\n').slice(1)
+    .map(l => l.split(',')[0].trim().replace(/^"|"$/g,''))
+    .filter(Boolean);
+}
+
+async function loadAll() {
+  // CTR master list
+  try {
+    const res  = await fetch(CSV_CTR);
+    const text = await res.text();
+    const lines= text.trim().split('\n');
+    const headers = lines[0].split(',').map(h=>h.trim().replace(/"/g,'').toLowerCase());
+    const statusCol = headers.findIndex(h=>h.includes('status'));
+    for (let i=1;i<lines.length;i++) {
+      const cols = lines[i].match(/(".*?"|[^,\n]+)/g)||[];
+      const c    = cols.map(x=>x.trim().replace(/^"|"$/g,''));
+      const ctr  = (c[0]||'').trim(), dept=(c[2]||'').trim();
+      const status = statusCol>=0?(c[statusCol]||'').trim().toLowerCase():'ongoing';
+      if (!ctr||!dept||status!=='ongoing') continue;
+      if (!deptMap[dept]) deptMap[dept]=[];
+      deptMap[dept].push(ctr);
+    }
+  } catch(e) { console.error('CTR load failed',e); }
+
+  // Equipment list
+  try {
+    equipList = await fetchCSV(CSV_EQUIPMENT);
+  } catch(e) { equipList = []; }
+
+  // Vendor list
+  try {
+    vendorList = await fetchCSV(CSV_VENDOR);
+    document.getElementById('vendor-status').textContent = `✓ ${vendorList.length} vendors loaded`;
+    document.getElementById('vendor-status').className = 'status-ok';
+  } catch(e) {
+    document.getElementById('vendor-status').textContent = '✗ Could not load vendors';
+    document.getElementById('vendor-status').className = 'status-err';
+  }
+
+  // Site / Cost Centre list
+  try {
+    const sites = await fetchCSV(CSV_SITE);
+    const sel = document.getElementById('req-site');
+    sel.innerHTML = '<option value="">Select site / cost centre...</option>';
+    sites.forEach(s => { const o=document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o); });
+    document.getElementById('site-status').textContent = `✓ ${sites.length} sites loaded`;
+    document.getElementById('site-status').className = 'status-ok';
+  } catch(e) {
+    document.getElementById('site-status').textContent = '✗ Could not load sites';
+    document.getElementById('site-status').className = 'status-err';
+  }
+}
+
+// ── AUTOCOMPLETE ENGINE ───────────────────────────────────────────────────────
+const acLists = { vendor: ()=>vendorList, make: ()=>equipList };
+
+function filterAC(key, id='') {
+  const inputId = id ? `${key}-input-${id}` : `${key}-input`;
+  const valId   = id ? `${key}-val-${id}`   : `${key}-val`;
+  const ddId    = id ? `${key}-dd-${id}`    : `${key}-dd`;
+  const q = document.getElementById(inputId).value.trim().toLowerCase();
+  document.getElementById(valId).value = '';
+  if (id) { const el=document.getElementById(inputId); el.classList.remove('selected'); }
+  renderAC(key, id, q);
+  if (id) v2(); else v2();
+}
+
+function renderAC(key, id='', q='') {
+  const ddId = id ? `${key}-dd-${id}` : `${key}-dd`;
+  const dd   = document.getElementById(ddId);
+  if (!dd) return;
+  const list = acLists[key]?.() || [];
+  const matches = q ? list.filter(x=>x.toLowerCase().includes(q)) : list.slice(0,50);
+  if (!matches.length) {
+    dd.innerHTML=`<div class="ac-none">No match found</div>`;
+  } else {
+    dd.innerHTML = matches.map(x => {
+      const hi = q ? x.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark>$1</mark>') : x;
+      return `<div class="ac-option" data-val="${x}" onmousedown="selectAC(event,'${key}','${id}','${x.replace(/'/g,"\\'")}')"><span>${hi}</span></div>`;
+    }).join('');
+  }
+  dd.classList.add('open');
+}
+
+function openAC(key, id='') {
+  const inputId = id ? `${key}-input-${id}` : `${key}-input`;
+  const q = document.getElementById(inputId)?.value.trim().toLowerCase()||'';
+  renderAC(key, id, q);
+}
+
+function selectAC(e, key, id, val) {
+  e.preventDefault();
+  const inputId = id ? `${key}-input-${id}` : `${key}-input`;
+  const valId   = id ? `${key}-val-${id}`   : `${key}-val`;
+  const ddId    = id ? `${key}-dd-${id}`    : `${key}-dd`;
+  document.getElementById(inputId).value = val;
+  document.getElementById(inputId).classList.add('selected');
+  document.getElementById(valId).value   = val;
+  document.getElementById(ddId).classList.remove('open');
+  v2();
+}
+
+function navAC(e, key, id='') {
+  const ddId = id ? `${key}-dd-${id}` : `${key}-dd`;
+  const dd   = document.getElementById(ddId);
+  if (!dd) return;
+  const opts = dd.querySelectorAll('.ac-option');
+  let cur = [...opts].findIndex(o=>o.classList.contains('kbd'));
+  if (e.key==='ArrowDown'){e.preventDefault();if(cur>=0)opts[cur].classList.remove('kbd');cur=Math.min(cur+1,opts.length-1);if(opts[cur])opts[cur].classList.add('kbd');}
+  else if(e.key==='ArrowUp'){e.preventDefault();if(cur>=0)opts[cur].classList.remove('kbd');cur=Math.max(cur-1,0);if(opts[cur])opts[cur].classList.add('kbd');}
+  else if(e.key==='Enter'){e.preventDefault();const a=dd.querySelector('.ac-option.kbd')||dd.querySelector('.ac-option');if(a){selectAC({preventDefault:()=>{}},key,id,a.dataset.val);}}
+  else if(e.key==='Escape'){dd.classList.remove('open');}
+}
+
+document.addEventListener('click', e => {
+  document.querySelectorAll('.ac-dropdown.open').forEach(dd => {
+    if (!dd.closest('.ac-wrap').contains(e.target)) dd.classList.remove('open');
+  });
+});
+
+// ── EQUIPMENT ROWS ────────────────────────────────────────────────────────────
+let eqCount = 0;
+function addEqRow() {
+  eqCount++;
+  const id = eqCount;
+  const tr = document.createElement('tr');
+  tr.id = `eq-row-${id}`;
+  tr.innerHTML = `
+    <td>
+      <select id="eq-type-${id}" onchange="v1()" style="font-size:12px;">
+        <option value="">Select...</option>
+        ${EQ_TYPES.map(t=>`<option>${t}</option>`).join('')}
+      </select>
+    </td>
+    <td>
+      <select id="eq-rtype-${id}" onchange="onEqTypeChange(${id});v1()" style="font-size:12px;">
+        <option value="">Select...</option>
+        <option value="direct">Direct</option>
+        <option value="indirect">Indirect</option>
+      </select>
+    </td>
+    <td>
+      <select id="eq-dept-${id}" onchange="onEqDeptChange(${id});v1()" style="font-size:12px;" disabled>
+        <option value="">—</option>
+      </select>
+    </td>
+    <td>
+      <select id="eq-ctr-${id}" onchange="v1()" style="font-size:12px;" disabled>
+        <option value="">—</option>
+      </select>
+    </td>
+    <td><input type="number" id="eq-qty-${id}" min="1" max="99" value="1" style="font-size:12px;width:55px;" oninput="v1()"></td>
+    <td><input type="date" id="eq-start-${id}" value="${dateStr}" oninput="calcDur(${id});v1()" style="font-size:12px;"></td>
+    <td><input type="date" id="eq-end-${id}" oninput="calcDur(${id});v1()" style="font-size:12px;"></td>
+    <td><button class="btn-remove" onclick="removeEqRow(${id})">×</button></td>`;
+  document.getElementById('eq-body').appendChild(tr);
+  v1();
+}
+
+function onEqTypeChange(id) {
+  const rtype   = document.getElementById(`eq-rtype-${id}`).value;
+  const deptSel = document.getElementById(`eq-dept-${id}`);
+  const ctrSel  = document.getElementById(`eq-ctr-${id}`);
+  const row     = document.getElementById(`eq-row-${id}`);
+
+  deptSel.innerHTML = '<option value="">Select dept...</option>';
+  ctrSel.innerHTML  = '<option value="">—</option>';
+
+  if (rtype === 'direct') {
+    Object.keys(deptMap).sort().forEach(d => {
+      const o=document.createElement('option'); o.value=d; o.textContent=d; deptSel.appendChild(o);
+    });
+    deptSel.disabled = false;
+    ctrSel.disabled  = true;
+    ctrSel.style.opacity = '1';
+    if (row) row.style.borderLeft = '3px solid var(--info)';
+  } else if (rtype === 'indirect') {
+    INDIRECT_DEPTS.forEach(d => {
+      const o=document.createElement('option'); o.value=d; o.textContent=d; deptSel.appendChild(o);
+    });
+    deptSel.disabled = false;
+    ctrSel.innerHTML = '<option value="— Indirect">— N/A (Indirect)</option>';
+    ctrSel.disabled  = true;
+    ctrSel.style.opacity = '0.45';
+    if (row) row.style.borderLeft = '3px solid var(--warning)';
+  } else {
+    deptSel.disabled = true;
+    ctrSel.disabled  = true;
+    if (row) row.style.borderLeft = '';
+  }
+}
+
+function onEqDeptChange(id) {
+  const rtype  = document.getElementById(`eq-rtype-${id}`).value;
+  const dept   = document.getElementById(`eq-dept-${id}`).value;
+  const ctrSel = document.getElementById(`eq-ctr-${id}`);
+  if (rtype !== 'direct') return;
+  ctrSel.innerHTML = '<option value="">Select CTR...</option>';
+  (deptMap[dept]||[]).sort().forEach(c => {
+    const o=document.createElement('option'); o.value=c; o.textContent=c; ctrSel.appendChild(o);
+  });
+  ctrSel.disabled = false;
+  v1();
+}
+
+function calcDur(id) {
+  const s=document.getElementById(`eq-start-${id}`)?.value;
+  const e=document.getElementById(`eq-end-${id}`)?.value;
+  if (s&&e) {
+    const d=Math.round((new Date(e)-new Date(s))/(864e5));
+  }
+}
+
+function removeEqRow(id) { document.getElementById(`eq-row-${id}`)?.remove(); v1(); }
+
+function getEqRows() {
+  return Array.from(document.querySelectorAll('[id^="eq-row-"]')).map(r => {
+    const id = r.id.replace('eq-row-','');
+    const rtype = document.getElementById(`eq-rtype-${id}`)?.value||'';
+    const ctr   = rtype==='indirect' ? '— Indirect' : (document.getElementById(`eq-ctr-${id}`)?.value||'');
+    return {
+      type:  document.getElementById(`eq-type-${id}`)?.value||'',
+      rtype, dept: document.getElementById(`eq-dept-${id}`)?.value||'',
+      ctr,   qty:  document.getElementById(`eq-qty-${id}`)?.value||'1',
+      start: document.getElementById(`eq-start-${id}`)?.value||'',
+      end:   document.getElementById(`eq-end-${id}`)?.value||'',
+    };
+  });
+}
+
+// ── STATUS BAR ────────────────────────────────────────────────────────────────
+function updateStatus(step) {
+  for(let i=1;i<=5;i++){
+    const sc=document.getElementById(`sc${i}`), sn=document.getElementById(`sn${i}`);
+    if(i<step){sc.className='step-circle done';sc.textContent='✓';sn.className='step-name done';}
+    else if(i===step){sc.className='step-circle active';sc.textContent=i;sn.className='step-name active';}
+    else{sc.className='step-circle';sc.textContent=i;sn.className='step-name';}
+    if(i<5){document.getElementById(`conn${i}`).className=i<step?'step-connector done':'step-connector';}
+  }
+}
+
+// ── VALIDATION ────────────────────────────────────────────────────────────────
+const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
+function renderVal(checks) {
+  document.getElementById('val-rows').innerHTML = checks.map(([id,label,pass])=>`
+    <div class="val-row ${pass?'pass':'fail'}" id="vr-${id}">
+      <div class="val-dot ${pass?'pass':'fail'}" id="vd-${id}"></div>${label}
+    </div>`).join('');
+  document.getElementById('btn-submit').disabled = !checks.every(c=>c[2]);
+}
+
+function v1() {
+  const email = document.getElementById('req-email').value.trim();
+  const site  = document.getElementById('req-site').value;
+  const rows  = getEqRows();
+  renderVal([
+    ['a','Valid email address',isEmail(email)],
+    ['b','Site / Cost Centre selected',!!site],
+    ['c','At least one equipment row added',rows.length>0],
+    ['d','All rows have equipment type',rows.every(r=>r.type)],
+    ['e','All rows have resource type selected',rows.every(r=>r.rtype)],
+    ['f','All rows have department selected',rows.every(r=>r.dept)],
+    ['g','Direct rows have CTR assigned',rows.every(r=>r.rtype==='indirect'||!!r.ctr.replace('— Indirect',''))],
+    ['h','All rows have start and end dates',rows.every(r=>r.start&&r.end)],
+    ['i','End date is after start date',rows.every(r=>!r.start||!r.end||new Date(r.end)>=new Date(r.start))],
+  ]);
+}
+
+function v2() {
+  const email = document.getElementById('log-email').value.trim();
+  const own   = document.getElementById('log-ownership').value;
+  const items = getLogItems();
+  renderVal([
+    ['a','Valid logistics email',isEmail(email)],
+    ['b','Ownership selected',!!own],
+    ['c','All items have plate number',items.every(i=>i.plate)],
+    ['d','All items have make/model selected',items.every(i=>i.make)],
+  ]);
+}
+
+function getLogItems() {
+  return Array.from(document.querySelectorAll('[id^="log-item-"]')).map(r=>{
+    const id=r.id.replace('log-item-','');
+    return {
+      plate: document.getElementById(`log-plate-${id}`)?.value?.trim()||'',
+      make:  document.getElementById(`make-val-${id}`)?.value?.trim()||'',
+    };
+  });
+}
+
+function v3() {
+  const email = document.getElementById('ivms-email').value.trim();
+  const gps   = document.getElementById('ivms-gps').value;
+  const items = getIVMSItems();
+  renderVal([
+    ['a','Valid IVMS email',isEmail(email)],
+    ['b','Overall GPS status selected',!!gps],
+    ['c','All equipment items verified',items.every(i=>i.status)],
+  ]);
+}
+
+function getIVMSItems() {
+  return Array.from(document.querySelectorAll('[id^="ivms-item-"]')).map(r=>{
+    const id=r.id.replace('ivms-item-','');
+    return { status:document.getElementById(`ivms-status-${id}`)?.value||'' };
+  });
+}
+
+function v4() {
+  const date = document.getElementById('log-day').value;
+  const by   = document.getElementById('log-by').value.trim();
+  const rows = getDailyRows();
+  renderVal([
+    ['a','Log date set',!!date],
+    ['b','Valid IVMS email',isEmail(by)],
+    ['c','All equipment has status',rows.every(r=>r.status)],
+    ['d','Working equipment has start and end time',rows.every(r=>r.status==='off'||r.status==='breakdown'||(r.start&&r.end))],
+  ]);
+}
+
+function getDailyRows() {
+  return Array.from(document.querySelectorAll('[id^="daily-row-"]')).map(r=>{
+    const id  = r.id.replace('daily-row-','');
+    const s   = document.getElementById(`daily-start-${id}`)?.value||'';
+    const e   = document.getElementById(`daily-end-${id}`)?.value||'';
+    let regH=0, otH=0;
+    if (s && e) {
+      const [sh,sm]=s.split(':').map(Number),[eh,em]=e.split(':').map(Number);
+      const totalH = ((eh*60+em)-(sh*60+sm))/60;
+      regH = Math.min(totalH, REGULAR_HOURS);
+      otH  = Math.max(0, totalH - REGULAR_HOURS);
+    }
+    return {
+      status:   document.getElementById(`daily-status-${id}`)?.value||'',
+      start: s, end: e,
+      regular:  regH>0?regH.toFixed(1):'0',
+      overtime: otH>0?otH.toFixed(1):'0',
+    };
+  });
+}
+
+// ── SUBMIT ────────────────────────────────────────────────────────────────────
+async function submitStep() {
+  document.getElementById('btn-submit').disabled=true;
+  document.getElementById('btn-submit').textContent='Submitting...';
+  if(currentStep===1) await doStep1();
+  else if(currentStep===2) await doStep2();
+  else if(currentStep===3) await doStep3();
+  else if(currentStep===4) await doStep4();
+}
+
+async function doStep1() {
+  const rows = getEqRows();
+  caseData.step1 = {
+    caseId, by:document.getElementById('req-email').value.trim(),
+    date:document.getElementById('req-date').value,
+    site:document.getElementById('req-site').value,
+    remarks:document.getElementById('req-remarks').value.trim(),
+    items:rows
+  };
+  const sheetRows = rows.map(r=>({
+    'Case ID':caseId,'Submitted By':caseData.step1.by,'Request Date':caseData.step1.date,
+    'Site / Cost Centre':caseData.step1.site,'Resource Type':r.rtype,
+    'Department':r.dept,'CTR':r.ctr,'Equipment Type':r.type,'Quantity':r.qty,
+    'Start Date':r.start,'End Date':r.end,
+    'Duration (days)':r.start&&r.end?Math.round((new Date(r.end)-new Date(r.start))/864e5):'',
+    'Remarks':caseData.step1.remarks,'Status':'Pending Logistics'
+  }));
+  await save(sheetRows,'requests');
+  showSuccess('Request submitted','Handed to Logistics team',1,[
+    ['Case ID',caseId],['Submitted by',caseData.step1.by],
+    ['Site',caseData.step1.site],['Equipment rows',rows.length],['Status','Pending Logistics']
+  ]);
+}
+
+async function doStep2() {
+  const items=getLogItems();
+  caseData.step2={
+    by:document.getElementById('log-email').value.trim(),
+    date:document.getElementById('log-date').value,
+    ownership:document.getElementById('log-ownership').value,
+    vendor:document.getElementById('vendor-val').value,
+    notes:document.getElementById('log-notes').value.trim(), items
+  };
+  const sheetRows=caseData.step1.items.map((it,i)=>({
+    'Case ID':caseId,'Assigned By':caseData.step2.by,'Assignment Date':caseData.step2.date,
+    'Site / Cost Centre':caseData.step1.site,'Resource Type':it.rtype,
+    'Department':it.dept,'CTR':it.ctr,'Equipment Type':it.type,'Quantity':it.qty,
+    'Plate Number':items[i]?.plate||'','Make / Model':items[i]?.make||'',
+    'Ownership':caseData.step2.ownership,'Vendor':caseData.step2.vendor,
+    'Start Date':it.start,'End Date':it.end,'Notes':caseData.step2.notes,'Status':'Assigned'
+  }));
+  await save(sheetRows,'assignments');
+  showSuccess('Equipment assigned','Handed to IVMS team',2,[
+    ['Case ID',caseId],['Assigned by',caseData.step2.by],
+    ['Ownership',caseData.step2.ownership],['Items',items.length],['Status','Assigned']
+  ]);
+}
+
+async function doStep3() {
+  const items=getIVMSItems();
+  caseData.step3={
+    by:document.getElementById('ivms-email').value.trim(),
+    date:document.getElementById('ivms-date').value,
+    gps:document.getElementById('ivms-gps').value,
+    ref:document.getElementById('ivms-ref').value.trim(),
+    notes:document.getElementById('ivms-notes').value.trim(), items
+  };
+  const sheetRows=caseData.step1.items.map((it,i)=>({
+    'Case ID':caseId,'Verified By':caseData.step3.by,'Verification Date':caseData.step3.date,
+    'Department':it.dept,'CTR':it.ctr,'Equipment Type':it.type,
+    'Plate Number':caseData.step2.items[i]?.plate||'',
+    'Make / Model':caseData.step2.items[i]?.make||'',
+    'Item GPS Status':items[i]?.status||'',
+    'IVMS Tracking ID':document.getElementById(`ivms-tid-${i}`)?.value||'',
+    'Overall GPS':caseData.step3.gps,'IVMS Reference':caseData.step3.ref,
+    'Notes':caseData.step3.notes,'Status':'IVMS Verified'
+  }));
+  await save(sheetRows,'ivms');
+  // Check if 1-day case → complete
+  // Duration 0 = same day, 1 = consecutive days — both treated as single-day cases
+  const maxDur = Math.max(...caseData.step1.items.map(it=> {
+    if (!it.start || !it.end) return 0;
+    const diffMs = new Date(it.end) - new Date(it.start);
+    return Math.round(diffMs / 864e5); // 0 = same day, 1 = next day, etc.
+  }));
+  if (maxDur <= 1) {  // same-day or 1-day apart closes after IVMS
+    showSuccess('Case completed','1-day case — IVMS verification closes the case',3,[
+      ['Case ID',caseId],['Verified by',caseData.step3.by],
+      ['GPS status',caseData.step3.gps],['Status','Completed — 1 day']
+    ],true);
+  } else {
+    showSuccess('IVMS verified','Daily log is now active',3,[
+      ['Case ID',caseId],['Verified by',caseData.step3.by],
+      ['GPS status',caseData.step3.gps],['Status','IVMS Verified']
+    ]);
+  }
+}
+
+async function doStep4() {
+  const rows=getDailyRows();
+  const logDate=document.getElementById('log-day').value;
+  const logBy=document.getElementById('log-by').value.trim();
+  const sheetRows=rows.map((r,i)=>({
+    'Case ID':caseId,'Log Date':logDate,'Logged By':logBy,
+    'Site / Cost Centre':caseData.step1?.site||'',
+    'Department':caseData.step1?.items?.[i]?.dept||'',
+    'CTR':caseData.step1?.items?.[i]?.ctr||'',
+    'Equipment Type':caseData.step1?.items?.[i]?.type||'',
+    'Plate Number':caseData.step2?.items?.[i]?.plate||'',
+    'Make / Model':caseData.step2?.items?.[i]?.make||'',
+    'Attendance Status':r.status,
+    'Start Time':r.start||'—','End Time':r.end||'—',
+    'Regular Hours':  r.regular||'0',
+    'Overtime Hours': r.overtime||'0',
+    'Total Hours':    r.start&&r.end?calcH(r.start,r.end):'0',
+    'Status':'Daily Log Recorded'
+  }));
+  await save(sheetRows,'daily');
+  showSuccess('Daily log recorded','Equipment attendance logged for '+logDate,4,[
+    ['Case ID',caseId],['Log date',logDate],['Logged by',logBy],
+    ['Items',rows.length],['OFF items',rows.filter(r=>r.status==='off').length]
+  ],false,true);
+}
+
+function calcH(s,e){
+  const [sh,sm]=s.split(':').map(Number),[eh,em]=e.split(':').map(Number);
+  const d=(eh*60+em)-(sh*60+sm); return d>0?(d/60).toFixed(1)+' hrs':'0';
+}
+
+async function save(rows,tab){
+  try {
+    const res=await fetch(SHEETDB_TABS[tab],{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({data:rows})
+    });
+    const j=await res.json(); console.log(`SheetDB[${tab}]:`,j);
+  } catch(e){console.error('SheetDB error:',e);}
+}
+
+// ── SUCCESS / CONTINUE ────────────────────────────────────────────────────────
+function showSuccess(title,sub,step,lines,isClosed=false,isDaily=false) {
+  document.getElementById('form-container').style.display='none';
+  document.getElementById('success-screen').style.display='block';
+  document.getElementById('success-title').textContent=title;
+  document.getElementById('success-sub').textContent=`${caseId}  ·  ${sub}`;
+  document.getElementById('audit-box').innerHTML=lines.map(
+    ([k,v])=>`<div class="audit-line"><span class="audit-key">${k}</span><span class="audit-val">${v}</span></div>`
+  ).join('');
+  const btn=document.getElementById('btn-continue');
+  if(isClosed){btn.textContent='Start new case';btn.onclick=()=>location.reload();}
+  else if(isDaily){btn.textContent='Log another day';btn.onclick=()=>resetDaily();}
+  else {
+    const labels=['','Logistics step','IVMS Verification','Daily Log',''];
+    btn.textContent=`Continue to ${labels[step+1]||'next step'}`;
+    btn.onclick=()=>continueNext();
+  }
+}
+
+function continueNext(){
+  currentStep++;
+  document.getElementById('success-screen').style.display='none';
+  document.getElementById('form-container').style.display='block';
+  activateStep(currentStep);
+}
+
+function resetDaily(){
+  document.getElementById('success-screen').style.display='none';
+  document.getElementById('form-container').style.display='block';
+  document.getElementById('log-day').value='';
+  document.getElementById('log-by').value='';
+  buildDailyTable();
+  v4();
+}
+
+// ── ACTIVATE STEP ─────────────────────────────────────────────────────────────
+function activateStep(step) {
+  updateStatus(step);
+  const titles=['','Equipment Request','Logistics Assignment','IVMS Verification','Daily Attendance Log','Completed'];
+  document.getElementById('form-title').textContent=titles[step]||'';
+  ['step1','step2','step3','step4'].forEach((s,i)=>{
+    const sec=document.getElementById(`${s}-section`), n=i+1;
+    if(n<step){sec.classList.remove('locked');sec.classList.add('readonly');}
+    else if(n===step){sec.classList.remove('locked','readonly');}
+    else{sec.classList.add('locked');sec.classList.remove('readonly');}
+  });
+  if(step===2) buildStep2();
+  if(step===3) buildStep3();
+  if(step===4) buildStep4();
+  const labels=['','Submit request','Submit assignment','Submit verification','Submit daily log'];
+  document.getElementById('btn-submit').textContent=labels[step]||'Submit';
+  document.getElementById('btn-submit').disabled=true;
+  if(step===1) v1();
+  if(step===2) v2();
+  if(step===3) v3();
+  if(step===4) v4();
+}
+
+// ── BUILD STEP 2 ──────────────────────────────────────────────────────────────
+function buildStep2() {
+  const s1=caseData.step1;
+  document.getElementById('step1-readonly').innerHTML=`
+    <div class="field-row cols-3" style="margin-bottom:12px;">
+      <div class="field"><label>Requested by</label><div class="ro-field">${s1.by}</div></div>
+      <div class="field"><label>Date</label><div class="ro-field">${s1.date}</div></div>
+      <div class="field"><label>Site / Cost Centre</label><div class="ro-field ro-highlight">${s1.site}</div></div>
+    </div>
+    <div style="border:1.5px solid var(--border);border-radius:10px;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="background:var(--surface2);">
+          ${['Equipment type','Resource type','Department','CTR','Qty','Period'].map(h=>`<th style="text-align:left;font-size:11px;color:var(--label);padding:8px 12px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid var(--border);">${h}</th>`).join('')}
+        </tr></thead>
+        <tbody>${s1.items.map(it=>`<tr>
+          <td style="padding:8px 12px;font-size:13px;border-bottom:1px solid var(--border);">${it.type}</td>
+          <td style="padding:8px 12px;font-size:12px;border-bottom:1px solid var(--border);"><span style="background:${it.rtype==='direct'?'rgba(2,132,199,.1)':'rgba(217,119,6,.1)'};color:${it.rtype==='direct'?'var(--info)':'var(--warning)'};padding:2px 7px;border-radius:4px;font-size:11px;font-family:var(--mono);">${it.rtype}</span></td>
+          <td style="padding:8px 12px;font-size:13px;border-bottom:1px solid var(--border);">${it.dept}</td>
+          <td style="padding:8px 12px;font-size:12px;font-family:var(--mono);border-bottom:1px solid var(--border);">${it.ctr}</td>
+          <td style="padding:8px 12px;font-size:13px;border-bottom:1px solid var(--border);">${it.qty}</td>
+          <td style="padding:8px 12px;font-size:12px;font-family:var(--mono);border-bottom:1px solid var(--border);">${it.start} → ${it.end}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+
+  document.getElementById('log-items').innerHTML=s1.items.map((it,i)=>`
+    <div id="log-item-${i}" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:600;color:var(--accent);font-family:var(--mono);margin-bottom:12px;">
+        ${it.qty}× ${it.type} &nbsp;·&nbsp; <span style="color:var(--muted)">${it.dept} / ${it.ctr}</span>
+      </div>
+      <div class="field-row cols-2">
+        <div class="field">
+          <label>Plate number <span class="required">*</span></label>
+          <input type="text" id="log-plate-${i}" placeholder="e.g. 12345 Baghdad" oninput="v2()">
+        </div>
+        <div class="field">
+          <label>Make / model <span class="required">*</span></label>
+          <div class="ac-wrap">
+            <input type="text" class="ac-input" id="make-input-${i}" placeholder="Search model..."
+              oninput="filterAC('make','${i}')" onfocus="openAC('make','${i}')" onkeydown="navAC(event,'make','${i}')" autocomplete="off">
+            <input type="hidden" id="make-val-${i}">
+            <div class="ac-dropdown" id="make-dd-${i}"></div>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── BUILD STEP 3 ──────────────────────────────────────────────────────────────
+function buildStep3() {
+  const s2=caseData.step2;
+  document.getElementById('step2-readonly').innerHTML=`
+    <div class="field-row cols-2" style="margin-bottom:12px;">
+      <div class="field"><label>Assigned by</label><div class="ro-field">${s2.by}</div></div>
+      <div class="field"><label>Ownership</label><div class="ro-field ro-highlight">${s2.ownership}${s2.vendor?' — '+s2.vendor:''}</div></div>
+    </div>
+    <div style="border:1.5px solid var(--border);border-radius:10px;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="background:var(--surface2);">
+          ${['Equipment type','Plate','Make / model','CTR','Period'].map(h=>`<th style="text-align:left;font-size:11px;color:var(--label);padding:8px 12px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid var(--border);">${h}</th>`).join('')}
+        </tr></thead>
+        <tbody>${caseData.step1.items.map((it,i)=>`<tr>
+          <td style="padding:8px 12px;font-size:13px;border-bottom:1px solid var(--border);">${it.type}</td>
+          <td style="padding:8px 12px;font-size:12px;font-family:var(--mono);border-bottom:1px solid var(--border);">${s2.items[i]?.plate||'—'}</td>
+          <td style="padding:8px 12px;font-size:13px;border-bottom:1px solid var(--border);">${s2.items[i]?.make||'—'}</td>
+          <td style="padding:8px 12px;font-size:12px;font-family:var(--mono);border-bottom:1px solid var(--border);">${it.ctr}</td>
+          <td style="padding:8px 12px;font-size:12px;font-family:var(--mono);border-bottom:1px solid var(--border);">${it.start} → ${it.end}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+
+  document.getElementById('ivms-items').innerHTML=caseData.step1.items.map((it,i)=>`
+    <div id="ivms-item-${i}" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:600;color:#7c3aed;font-family:var(--mono);margin-bottom:10px;">
+        ${it.type} &nbsp;·&nbsp; ${caseData.step2.items[i]?.plate||'—'} &nbsp;·&nbsp; ${caseData.step2.items[i]?.make||'—'}
+      </div>
+      <div class="field-row cols-2">
+        <div class="field"><label>Item GPS status <span class="required">*</span></label>
+          <select id="ivms-status-${i}" onchange="v3()">
+            <option value="">Select...</option>
+            <option value="on-site">On site — GPS confirmed</option>
+            <option value="late-arrival">Late arrival</option>
+            <option value="early-departure">Early departure</option>
+            <option value="not-detected">Not detected in IVMS</option>
+          </select></div>
+        <div class="field"><label>IVMS tracking ID</label>
+          <input type="text" id="ivms-tid-${i}" placeholder="Tracking ID"></div>
+      </div>
+    </div>`).join('');
+}
+
+// ── BUILD STEP 4 ──────────────────────────────────────────────────────────────
+function buildStep4() { buildDailyTable(); }
+
+function buildDailyTable() {
+  document.getElementById('daily-log-table').innerHTML=`
+    <div class="daily-wrap">
+      <table class="daily-table">
+        <thead><tr>
+          <th style="width:16%">Equipment type</th>
+          <th style="width:13%">Plate</th>
+          <th style="width:12%">Status</th>
+          <th style="width:12%">Start time</th>
+          <th style="width:12%">End time</th>
+          <th style="width:10%">Reg. hours</th>
+          <th style="width:10%">Overtime</th>
+          <th style="width:9%">CTR</th>
+        </tr></thead>
+        <tbody id="daily-body"></tbody>
+      </table>
+    </div>`;
+  const tbody=document.getElementById('daily-body');
+  caseData.step1.items.forEach((it,i)=>{
+    const plate=caseData.step2?.items?.[i]?.plate||`Item ${i+1}`;
+    const tr=document.createElement('tr'); tr.id=`daily-row-${i}`;
+    tr.innerHTML=`
+      <td>${it.type}</td>
+      <td style="font-family:var(--mono);font-size:11px;">${plate}</td>
+      <td><select id="daily-status-${i}" onchange="onDayStatus(${i});v4()" style="font-size:12px;">
+        <option value="">Select...</option>
+        <option value="working">Working</option>
+        <option value="standby">Standby</option>
+        <option value="off">OFF</option>
+        <option value="breakdown">Breakdown</option>
+      </select></td>
+      <td><input type="time" id="daily-start-${i}" oninput="calcDayH(${i});v4()" style="font-size:12px;"></td>
+      <td><input type="time" id="daily-end-${i}" oninput="calcDayH(${i});v4()" style="font-size:12px;"></td>
+      <td><span id="daily-hrs-${i}" style="font-size:12px;color:var(--text);font-family:var(--mono);font-weight:500;">—</span></td>
+      <td><span id="daily-ot-${i}" style="font-size:12px;color:var(--warning);font-family:var(--mono);font-weight:600;">—</span></td>
+      <td style="font-size:11px;font-family:var(--mono);color:var(--muted);">${it.ctr.length>15?it.ctr.slice(0,14)+'…':it.ctr}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function onDayStatus(i){
+  const s     = document.getElementById(`daily-status-${i}`).value;
+  const isOff = s==='off'||s==='breakdown';
+  document.getElementById(`daily-start-${i}`).disabled = isOff;
+  document.getElementById(`daily-end-${i}`).disabled   = isOff;
+  const hrs = document.getElementById(`daily-hrs-${i}`);
+  const ot  = document.getElementById(`daily-ot-${i}`);
+  if (isOff) {
+    document.getElementById(`daily-start-${i}`).value = '';
+    document.getElementById(`daily-end-${i}`).value   = '';
+    if (hrs) { hrs.textContent = s.toUpperCase(); hrs.style.color='var(--muted)'; }
+    if (ot)  { ot.textContent  = '—'; }
+  } else {
+    if (hrs) hrs.textContent = '—';
+    if (ot)  ot.textContent  = '—';
+  }
+}
+
+const REGULAR_HOURS = 10; // Standard working day
+
+function calcDayH(i){
+  const s  = document.getElementById(`daily-start-${i}`)?.value;
+  const e  = document.getElementById(`daily-end-${i}`)?.value;
+  const hrs = document.getElementById(`daily-hrs-${i}`);
+  const ot  = document.getElementById(`daily-ot-${i}`);
+  if (!hrs) return;
+  if (s && e) {
+    const [sh,sm] = s.split(':').map(Number);
+    const [eh,em] = e.split(':').map(Number);
+    const totalMins = (eh*60+em) - (sh*60+sm);
+    if (totalMins <= 0) { hrs.textContent='—'; ot.textContent='—'; return; }
+    const totalHrs  = totalMins / 60;
+    const regHrs    = Math.min(totalHrs, REGULAR_HOURS);
+    const otHrs     = Math.max(0, totalHrs - REGULAR_HOURS);
+    hrs.textContent = regHrs.toFixed(1) + ' hrs';
+    hrs.style.color = 'var(--success)';
+    if (otHrs > 0) {
+      ot.textContent  = otHrs.toFixed(1) + ' hrs';
+      ot.style.color  = 'var(--warning)';
+    } else {
+      ot.textContent = '—';
+      ot.style.color = 'var(--muted)';
+    }
+  } else {
+    hrs.textContent = '—';
+    if (ot) ot.textContent = '—';
+  }
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+loadAll();
+activateStep(1);
+addEqRow();
+</script>
+</body>
+</html>

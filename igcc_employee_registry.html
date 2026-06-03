@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IGCC — Employee Registry</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--surface2:#f8fafc;--border:#dde3ed;
+  --accent:#0284c7;--accent-dim:rgba(2,132,199,0.08);--accent-mid:rgba(2,132,199,0.15);
+  --success:#16a34a;--danger:#dc2626;--warning:#d97706;--info:#0284c7;
+  --text:#0f172a;--muted:#64748b;--label:#475569;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 6px rgba(0,0,0,.07);
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;}
+
+/* HEADER */
+.header{background:#fff;border-bottom:2px solid var(--accent);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.header-left{display:flex;align-items:center;gap:12px;}
+.logo-badge{background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;letter-spacing:.05em;}
+.header-title{font-size:13px;font-weight:500;color:var(--label);}
+
+/* TABS */
+.tabs{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:0;box-shadow:var(--shadow);}
+.tab{padding:14px 20px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;user-select:none;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* CONTAINER */
+.container{max-width:1000px;margin:0 auto;padding:24px 20px 60px;}
+
+/* SECTION */
+.section{background:#fff;border:1px solid var(--border);border-radius:12px;padding:22px 26px;margin-bottom:16px;box-shadow:var(--shadow);}
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--bg);}
+.section-num{width:24px;height:24px;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--mono);flex-shrink:0;}
+.section-title{font-size:13px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:.07em;}
+
+/* FIELDS */
+.field-row{display:grid;gap:16px;margin-bottom:14px;}
+.field-row.cols-2{grid-template-columns:1fr 1fr;}
+.field-row.cols-3{grid-template-columns:1fr 1fr 1fr;}
+.field-row.cols-4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:5px;}
+label{font-size:11px;font-weight:600;color:var(--label);letter-spacing:.06em;text-transform:uppercase;}
+.required{color:var(--danger);}
+input,select,textarea{background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:14px;padding:10px 12px;transition:border-color .15s,box-shadow .15s;outline:none;width:100%;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(2,132,199,.12);}
+input[readonly]{background:var(--surface2);color:var(--muted);cursor:not-allowed;}
+select option{background:#fff;}
+.field-hint{font-size:11px;color:var(--muted);font-family:var(--mono);}
+
+/* ID BADGE */
+.id-preview{background:var(--accent-dim);border:1.5px solid rgba(2,132,199,.25);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:18px;font-weight:600;color:var(--accent);text-align:center;letter-spacing:.08em;}
+
+/* PAY RATE CONDITIONAL */
+.pay-monthly{display:none;}
+.pay-daily{display:none;}
+.pay-monthly.show,.pay-daily.show{display:grid;}
+
+/* VALIDATION */
+.validation-panel{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:16px;box-shadow:var(--shadow);}
+.val-title{font-size:11px;font-weight:600;color:var(--label);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;}
+.val-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);padding:3px 0;font-family:var(--mono);}
+.val-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;}
+.val-dot.pass{background:var(--success);}
+.val-dot.fail{background:var(--danger);}
+.val-row.pass{color:var(--success);}
+.val-row.fail{color:var(--danger);}
+
+/* BUTTONS */
+.btn-primary{background:var(--accent);border:none;border-radius:10px;color:#fff;cursor:pointer;font-family:var(--sans);font-size:15px;font-weight:600;padding:14px 32px;width:100%;transition:all .15s;box-shadow:0 2px 4px rgba(2,132,199,.3);}
+.btn-primary:hover{background:#0369a1;}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+.btn-secondary{background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--label);cursor:pointer;font-family:var(--sans);font-size:13px;padding:8px 18px;transition:all .15s;}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+.divider{border:none;border-top:1.5px solid var(--bg);margin:16px 0;}
+
+/* SUCCESS */
+.success-screen{display:none;text-align:center;padding:50px 20px;}
+.success-icon{width:64px;height:64px;background:rgba(22,163,74,.1);border:2px solid var(--success);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px;color:var(--success);}
+.success-title{font-size:20px;font-weight:700;margin-bottom:8px;}
+.success-sub{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:24px;}
+.emp-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:20px;max-width:520px;margin:0 auto 24px;box-shadow:var(--shadow);text-align:left;}
+.emp-card-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.emp-avatar{width:52px;height:52px;background:var(--accent-dim);border:2px solid rgba(2,132,199,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--accent);font-family:var(--mono);}
+.emp-name{font-size:16px;font-weight:600;color:var(--text);}
+.emp-id{font-size:12px;font-family:var(--mono);color:var(--muted);}
+.emp-details{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.emp-detail-item{display:flex;flex-direction:column;gap:2px;}
+.emp-detail-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.emp-detail-value{font-size:13px;color:var(--text);font-weight:500;}
+
+/* SEARCH DASHBOARD */
+.search-bar{display:flex;gap:10px;margin-bottom:20px;}
+.search-input{flex:1;background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:14px;padding:10px 14px;outline:none;transition:border-color .15s,box-shadow .15s;}
+.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(2,132,199,.12);}
+.filter-select{background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:13px;padding:10px 12px;outline:none;cursor:pointer;min-width:140px;}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 18px;box-shadow:var(--shadow);}
+.stat-num{font-family:var(--mono);font-size:28px;font-weight:600;line-height:1;margin-bottom:4px;}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.stat-blue{color:var(--accent);}
+.stat-green{color:var(--success);}
+.stat-orange{color:var(--warning);}
+.stat-gray{color:var(--muted);}
+
+/* EMPLOYEE TABLE */
+.emp-table-wrap{border:1.5px solid var(--border);border-radius:10px;overflow:hidden;}
+.emp-table{width:100%;border-collapse:collapse;}
+.emp-table thead tr{background:var(--surface2);}
+.emp-table th{text-align:left;font-size:11px;font-weight:600;color:var(--label);letter-spacing:.06em;text-transform:uppercase;padding:11px 14px;border-bottom:1.5px solid var(--border);cursor:pointer;user-select:none;}
+.emp-table th:hover{color:var(--accent);}
+.emp-table td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+.emp-table tbody tr:last-child td{border-bottom:none;}
+.emp-table tbody tr:hover{background:var(--surface2);}
+
+/* BADGES */
+.badge{display:inline-block;font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:20px;font-weight:500;}
+.badge-permanent{background:rgba(22,163,74,.1);color:var(--success);border:1px solid rgba(22,163,74,.2);}
+.badge-fixed{background:rgba(2,132,199,.1);color:var(--accent);border:1px solid rgba(2,132,199,.2);}
+.badge-probation{background:rgba(217,119,6,.1);color:var(--warning);border:1px solid rgba(217,119,6,.2);}
+.badge-daily{background:rgba(100,116,139,.1);color:var(--muted);border:1px solid rgba(100,116,139,.2);}
+.badge-active{background:rgba(22,163,74,.1);color:var(--success);border:1px solid rgba(22,163,74,.2);}
+.badge-inactive{background:rgba(220,38,38,.08);color:var(--danger);border:1px solid rgba(220,38,38,.2);}
+.badge-iraqi{background:rgba(2,132,199,.08);color:var(--accent);border:1px solid rgba(2,132,199,.2);}
+.badge-expat{background:rgba(124,58,237,.08);color:#7c3aed;border:1px solid rgba(124,58,237,.2);}
+
+/* EMPLOYEE DETAIL MODAL (inline) */
+.emp-detail-panel{display:none;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:22px;margin-top:12px;box-shadow:var(--shadow-md);}
+.emp-detail-panel.open{display:block;}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;}
+
+.hidden{display:none!important;}
+
+/* Searchable select */
+.ss-wrap{position:relative;width:100%;}
+.ss-input{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:14px;padding:10px 12px;outline:none;transition:border-color .15s,box-shadow .15s;cursor:pointer;}
+.ss-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(2,132,199,.12);}
+.ss-input.selected{border-color:var(--success);}
+.ss-input:disabled{background:var(--surface2);color:var(--muted);cursor:not-allowed;}
+.ss-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--accent);border-radius:10px;z-index:9999;display:none;box-shadow:0 4px 12px rgba(0,0,0,.1);}
+.ss-dropdown.open{display:block;}
+.ss-search{width:100%;border:none;border-bottom:1px solid var(--border);padding:8px 12px;font-size:13px;outline:none;border-radius:10px 10px 0 0;font-family:var(--sans);}
+.ss-list{max-height:200px;overflow-y:auto;}
+.ss-option{padding:8px 12px;font-size:13px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);}
+.ss-option:last-child{border-bottom:none;}
+.ss-option:hover,.ss-option.active{background:var(--accent-dim);color:var(--accent);}
+.ss-option mark{background:none;color:var(--accent);font-weight:700;}
+.ss-none{padding:8px 12px;font-size:12px;color:var(--muted);font-family:var(--mono);}
+@media(max-width:640px){.field-row.cols-2,.field-row.cols-3,.field-row.cols-4{grid-template-columns:1fr;}.stats-row{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="logo-badge">IGCC</span>
+    <span class="header-title">Human Resources · Employee Registry</span>
+  </div>
+  <button class="btn-secondary" onclick="exportCSV()">↓ Export CSV</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" id="tab-search" onclick="switchTab('search')">Employee Directory</div>
+  <div class="tab" id="tab-add" onclick="switchTab('add')">Add New Employee</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- TAB 1: SEARCH / DIRECTORY -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="container" id="view-search">
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num stat-blue" id="stat-total">—</div><div class="stat-label">Total employees</div></div>
+    <div class="stat-card"><div class="stat-num stat-green" id="stat-active">—</div><div class="stat-label">Active</div></div>
+    <div class="stat-card"><div class="stat-num stat-orange" id="stat-expat">—</div><div class="stat-label">Expats</div></div>
+    <div class="stat-card"><div class="stat-num stat-gray" id="stat-sites">—</div><div class="stat-label">Sites</div></div>
+  </div>
+
+  <div class="section">
+    <div style="display:flex;gap:10px;margin-bottom:10px;">
+      <input type="text" class="search-input" id="search-input" placeholder="Search by name, ID, position, department, site..." oninput="filterTable()" style="flex:1;">
+      <button class="btn-secondary" onclick="clearFilters()" style="white-space:nowrap;font-size:12px;">✕ Clear filters</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px;">
+      <select class="filter-select" id="filter-dept" onchange="filterTable()">
+        <option value="">All departments</option>
+      </select>
+      <select class="filter-select" id="filter-contract" onchange="filterTable()">
+        <option value="">All contracts</option>
+        <option>Rotation</option>
+        <option>Fixed-term contract</option>
+        <option>Daily Wages</option>
+      </select>
+      <select class="filter-select" id="filter-status" onchange="filterTable()">
+        <option value="">All statuses</option>
+        <option>Active</option>
+        <option>Inactive</option>
+      </select>
+      <select class="filter-select" id="filter-nationality" onchange="filterTable()">
+        <option value="">All nationalities</option>
+        <option>Iraqi</option>
+        <option>Expat</option>
+      </select>
+      <select class="filter-select" id="filter-site" onchange="filterTable()">
+        <option value="">All sites</option>
+      </select>
+      <select class="filter-select" id="filter-gender" onchange="filterTable()">
+        <option value="">All genders</option>
+        <option>Male</option>
+        <option>Female</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <label style="font-size:11px;color:var(--label);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;">Start date from</label>
+        <input type="date" id="filter-start-from" onchange="filterTable()" style="flex:1;padding:7px 10px;font-size:12px;">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <label style="font-size:11px;color:var(--label);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;">Start date to</label>
+        <input type="date" id="filter-start-to" onchange="filterTable()" style="flex:1;padding:7px 10px;font-size:12px;">
+      </div>
+      <select class="filter-select" id="filter-emptype" onchange="filterTable()">
+        <option value="">All employment types</option>
+        <option>Full-time</option>
+        <option>Part-time</option>
+      </select>
+    </div>
+    <div id="filter-summary" style="font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;"></div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <span id="filter-count" style="font-size:12px;color:var(--muted);font-family:var(--mono);"></span>
+    </div>
+    <div class="emp-table-wrap">
+      <table class="emp-table">
+        <thead>
+          <tr>
+            <th onclick="sortTable('id')">Employee ID ↕</th>
+            <th onclick="sortTable('name')">Full name ↕</th>
+            <th onclick="sortTable('position')">Position</th>
+            <th onclick="sortTable('dept')">Department</th>
+            <th onclick="sortTable('site')">Site</th>
+            <th onclick="sortTable('contract')">Contract</th>
+            <th onclick="sortTable('nationality')">Nationality</th>
+            <th onclick="sortTable('status')">Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="emp-table-body"></tbody>
+      </table>
+    </div>
+    <div id="table-empty" class="empty-state hidden">No employees found matching your search.</div>
+    <div id="table-loading" class="empty-state">⟳ Loading employee data...</div>
+  </div>
+
+  <!-- Employee detail expand panel -->
+  <div class="emp-detail-panel" id="detail-panel"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- TAB 2: ADD EMPLOYEE -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="container hidden" id="view-add">
+
+  <!-- SUCCESS SCREEN -->
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">✓</div>
+    <div class="success-title">Employee registered</div>
+    <div class="success-sub" id="success-sub"></div>
+    <div class="emp-card" id="success-card"></div>
+    <div style="display:flex;gap:10px;max-width:520px;margin:0 auto;">
+      <button class="btn-primary" style="flex:1;" onclick="resetForm()">Add another employee</button>
+      <button class="btn-secondary" style="flex:1;" onclick="switchTab('search')">View directory</button>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div id="add-form">
+
+    <!-- SECTION 1: IDENTITY -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">1</div>
+        <div class="section-title">Employee Identity</div>
+      </div>
+      <div class="field-row cols-3">
+        <div class="field">
+          <label>Employee ID <span class="required">*</span></label>
+          <div class="id-preview" id="id-preview">IG—</div>
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <input type="text" id="emp-id" placeholder="e.g. IG0042" oninput="updateIdPreview();validate()" style="flex:1;">
+            <button class="btn-secondary" onclick="autoGenerateId()" style="white-space:nowrap;font-size:12px;">Auto-generate</button>
+          </div>
+          <span class="field-hint">Existing: IG + sequence · New: auto-generate</span>
+        </div>
+        <div class="field">
+          <label>Full name (English) <span class="required">*</span></label>
+          <input type="text" id="emp-name-en" placeholder="First Middle Last" oninput="validate()">
+        </div>
+        <div class="field">
+          <label>Full name (Arabic)</label>
+          <input type="text" id="emp-name-ar" placeholder="الاسم الكامل" dir="rtl">
+        </div>
+      </div>
+      <div class="field-row cols-4">
+        <div class="field">
+          <label>Date of birth</label>
+          <input type="date" id="emp-dob">
+        </div>
+        <div class="field">
+          <label>Gender</label>
+          <select id="emp-gender">
+            <option value="">Select...</option>
+            <option>Male</option>
+            <option>Female</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Nationality <span class="required">*</span></label>
+          <select id="emp-nationality" onchange="validate()">
+            <option value="">Select...</option>
+            <option>Iraqi</option>
+            <option>Expat</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Country (if expat)</label>
+          <input type="text" id="emp-country" placeholder="e.g. Philippines">
+        </div>
+      </div>
+      <div class="field-row cols-3">
+        <div class="field">
+          <label>National ID / Passport</label>
+          <input type="text" id="emp-nid" placeholder="ID or passport number">
+        </div>
+        <div class="field">
+          <label>Phone number</label>
+          <input type="tel" id="emp-phone" placeholder="+964 7xx xxx xxxx">
+        </div>
+        <div class="field">
+          <label>Personal email</label>
+          <input type="email" id="emp-email" placeholder="name@email.com">
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: POSITION -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">2</div>
+        <div class="section-title">Position & Assignment</div>
+      </div>
+      <div class="field-row cols-3">
+        <div class="field">
+          <label>Position / job title <span class="required">*</span></label>
+          <select id="emp-position" onchange="validate()">
+            <option value="">Loading positions...</option>
+          </select>
+          <span id="pos-status" class="field-hint">⟳ Loading...</span>
+        </div>
+        <div class="field">
+          <label>Department <span class="required">*</span></label>
+          <select id="emp-dept" onchange="validate()">
+            <option value="">Loading departments...</option>
+          </select>
+          <span id="dept-status" class="field-hint">⟳ Loading...</span>
+        </div>
+        <div class="field">
+          <label>Site / Cost Centre <span class="required">*</span></label>
+          <select id="emp-site" onchange="validate()">
+            <option value="">Loading sites...</option>
+          </select>
+          <span id="site-status" class="field-hint">⟳ Loading...</span>
+        </div>
+      </div>
+      <div class="field-row cols-3">
+        <div class="field">
+          <label>Reports to (manager) <span class="required">*</span></label>
+          <select id="emp-manager" onchange="validate()">
+            <option value="">Select manager...</option>
+            <option value="CEO">CEO — Chief Executive Officer</option>
+          </select>
+          <span class="field-hint">CEO is always available · others loaded from active employees</span>
+        </div>
+        <div class="field">
+          <label>Employment type</label>
+          <select id="emp-emptype">
+            <option value="">Select...</option>
+            <option>Full-time</option>
+            <option>Part-time</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select id="emp-status">
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: CONTRACT -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">3</div>
+        <div class="section-title">Contract Details</div>
+      </div>
+      <div class="field-row cols-3">
+        <div class="field">
+          <label>Contract type <span class="required">*</span></label>
+          <select id="emp-contract" onchange="onContractChange();validate()">
+            <option value="">Select...</option>
+            <option>Rotation</option>
+            <option>Fixed-term contract</option>
+            <option>Daily Wages</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Start date <span class="required">*</span></label>
+          <input type="date" id="emp-start" oninput="validate()">
+        </div>
+        <div class="field" id="end-date-field">
+          <label>Contract end date</label>
+          <input type="date" id="emp-end">
+          <span class="field-hint">Required for Fixed-term contract</span>
+        </div>
+        <div class="field hidden" id="rotation-days-field">
+          <label>Monthly days off <span class="required">*</span></label>
+          <input type="number" id="emp-rotation-days" min="1" max="31" placeholder="e.g. 28" oninput="validate()">
+          <span class="field-hint">Number of days off per month (rotation schedule)</span>
+        </div>
+      </div>
+
+      <!-- PAY RATE — Monthly -->
+      <div class="field-row cols-3 pay-monthly" id="pay-monthly">
+        <div class="field">
+          <label>Monthly salary (USD) <span class="required">*</span></label>
+          <input type="number" id="emp-salary" placeholder="0.00" min="0" step="0.01" oninput="validate()">
+        </div>
+        <div class="field">
+          <label>Currency</label>
+          <select id="emp-currency">
+            <option>USD</option>
+            <option>IQD</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Payment method</label>
+          <select id="emp-paymethod">
+            <option value="">Select...</option>
+            <option>Bank transfer</option>
+            <option>Cash</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- PAY RATE — Daily -->
+      <div class="field-row cols-3 pay-daily" id="pay-daily">
+        <div class="field">
+          <label>Daily rate (USD) <span class="required">*</span></label>
+          <input type="number" id="emp-daily-rate" placeholder="0.00" min="0" step="0.01" oninput="validate()">
+        </div>
+        <div class="field">
+          <label>Currency</label>
+          <select id="emp-daily-currency">
+            <option>USD</option>
+            <option>IQD</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Overtime rate (per hour)</label>
+          <input type="number" id="emp-ot-rate" placeholder="0.00" min="0" step="0.01">
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: EMERGENCY CONTACT -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">4</div>
+        <div class="section-title">Emergency Contact</div>
+      </div>
+      <div class="field-row cols-3">
+        <div class="field">
+          <label>Contact name</label>
+          <input type="text" id="ec-name" placeholder="Full name">
+        </div>
+        <div class="field">
+          <label>Relationship</label>
+          <select id="ec-rel">
+            <option value="">Select...</option>
+            <option>Spouse</option>
+            <option>Parent</option>
+            <option>Sibling</option>
+            <option>Child</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Phone number</label>
+          <input type="tel" id="ec-phone" placeholder="+964 7xx xxx xxxx">
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: NOTES -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">5</div>
+        <div class="section-title">Notes</div>
+      </div>
+      <div class="field">
+        <label>HR notes</label>
+        <textarea id="emp-notes" rows="2" placeholder="Any additional information, qualifications, certifications..."></textarea>
+      </div>
+    </div>
+
+    <!-- VALIDATION -->
+    <div class="validation-panel">
+      <div class="val-title">Registration checklist</div>
+      <div id="val-rows"></div>
+    </div>
+    <button class="btn-primary" id="btn-submit" onclick="submitEmployee()" disabled>Register employee</button>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+// Paste your Apps Script Web App URL here after deployment
+const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbyWr4pGHzsdUvfHARGhEtTaVNPn3tf4-7YZZLgys0B2KlyR-q1_REOvRvINgUODkW32/exec';
+
+const CSV_POSITIONS= 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQuddYxbfTTwrn1dK0UZccQ6ONvSq76EpuYe0Pb8elh2sx3WeC2bx8Z-JVxuuV6pvRbnV8fikMWreul/pub?gid=0&single=true&output=csv';
+const CSV_SITES    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSfLmsVdtOnq7zUKzaPX7Uwd-aQ6eiONkQv30vWRS0MO-3XRZzj5liNU08LyRoII522GqAqovxo3Z5N/pub?output=csv';
+const CSV_CTR      = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vThe2Huy18W_ynocBDQ1FQoI45gGU18pu33KD4iibTl3VU9WppGE1HwSHmuHViVWbPXd2g0GL4Yds6w/pub?gid=0&single=true&output=csv';
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let employees     = [];
+let sortCol       = 'id';
+let sortDir       = 1;
+let openDetailId  = null;
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+const today = new Date();
+const pad   = n => String(n).padStart(2,'0');
+document.getElementById('emp-start').value =
+  `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+
+async function fetchCSVCol(url, col=0) {
+  const res  = await fetch(url);
+  const text = await res.text();
+  return text.trim().split('\n').slice(1)
+    .map(l => l.split(',')[col].trim().replace(/^"|"$/g,''))
+    .filter(Boolean);
+}
+
+// ── SEARCHABLE SELECT ─────────────────────────────────────────────────────────
+function buildSearchableSelect(targetEl, items, placeholder='Search...') {
+  // Replace a select element with a searchable input + dropdown
+  const wrap = document.createElement('div');
+  wrap.className = 'ss-wrap';
+  const originalId = targetEl.id;
+
+  wrap.innerHTML = `
+    <input type="text" class="ss-input" id="ss-input-${originalId}"
+      placeholder="${placeholder}" autocomplete="off" readonly
+      onclick="openSS('${originalId}')" onkeydown="navSS(event,'${originalId}')">
+    <input type="hidden" id="${originalId}">
+    <div class="ss-dropdown" id="ss-dd-${originalId}">
+      <input type="text" class="ss-search" id="ss-search-${originalId}"
+        placeholder="Type to search..." oninput="filterSS('${originalId}')">
+      <div class="ss-list" id="ss-list-${originalId}"></div>
+    </div>`;
+
+  targetEl.replaceWith(wrap);
+  wrap._items = items;
+
+  renderSSList(originalId, items, '');
+}
+
+function renderSSList(id, items, q) {
+  const list = document.getElementById(`ss-list-${id}`);
+  if (!list) return;
+  const matches = q ? items.filter(x=>x.toLowerCase().includes(q.toLowerCase())) : items;
+  if (!matches.length) {
+    list.innerHTML = `<div class="ss-none">No match found</div>`;
+    return;
+  }
+  list.innerHTML = matches.map(x => {
+    const hi = q ? x.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark>$1</mark>') : x;
+    return `<div class="ss-option" data-val="${x}" onmousedown="selectSS(event,'${id}','${x.replace(/'/g,"\'")}')"><span>${hi}</span></div>`;
+  }).join('');
+}
+
+function openSS(id) {
+  document.querySelectorAll('.ss-dropdown.open').forEach(d => {
+    if (d.id !== `ss-dd-${id}`) d.classList.remove('open');
+  });
+  const dd = document.getElementById(`ss-dd-${id}`);
+  if (!dd) return;
+  dd.classList.toggle('open');
+  if (dd.classList.contains('open')) {
+    const search = document.getElementById(`ss-search-${id}`);
+    if (search) { search.value=''; setTimeout(()=>search.focus(),50); }
+    const wrap = dd.closest('.ss-wrap');
+    renderSSList(id, wrap?._items||[], '');
+  }
+}
+
+function filterSS(id) {
+  const q    = document.getElementById(`ss-search-${id}`)?.value||'';
+  const wrap = document.getElementById(`ss-dd-${id}`)?.closest('.ss-wrap');
+  renderSSList(id, wrap?._items||[], q);
+}
+
+function selectSS(e, id, val) {
+  e.preventDefault();
+  document.getElementById(`ss-input-${id}`).value = val;
+  document.getElementById(`ss-input-${id}`).classList.add('selected');
+  document.getElementById(id).value = val;
+  document.getElementById(`ss-dd-${id}`).classList.remove('open');
+  validate();
+}
+
+function navSS(e, id) {
+  if (e.key==='Enter'||e.key===' ') { e.preventDefault(); openSS(id); }
+  if (e.key==='Escape') { document.getElementById(`ss-dd-${id}`)?.classList.remove('open'); }
+}
+
+document.addEventListener('click', e => {
+  document.querySelectorAll('.ss-dropdown.open').forEach(dd => {
+    if (!dd.closest('.ss-wrap')?.contains(e.target)) dd.classList.remove('open');
+  });
+});
+
+// ── MASTER LISTS ──────────────────────────────────────────────────────────────
+async function loadMasterLists() {
+  // Positions — comprehensive O&G construction list
+  const POSITIONS_LIST = [
+    // Project & Construction Management
+    'Project Director','Project Manager','Deputy Project Manager',
+    'Construction Manager','Deputy Construction Manager',
+    'Site Manager','Resident Engineer','Field Engineer',
+    // Engineering
+    'Civil Engineer','Senior Civil Engineer','Junior Civil Engineer',
+    'Mechanical Engineer','Senior Mechanical Engineer','Junior Mechanical Engineer',
+    'Electrical Engineer','Senior Electrical Engineer','Junior Electrical Engineer',
+    'Instrument Engineer','Senior Instrument Engineer','Junior Instrument Engineer',
+    'Piping Engineer','Senior Piping Engineer',
+    'Structural Engineer','Senior Structural Engineer',
+    'Process Engineer','Senior Process Engineer',
+    'Pipeline Engineer','Subsea Engineer',
+    'Commissioning Engineer','Pre-commissioning Engineer',
+    'Rotating Equipment Engineer','Static Equipment Engineer',
+    'HVAC Engineer','Fire Protection Engineer',
+    'Corrosion Engineer','Materials Engineer',
+    'Welding Engineer','NDT Engineer',
+    // Planning & Cost Control
+    'Planning Manager','Senior Planner','Planner',
+    'Scheduler','Planning Engineer',
+    'Cost Control Manager','Cost Control Lead','Cost Control Engineer',
+    'Cost Control Officer','Quantity Surveyor','Senior Quantity Surveyor',
+    'Estimator','Budget Analyst',
+    // HSE
+    'HSE Manager','HSE Lead','HSE Supervisor',
+    'HSE Officer','Senior HSE Officer','Junior HSE Officer',
+    'Safety Officer','Safety Supervisor',
+    'Environmental Officer','Industrial Hygienist',
+    'Fire Safety Officer','Rescue Team Leader',
+    'First Aider','Medic','Site Nurse','Site Doctor',
+    // Quality
+    'QA/QC Manager','QA Manager','QC Manager',
+    'QA/QC Engineer','QA Engineer','QC Engineer',
+    'QC Inspector','QA Inspector',
+    'Welding Inspector','Piping Inspector',
+    'Civil Inspector','Structural Inspector',
+    'Electrical Inspector','Instrument Inspector',
+    'Painting & Coating Inspector','NDT Technician',
+    'Radiographer','UT Technician','MT Technician',
+    'Laboratory Technician','Calibration Technician',
+    // Supervisors & Foremen
+    'Construction Supervisor','Civil Supervisor','Mechanical Supervisor',
+    'Electrical Supervisor','Instrument Supervisor','Piping Supervisor',
+    'Structural Supervisor','Painting Supervisor','Scaffold Supervisor',
+    'Civil Foreman','Mechanical Foreman','Electrical Foreman',
+    'Instrument Foreman','Piping Foreman','Scaffold Foreman',
+    'Painting Foreman','Insulation Foreman','Concrete Foreman',
+    // Skilled Trades
+    'Welder (GTAW)','Welder (SMAW)','Welder (FCAW)','Welder (SAW)',
+    'Coded Welder','Pipe Welder','Structural Welder',
+    'Pipefitter','Senior Pipefitter','Pipe Fabricator',
+    'Electrician','Senior Electrician','Instrumentation Technician',
+    'Instrument Fitter','Cable Puller','Cable Terminator',
+    'Millwright','Mechanical Technician','Rotating Equipment Technician',
+    'Rigging Supervisor','Rigger Grade 1','Rigger Grade 2','Rigger Grade 3',
+    'Scaffolder','Scaffold Inspector','Scaffold Labourer',
+    'Carpenter','Senior Carpenter','Shuttering Carpenter',
+    'Mason','Bricklayer','Tile Fixer',
+    'Painter','Blaster','Coating Applicator','Insulation Technician',
+    'Heavy Equipment Operator','Crane Operator','Excavator Operator',
+    'Bulldozer Operator','Grader Operator','Forklift Operator',
+    'Concrete Pump Operator','Generator Technician',
+    'Surveyor','Survey Technician','Survey Assistant',
+    // Semi-skilled & General
+    'Semi-skilled Worker','General Labourer','Helper',
+    'Concrete Labourer','Steel Fixer','Rod Bender',
+    // Document Control & Admin
+    'Document Control Manager','Document Controller','Senior Document Controller',
+    'Administrative Manager','Administrator','Admin Assistant',
+    'Timekeeper','HR Officer','HR Assistant','HR Coordinator',
+    'Receptionist','Office Assistant','Data Entry Operator',
+    // Logistics & Warehouse
+    'Logistics Manager','Logistics Coordinator','Logistics Officer',
+    'Warehouse Manager','Warehouse Supervisor','Warehouse Keeper',
+    'Store Keeper','Material Controller','Material Coordinator',
+    'Procurement Officer','Purchasing Officer','Buyer',
+    'Expeditor','Customs Clearance Officer',
+    'Driver','Heavy Driver','Bus Driver','Crew Transport Driver',
+    // IT & Communication
+    'IT Manager','IT Support Engineer','IT Technician',
+    'Telecom Engineer','Radio Operator',
+    // Finance & Accounting
+    'Finance Manager','Finance Officer','Accountant',
+    'Senior Accountant','Junior Accountant','Accounts Assistant',
+    'Payroll Officer','Cashier','Auditor',
+    // Security & Camp
+    'Security Manager','Security Supervisor','Security Guard',
+    'Access Control Officer','CCTV Operator',
+    'Camp Boss','Camp Supervisor','Cook','Assistant Cook',
+    'Housekeeper','Cleaner','Laundry Attendant',
+    // Management
+    'General Manager','Operations Manager','Business Development Manager',
+    'Commercial Manager','Contract Manager','Legal Advisor',
+  ];
+  const posSel = document.getElementById('emp-position');
+  posSel.innerHTML = '';
+  buildSearchableSelect(posSel, POSITIONS_LIST, 'Search position...');
+  document.getElementById('pos-status').textContent = `✓ ${POSITIONS_LIST.length} positions loaded`;
+
+  // Sites
+  try {
+    const sites = await fetchCSVCol(CSV_SITES, 0);
+    const siteSel = document.getElementById('emp-site');
+    siteSel.innerHTML = '';
+    buildSearchableSelect(siteSel, sites, 'Search site / cost centre...');
+    document.getElementById('site-status').textContent = `✓ ${sites.length} sites loaded`;
+  } catch(e) { document.getElementById('site-status').textContent = '✗ Could not load'; }
+
+  // Departments — comprehensive list
+  const DEPTS_LIST = [
+    // Construction disciplines
+    'Civil','Mechanical','Electrical','Instrumentation',
+    'Piping','Structural','Painting & Coating','Insulation',
+    'Scaffolding','Commissioning','Pre-commissioning',
+    // Support & Technical
+    'QAQC','HSE','Planning','Engineering',
+    'Surveying','NDT',
+    // Management & Admin
+    'Project Management','Construction Management',
+    'Administration','Human Resources','Document Control',
+    // Finance & Commercial
+    'Finance','Accounting','Cost Control',
+    'Commercial','Procurement','Contracts',
+    // Logistics & Operations
+    'Logistics','Warehouse','Materials','Customs',
+    'Transportation','Camp Services',
+    // IT & Communication
+    'Information Technology','Telecommunications',
+    // Other
+    'Security','Medical','Legal',
+    'Business Development','Operations',
+    'House Keeping','General Services',
+  ].sort();
+  const deptSel = document.getElementById('emp-dept');
+  deptSel.innerHTML = '';
+  buildSearchableSelect(deptSel, DEPTS_LIST, 'Search department...');
+  // Update filter dropdown
+  const fsel = document.getElementById('filter-dept');
+  fsel.innerHTML = '<option value="">All departments</option>';
+  DEPTS_LIST.forEach(d => { const o=document.createElement('option'); o.value=d; o.textContent=d; fsel.appendChild(o); });
+  document.getElementById('dept-status').textContent = `✓ ${DEPTS_LIST.length} departments loaded`;
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('view-search').classList.toggle('hidden', tab!=='search');
+  document.getElementById('view-add').classList.toggle('hidden', tab!=='add');
+  document.getElementById('tab-search').classList.toggle('active', tab==='search');
+  document.getElementById('tab-add').classList.toggle('active', tab==='add');
+  if (tab==='search') loadEmployees();
+}
+
+// ── LOAD EMPLOYEES ────────────────────────────────────────────────────────────
+async function loadEmployees() {
+  document.getElementById('table-loading').classList.remove('hidden');
+  document.getElementById('table-empty').classList.add('hidden');
+  document.getElementById('emp-table-body').innerHTML = '';
+  if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    document.getElementById('table-loading').textContent = '⚠ Apps Script URL not configured yet';
+    return;
+  }
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=read`);
+    const json = await res.json();
+    employees  = json.data || [];
+    renderTable(employees);
+    updateStats(employees);
+    populateManagerList(employees);
+  } catch(e) {
+    document.getElementById('table-loading').textContent = '✗ Could not load employees — check Apps Script deployment';
+  }
+}
+
+function updateStats(data) {
+  document.getElementById('stat-total').textContent  = data.length;
+  document.getElementById('stat-active').textContent = data.filter(e=>e['Status']==='Active').length;
+  document.getElementById('stat-expat').textContent  = data.filter(e=>e['Nationality']==='Expat').length;
+  const sites = new Set(data.map(e=>e['Site']).filter(Boolean));
+  document.getElementById('stat-sites').textContent  = sites.size;
+  populateFilterDropdowns(data);
+}
+
+function populateFilterDropdowns(data) {
+  const fill = (selId, values, allLabel) => {
+    const sel = document.getElementById(selId); if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = `<option value="">${allLabel}</option>`;
+    [...new Set(values.filter(Boolean))].sort().forEach(v => {
+      const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o);
+    });
+    sel.value = prev;
+  };
+  fill('filter-site',     data.map(e=>e['Site']),     'All sites');
+  fill('filter-position', data.map(e=>e['Position']), 'All positions');
+  fill('filter-dept',     data.map(e=>e['Department']),'All departments');
+  const mgrSel = document.getElementById('filter-manager');
+  if (mgrSel) {
+    const prev = mgrSel.value;
+    mgrSel.innerHTML = '<option value="">All reporting lines</option>';
+    [...new Set(data.map(e=>e['Reports To']).filter(Boolean))].sort().forEach(m => {
+      const mgr = data.find(e=>e['Employee ID']===m);
+      const o=document.createElement('option');
+      o.value=m; o.textContent=mgr?`${m} — ${mgr['Full Name (EN)']}`:m;
+      mgrSel.appendChild(o);
+    });
+    mgrSel.value = prev;
+  }
+}
+
+function populateManagerList(data) {
+  const sel = document.getElementById('emp-manager');
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">Select manager...</option>';
+  // CEO always at top — predefined top-level node
+  const ceOpt = document.createElement('option');
+  ceOpt.value = 'CEO';
+  ceOpt.textContent = 'CEO — Chief Executive Officer';
+  sel.appendChild(ceOpt);
+  // Divider
+  const div = document.createElement('option');
+  div.disabled = true;
+  div.textContent = '─────────────────────';
+  sel.appendChild(div);
+  // Active employees
+  data.filter(e=>e['Status']==='Active').forEach(e => {
+    const o=document.createElement('option');
+    o.value=e['Employee ID'];
+    o.textContent=`${e['Employee ID']} — ${e['Full Name (EN)']} (${e['Position']||'—'})`;
+    sel.appendChild(o);
+  });
+  // Restore previous selection
+  if (prev) sel.value = prev;
+}
+
+// ── RENDER TABLE ──────────────────────────────────────────────────────────────
+function renderTable(data) {
+  document.getElementById('table-loading').classList.add('hidden');
+  const tbody = document.getElementById('emp-table-body');
+  tbody.innerHTML = '';
+  if (!data.length) {
+    document.getElementById('table-empty').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('table-empty').classList.add('hidden');
+  data.forEach(e => {
+    const tr = document.createElement('tr');
+    const contractClass = {
+      'Permanent':'badge-permanent','Fixed-term contract':'badge-fixed',
+      'Probation':'badge-probation','Daily Wages':'badge-daily'
+    }[e['Contract Type']]||'badge-daily';
+    const natClass = e['Nationality']==='Expat'?'badge-expat':'badge-iraqi';
+    const statusClass = e['Status']==='Active'?'badge-active':'badge-inactive';
+    tr.innerHTML = `
+      <td style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent);">${e['Employee ID']||'—'}</td>
+      <td style="font-weight:500;">${e['Full Name (EN)']||'—'}</td>
+      <td>${e['Position']||'—'}</td>
+      <td>${e['Department']||'—'}</td>
+      <td style="font-size:12px;">${e['Site']||'—'}</td>
+      <td><span class="badge ${contractClass}">${e['Contract Type']||'—'}</span></td>
+      <td><span class="badge ${natClass}">${e['Nationality']||'—'}</span></td>
+      <td><span class="badge ${statusClass}">${e['Status']||'Active'}</span></td>
+      <td><button class="btn-secondary" style="font-size:11px;padding:5px 10px;" onclick="toggleDetail('${e['Employee ID']}')">View</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── EMPLOYEE DETAIL ───────────────────────────────────────────────────────────
+function toggleDetail(id) {
+  const panel = document.getElementById('detail-panel');
+  const emp   = employees.find(e=>e['Employee ID']===id);
+  if (!emp || openDetailId===id) {
+    panel.classList.remove('open');
+    openDetailId = null;
+    return;
+  }
+  openDetailId = id;
+  const initials = (emp['Full Name (EN)']||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const payInfo  = emp['Contract Type']==='Daily Wages'
+    ? `${emp['Daily Rate']||'—'} ${emp['Currency (Daily)']||'USD'}/day`
+    : `${emp['Monthly Salary']||'—'} ${emp['Currency']||'USD'}/month`;
+
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div class="emp-card-header" style="margin:0;padding:0;border:none;">
+        <div class="emp-avatar">${initials}</div>
+        <div>
+          <div class="emp-name">${emp['Full Name (EN)']||'—'}</div>
+          <div class="emp-id">${emp['Employee ID']||'—'} · ${emp['Position']||'—'}</div>
+        </div>
+      </div>
+      <button class="btn-secondary" onclick="toggleDetail('${id}')" style="font-size:12px;">Close</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+      ${[
+        ['Department',   emp['Department']||'—'],
+        ['Site',         emp['Site']||'—'],
+        ['Contract',     emp['Contract Type']||'—'],
+        ['Status',       emp['Status']||'Active'],
+        ['Start date',   emp['Start Date']||'—'],
+        ['End date',     emp['Contract End Date']||'Open-ended'],
+        ['Nationality',  emp['Nationality']||'—'],
+        ['Pay rate',     payInfo],
+        ['Reports to',   emp['Reports To']||'— (Top level)'],
+        ['Phone',        emp['Phone']||'—'],
+        ['Email',        emp['Email']||'—'],
+        ['Arabic name',  emp['Full Name (AR)']||'—'],
+      ].map(([l,v])=>`<div class="emp-detail-item"><div class="emp-detail-label">${l}</div><div class="emp-detail-value">${v}</div></div>`).join('')}
+    </div>
+    ${emp['Notes']?`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);"><b>Notes:</b> ${emp['Notes']}</div>`:''}`;
+  panel.classList.add('open');
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ── FILTER & SORT ─────────────────────────────────────────────────────────────
+function filterTable() {
+  const q        = document.getElementById('search-input').value.toLowerCase();
+  const dept     = document.getElementById('filter-dept').value;
+  const contract = document.getElementById('filter-contract').value;
+  const status   = document.getElementById('filter-status').value;
+  const site     = document.getElementById('filter-site').value;
+  const position = document.getElementById('filter-position').value;
+  const manager  = document.getElementById('filter-manager').value;
+
+  const filtered = employees.filter(e => {
+    const matchQ    = !q ||
+      (e['Employee ID']||'').toLowerCase().includes(q) ||
+      (e['Full Name (EN)']||'').toLowerCase().includes(q) ||
+      (e['Position']||'').toLowerCase().includes(q) ||
+      (e['Department']||'').toLowerCase().includes(q) ||
+      (e['Site']||'').toLowerCase().includes(q);
+    const matchDept = !dept     || e['Department']===dept;
+    const matchCon  = !contract || e['Contract Type']===contract;
+    const matchSt   = !status   || e['Status']===status;
+    const matchSite = !site     || e['Site']===site;
+    const matchPos  = !position || e['Position']===position;
+    const matchMgr  = !manager  || e['Reports To']===manager;
+    return matchQ&&matchDept&&matchCon&&matchSt&&matchSite&&matchPos&&matchMgr;
+  });
+
+  const countEl = document.getElementById('filter-count');
+  if (countEl) countEl.textContent = filtered.length === employees.length
+    ? `${employees.length} employees`
+    : `${filtered.length} of ${employees.length} employees`;
+
+  renderTable(filtered);
+}
+
+function clearFilters() {
+  document.getElementById('search-input').value = '';
+  ['filter-dept','filter-contract','filter-status',
+   'filter-site','filter-position','filter-manager'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  filterTable();
+}
+
+function clearFilters() {
+  ['search-input','filter-start-from','filter-start-to'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  ['filter-dept','filter-contract','filter-status','filter-nationality',
+   'filter-site','filter-gender','filter-emptype'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  filterTable();
+}
+
+function sortTable(col) {
+  if (sortCol===col) sortDir*=-1; else { sortCol=col; sortDir=1; }
+  const colMap = {
+    id:'Employee ID',name:'Full Name (EN)',position:'Position',
+    dept:'Department',site:'Site',contract:'Contract Type',
+    nationality:'Nationality',status:'Status'
+  };
+  const key = colMap[col]||col;
+  const sorted = [...employees].sort((a,b)=>
+    ((a[key]||'').localeCompare(b[key]||''))*sortDir);
+  renderTable(sorted);
+}
+
+// ── EXPORT CSV ────────────────────────────────────────────────────────────────
+function exportCSV() {
+  if (!employees.length) { alert('No employees to export'); return; }
+  const headers = Object.keys(employees[0]);
+  const rows    = [headers.join(','), ...employees.map(e=>headers.map(h=>`"${(e[h]||'').replace(/"/g,'""')}"`).join(','))];
+  const blob    = new Blob([rows.join('\n')],{type:'text/csv'});
+  const a       = document.createElement('a');
+  a.href        = URL.createObjectURL(blob);
+  a.download    = `IGCC_Employees_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+// ── AUTO-GENERATE ID ──────────────────────────────────────────────────────────
+async function autoGenerateId() {
+  const btn = document.querySelector('[onclick="autoGenerateId()"]');
+  if (btn) { btn.textContent = '...'; btn.disabled = true; }
+  try {
+    if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+      const res  = await fetch(`${SCRIPT_URL}?action=check_id`);
+      const json = await res.json();
+      document.getElementById('emp-id').value = json.nextId || 'IG0001';
+    } else {
+      // Fallback: generate from loaded employees
+      const existing = employees.map(e=>{
+        const m=(e['Employee ID']||'').match(/^IG(\d+)$/);
+        return m?parseInt(m[1]):0;
+      });
+      const next = String(Math.max(0,...existing)+1).padStart(4,'0');
+      document.getElementById('emp-id').value = `IG${next}`;
+    }
+  } catch(e) {
+    const existing = employees.map(e=>{
+      const m=(e['Employee ID']||'').match(/^IG(\d+)$/);
+      return m?parseInt(m[1]):0;
+    });
+    const next = String(Math.max(0,...existing)+1).padStart(4,'0');
+    document.getElementById('emp-id').value = `IG${next}`;
+  } finally {
+    if (btn) { btn.textContent = 'Auto-generate'; btn.disabled = false; }
+  }
+  updateIdPreview();
+  validate();
+}
+
+function updateIdPreview() {
+  const val = document.getElementById('emp-id').value.trim();
+  document.getElementById('id-preview').textContent = val || 'IG—';
+}
+
+// ── CONTRACT TYPE CHANGE ──────────────────────────────────────────────────────
+function onContractChange() {
+  const contract  = document.getElementById('emp-contract').value;
+  const monthly   = document.getElementById('pay-monthly');
+  const daily     = document.getElementById('pay-daily');
+  const endField  = document.getElementById('end-date-field');
+  const rotField  = document.getElementById('rotation-days-field');
+  monthly.classList.remove('show');
+  daily.classList.remove('show');
+  // End date: only for Fixed-term
+  endField.classList.toggle('hidden', contract === 'Rotation');
+  // Rotation days: only for Rotation
+  rotField.classList.toggle('hidden', contract !== 'Rotation');
+  if (contract === 'Daily Wages') {
+    daily.classList.add('show');
+  } else if (contract) {
+    monthly.classList.add('show');
+  }
+}
+
+// ── VALIDATION ────────────────────────────────────────────────────────────────
+const isEmail = v => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
+function validate() {
+  const id       = document.getElementById('emp-id').value.trim();
+  const nameEn   = document.getElementById('emp-name-en').value.trim();
+  const nat      = document.getElementById('emp-nationality').value;
+  const pos      = document.getElementById('emp-position').value;
+  const dept     = document.getElementById('emp-dept').value;
+  const site     = document.getElementById('emp-site').value;
+  const contract = document.getElementById('emp-contract').value;
+  const start    = document.getElementById('emp-start').value;
+  const salary   = document.getElementById('emp-salary').value;
+  const daily    = document.getElementById('emp-daily-rate').value;
+  const idValid  = /^IG\d+$/.test(id);
+  const rotDays  = document.getElementById('emp-rotation-days').value;
+  const payOk    = contract==='Daily Wages' ? !!daily : (!contract || !!salary);
+  const rotOk    = contract!=='Rotation' || !!rotDays;
+  const checks   = [
+    ['a','Employee ID format valid (IG + number)',idValid],
+    ['b','Full name (English) provided',!!nameEn],
+    ['c','Nationality selected',!!nat],
+    ['d','Position selected',!!pos],
+    ['d2','Manager (Reports To) selected',!!document.getElementById('emp-manager')?.value],
+    ['e','Department selected',!!dept],
+    ['f','Site / Cost Centre selected',!!site],
+    ['g','Contract type selected',!!contract],
+    ['h','Start date set',!!start],
+    ['i','Pay rate provided',payOk],
+    ['k','Reports to (manager) selected',!!document.getElementById('emp-manager').value],
+    ['j','Rotation days filled (Rotation contract)',rotOk],
+  ];
+  document.getElementById('val-rows').innerHTML = checks.map(([id,label,pass])=>`
+    <div class="val-row ${pass?'pass':'fail'}" id="vr-${id}">
+      <div class="val-dot ${pass?'pass':'fail'}"></div>${label}
+    </div>`).join('');
+  document.getElementById('btn-submit').disabled = !checks.every(c=>c[2]);
+}
+
+// ── SUBMIT ────────────────────────────────────────────────────────────────────
+async function submitEmployee() {
+  document.getElementById('btn-submit').disabled = true;
+  document.getElementById('btn-submit').textContent = 'Registering...';
+
+  const contract = document.getElementById('emp-contract').value;
+  const record   = {
+    'Employee ID':        document.getElementById('emp-id').value.trim(),
+    'Full Name (EN)':     document.getElementById('emp-name-en').value.trim(),
+    'Full Name (AR)':     document.getElementById('emp-name-ar').value.trim(),
+    'Date of Birth':      document.getElementById('emp-dob').value,
+    'Gender':             document.getElementById('emp-gender').value,
+    'Nationality':        document.getElementById('emp-nationality').value,
+    'Country':            document.getElementById('emp-country').value.trim(),
+    'National ID':        document.getElementById('emp-nid').value.trim(),
+    'Phone':              document.getElementById('emp-phone').value.trim(),
+    'Email':              document.getElementById('emp-email').value.trim(),
+    'Position':           document.getElementById('emp-position').value,
+    'Department':         document.getElementById('emp-dept').value,
+    'Site':               document.getElementById('emp-site').value,
+    'Reports To':         document.getElementById('emp-manager').value,
+    'Employment Type':    document.getElementById('emp-emptype').value,
+    'Status':             document.getElementById('emp-status').value,
+    'Contract Type':      contract,
+    'Start Date':         document.getElementById('emp-start').value,
+    'Contract End Date':  document.getElementById('emp-end').value,
+    'Rotation Days Off':  document.getElementById('emp-rotation-days').value,
+    'Monthly Salary':     contract!=='Daily Wages' ? document.getElementById('emp-salary').value : '',
+    'Currency':           contract!=='Daily Wages' ? document.getElementById('emp-currency').value : '',
+    'Payment Method':     contract!=='Daily Wages' ? document.getElementById('emp-paymethod').value : '',
+    'Daily Rate':         contract==='Daily Wages' ? document.getElementById('emp-daily-rate').value : '',
+    'Currency (Daily)':   contract==='Daily Wages' ? document.getElementById('emp-daily-currency').value : '',
+    'OT Rate (per hour)': document.getElementById('emp-ot-rate').value,
+    'EC Name':            document.getElementById('ec-name').value.trim(),
+    'EC Relationship':    document.getElementById('ec-rel').value,
+    'EC Phone':           document.getElementById('ec-phone').value.trim(),
+    'Notes':              document.getElementById('emp-notes').value.trim(),
+    'Registered On':      new Date().toISOString(),
+  };
+
+  try {
+    if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+      console.log('Employee record (not connected):', JSON.stringify(record, null, 2));
+      employees.push(record);
+      showSuccess(record);
+      return;
+    }
+    // Use hidden form POST — bypasses CORS restrictions
+    await new Promise((resolve) => {
+      const iframeName = 'hr-submit-frame';
+      let iframe = document.getElementById(iframeName);
+      if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.name = iframeName; iframe.id = iframeName;
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+      }
+      const form = document.createElement('form');
+      form.method = 'POST'; form.action = SCRIPT_URL;
+      form.target = iframeName; form.style.display = 'none';
+      const input = document.createElement('input');
+      input.type = 'hidden'; input.name = 'payload';
+      input.value = JSON.stringify(record);
+      form.appendChild(input);
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+      setTimeout(resolve, 3000);
+    });
+    employees.push(record);
+    showSuccess(record);
+  } catch(e) {
+    alert('Could not save — check Apps Script deployment');
+    document.getElementById('btn-submit').disabled = false;
+    document.getElementById('btn-submit').textContent = 'Register employee';
+  }
+}
+
+function showSuccess(r) {
+  document.getElementById('add-form').style.display='none';
+  document.getElementById('success-screen').style.display='block';
+  document.getElementById('success-sub').textContent = `${r['Employee ID']} · ${r['Full Name (EN)']}`;
+  const initials = r['Full Name (EN)'].split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const payInfo  = r['Contract Type']==='Daily Wages'
+    ? `${r['Daily Rate']} ${r['Currency (Daily)']}/day`
+    : `${r['Monthly Salary']} ${r['Currency']}/month`;
+  document.getElementById('success-card').innerHTML = `
+    <div class="emp-card-header">
+      <div class="emp-avatar">${initials}</div>
+      <div><div class="emp-name">${r['Full Name (EN)']}</div><div class="emp-id">${r['Employee ID']}</div></div>
+    </div>
+    <div class="emp-details">
+      ${[['Position',r['Position']],['Department',r['Department']],['Site',r['Site']],
+         ['Contract',r['Contract Type']],['Start date',r['Start Date']],['Pay rate',payInfo],
+         ['Nationality',r['Nationality']],['Status',r['Status']]
+        ].map(([l,v])=>`<div class="emp-detail-item"><div class="emp-detail-label">${l}</div><div class="emp-detail-value">${v||'—'}</div></div>`).join('')}
+    </div>`;
+}
+
+function resetForm() {
+  document.getElementById('success-screen').style.display='none';
+  document.getElementById('add-form').style.display='block';
+  document.getElementById('add-form').querySelectorAll('input,select,textarea').forEach(el=>{
+    if(el.type==='date'&&el.id==='emp-start') return;
+    el.value='';
+  });
+  document.getElementById('id-preview').textContent='IG—';
+  document.getElementById('pay-monthly').classList.remove('show');
+  document.getElementById('pay-daily').classList.remove('show');
+  validate();
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+loadMasterLists();
+loadEmployees();
+validate();
+</script>
+</body>
+</html>

@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IGCC — New Hire Onboarding</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--surface2:#f8fafc;--border:#dde3ed;
+  --accent:#0f172a;--blue:#0284c7;--blue-dim:rgba(2,132,199,.08);
+  --success:#16a34a;--danger:#dc2626;--warning:#d97706;--purple:#7c3aed;
+  --text:#0f172a;--muted:#64748b;--label:#475569;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 12px rgba(0,0,0,.1);
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;}
+
+/* HEADER */
+.header{background:#fff;border-bottom:2px solid var(--accent);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.logo-badge{background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;}
+.header-title{font-size:13px;font-weight:500;color:var(--label);}
+.header-left{display:flex;align-items:center;gap:12px;}
+.req-id-badge{font-family:var(--mono);font-size:12px;color:var(--blue);background:var(--blue-dim);border:1px solid rgba(2,132,199,.25);padding:5px 12px;border-radius:6px;font-weight:600;}
+
+/* STATUS BAR */
+.status-bar{background:#fff;border-bottom:1px solid var(--border);padding:16px 24px;box-shadow:var(--shadow);}
+.status-steps{display:flex;align-items:center;max-width:900px;margin:0 auto;}
+.step{display:flex;align-items:center;gap:8px;flex:1;}
+.step-circle{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;font-family:var(--mono);flex-shrink:0;border:2px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .3s;}
+.step-circle.done{background:var(--success);border-color:var(--success);color:#fff;}
+.step-circle.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 0 3px rgba(15,23,42,.15);}
+.step-circle.skipped{background:#cbd5e1;border-color:#cbd5e1;color:#fff;}
+.step-info{flex:1;}
+.step-name{font-size:12px;font-weight:500;color:var(--muted);}
+.step-name.active{color:var(--text);font-weight:600;}
+.step-name.done{color:var(--success);}
+.step-role{font-size:10px;font-family:var(--mono);color:var(--muted);}
+.step-connector{flex:1;height:2px;background:var(--border);margin:0 6px;max-width:40px;transition:background .3s;}
+.step-connector.done{background:var(--success);}
+.step-connector.skipped{background:#cbd5e1;}
+
+/* CONTAINER */
+.container{max-width:900px;margin:0 auto;padding:28px 20px 60px;}
+.form-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.form-subtitle{font-size:13px;color:var(--muted);margin-bottom:24px;font-family:var(--mono);}
+
+/* SECTIONS */
+.section{background:#fff;border:1px solid var(--border);border-radius:12px;padding:22px 26px;margin-bottom:16px;box-shadow:var(--shadow);}
+.section.readonly{background:var(--surface2);pointer-events:none;opacity:.8;}
+.section.locked{display:none;}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--bg);}
+.section-header-left{display:flex;align-items:center;gap:10px;}
+.section-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--mono);flex-shrink:0;color:#fff;}
+.section-title{font-size:13px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:.07em;}
+.section-badge{font-size:11px;font-family:var(--mono);padding:3px 10px;border-radius:20px;font-weight:500;}
+.badge-hr{background:rgba(15,23,42,.08);color:var(--accent);border:1px solid rgba(15,23,42,.15);}
+.badge-payroll{background:rgba(22,163,74,.1);color:var(--success);border:1px solid rgba(22,163,74,.2);}
+.badge-manager{background:rgba(2,132,199,.1);color:var(--blue);border:1px solid rgba(2,132,199,.2);}
+.badge-it{background:rgba(124,58,237,.1);color:var(--purple);border:1px solid rgba(124,58,237,.2);}
+.badge-readonly{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+
+/* FIELDS */
+.field-row{display:grid;gap:16px;margin-bottom:14px;}
+.field-row.cols-2{grid-template-columns:1fr 1fr;}
+.field-row.cols-3{grid-template-columns:1fr 1fr 1fr;}
+.field-row.cols-4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:5px;}
+label{font-size:11px;font-weight:600;color:var(--label);letter-spacing:.06em;text-transform:uppercase;}
+.required{color:var(--danger);}
+input,select,textarea{background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:14px;padding:10px 12px;transition:border-color .15s,box-shadow .15s;outline:none;width:100%;}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(2,132,199,.12);}
+input[readonly],input:disabled,select:disabled{background:var(--surface2);color:var(--muted);cursor:not-allowed;}
+.field-hint{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.ro-field{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text);min-height:40px;}
+.ro-highlight{border-color:rgba(2,132,199,.3);background:rgba(2,132,199,.04);}
+.divider{border:none;border-top:1.5px solid var(--bg);margin:16px 0;}
+.info-note{background:rgba(2,132,199,.06);border:1px solid rgba(2,132,199,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:14px;}
+
+/* ID PREVIEW */
+.id-preview{background:var(--blue-dim);border:1.5px solid rgba(2,132,199,.25);border-radius:8px;padding:10px;font-family:var(--mono);font-size:18px;font-weight:700;color:var(--blue);text-align:center;}
+
+/* PAY RATE */
+.pay-monthly,.pay-daily{display:none;}
+.pay-monthly.show,.pay-daily.show{display:grid;}
+
+/* EMAIL QUESTION */
+.email-question{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:18px;margin-bottom:14px;}
+.email-q-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;}
+.radio-group{display:flex;gap:12px;}
+.radio-opt{display:flex;align-items:center;gap:8px;padding:10px 16px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;flex:1;justify-content:center;}
+.radio-opt:hover{border-color:var(--blue);}
+.radio-opt.selected-yes{border-color:var(--success);background:rgba(22,163,74,.06);}
+.radio-opt.selected-no{border-color:var(--muted);background:var(--surface2);}
+.radio-opt input{display:none;}
+.radio-label{font-size:13px;font-weight:600;}
+
+/* SEARCHABLE SELECT */
+.ss-wrap{position:relative;width:100%;}
+.ss-input{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:14px;padding:10px 12px;outline:none;transition:border-color .15s;cursor:pointer;}
+.ss-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(2,132,199,.12);}
+.ss-input.selected{border-color:var(--success);}
+.ss-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--blue);border-radius:10px;z-index:9999;display:none;box-shadow:var(--shadow-md);}
+.ss-dropdown.open{display:block;}
+.ss-search{width:100%;border:none;border-bottom:1px solid var(--border);padding:8px 12px;font-size:13px;outline:none;border-radius:10px 10px 0 0;font-family:var(--sans);}
+.ss-list{max-height:200px;overflow-y:auto;}
+.ss-option{padding:8px 12px;font-size:13px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);}
+.ss-option:last-child{border-bottom:none;}
+.ss-option:hover{background:var(--blue-dim);color:var(--blue);}
+.ss-none{padding:8px 12px;font-size:12px;color:var(--muted);font-family:var(--mono);}
+
+/* VALIDATION */
+.validation-panel{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:16px;box-shadow:var(--shadow);}
+.val-title{font-size:11px;font-weight:600;color:var(--label);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;}
+.val-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);padding:3px 0;font-family:var(--mono);}
+.val-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;}
+.val-dot.pass{background:var(--success);}
+.val-dot.fail{background:var(--danger);}
+.val-row.pass{color:var(--success);}
+.val-row.fail{color:var(--danger);}
+
+/* BUTTONS */
+.btn-primary{background:var(--accent);border:none;border-radius:10px;color:#fff;cursor:pointer;font-family:var(--sans);font-size:15px;font-weight:600;padding:14px 32px;width:100%;transition:all .15s;box-shadow:0 2px 4px rgba(0,0,0,.2);}
+.btn-primary:hover{opacity:.9;}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+.btn-secondary{background:#fff;border:1.5px solid var(--border);border-radius:10px;color:var(--label);cursor:pointer;font-family:var(--sans);font-size:14px;padding:11px 24px;transition:all .15s;width:100%;margin-top:8px;}
+.btn-secondary:hover{border-color:var(--blue);color:var(--blue);}
+
+/* SUCCESS */
+.success-screen{display:none;text-align:center;padding:60px 20px;}
+.success-icon{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 20px;}
+.success-title{font-size:22px;font-weight:700;margin-bottom:8px;}
+.success-sub{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:28px;}
+.audit-box{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:18px;text-align:left;font-family:var(--mono);font-size:12px;color:var(--muted);max-width:580px;margin:0 auto 24px;box-shadow:var(--shadow);}
+.audit-line{padding:4px 0;display:flex;gap:12px;border-bottom:1px solid var(--border);}
+.audit-line:last-child{border-bottom:none;}
+.audit-key{color:var(--label);min-width:140px;font-weight:500;}
+.audit-val{color:var(--text);}
+
+/* NEXT ACTION BOX */
+.next-action{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;}
+.next-action-icon{font-size:24px;flex-shrink:0;}
+.next-action-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.next-action-sub{font-size:12px;color:var(--muted);}
+
+.hidden{display:none!important;}
+@media(max-width:640px){.field-row.cols-2,.field-row.cols-3,.field-row.cols-4{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="logo-badge">IGCC</span>
+    <span class="header-title">Human Resources · New Hire Onboarding</span>
+  </div>
+  <span class="req-id-badge" id="req-id-display">Generating...</span>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="status-steps">
+    <div class="step"><div class="step-circle active" id="sc1">1</div><div class="step-info"><div class="step-name active" id="sn1">HR Record</div><div class="step-role">HR team</div></div></div>
+    <div class="step-connector" id="conn1"></div>
+    <div class="step"><div class="step-circle" id="sc2">2</div><div class="step-info"><div class="step-name" id="sn2">Pay Rate</div><div class="step-role">Payroll</div></div></div>
+    <div class="step-connector" id="conn2"></div>
+    <div class="step"><div class="step-circle" id="sc3">3</div><div class="step-info"><div class="step-name" id="sn3">Manager Review</div><div class="step-role">Direct manager</div></div></div>
+    <div class="step-connector" id="conn3"></div>
+    <div class="step"><div class="step-circle" id="sc4">4</div><div class="step-info"><div class="step-name" id="sn4">IT Setup</div><div class="step-role">IT team</div></div></div>
+    <div class="step-connector" id="conn4"></div>
+    <div class="step"><div class="step-circle" id="sc5">5</div><div class="step-info"><div class="step-name" id="sn5">Completed</div><div class="step-role">Employee active</div></div></div>
+  </div>
+</div>
+
+<div class="container" id="form-container">
+  <div class="form-title" id="form-title">New Hire Record</div>
+  <div class="form-subtitle" id="form-ref">REQ — generating...</div>
+
+  <!-- ══════════ STEP 1: HR ══════════ -->
+  <div class="section" id="step1-section">
+    <div class="section-header">
+      <div class="section-header-left">
+        <div class="section-num" style="background:var(--accent);">1</div>
+        <div class="section-title">Employee Record</div>
+      </div>
+      <span class="section-badge badge-hr">HR Team</span>
+    </div>
+
+    <!-- Identity -->
+    <div class="field-row cols-3">
+      <div class="field">
+        <label>Employee ID <span class="required">*</span></label>
+        <div class="id-preview" id="id-preview">IG—</div>
+        <div style="display:flex;gap:8px;margin-top:6px;">
+          <input type="text" id="emp-id" placeholder="e.g. IG0042" oninput="updateIdPreview();v1()" style="flex:1;">
+          <button class="btn-secondary" style="width:auto;white-space:nowrap;font-size:12px;margin:0;" onclick="autoGenerateId()">Auto</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Full name (English) <span class="required">*</span></label>
+        <input type="text" id="emp-name-en" placeholder="First Middle Last" oninput="v1()">
+      </div>
+      <div class="field">
+        <label>Full name (Arabic)</label>
+        <input type="text" id="emp-name-ar" placeholder="الاسم الكامل" dir="rtl">
+      </div>
+    </div>
+    <div class="field-row cols-4">
+      <div class="field">
+        <label>Date of birth</label>
+        <input type="date" id="emp-dob">
+      </div>
+      <div class="field">
+        <label>Gender</label>
+        <select id="emp-gender">
+          <option value="">Select...</option>
+          <option>Male</option><option>Female</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Nationality <span class="required">*</span></label>
+        <select id="emp-nationality" onchange="v1()">
+          <option value="">Select...</option>
+          <option>Iraqi</option><option>Expat</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Country (if expat)</label>
+        <input type="text" id="emp-country" placeholder="e.g. Philippines">
+      </div>
+    </div>
+    <div class="field-row cols-3">
+      <div class="field">
+        <label>National ID / Passport</label>
+        <input type="text" id="emp-nid" placeholder="ID or passport number">
+      </div>
+      <div class="field">
+        <label>Phone number</label>
+        <input type="tel" id="emp-phone" placeholder="+964 7xx xxx xxxx">
+      </div>
+      <div class="field">
+        <label>Personal email</label>
+        <input type="email" id="emp-personal-email" placeholder="name@email.com">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Position -->
+    <div class="field-row cols-3">
+      <div class="field">
+        <label>Position <span class="required">*</span></label>
+        <select id="emp-position" onchange="v1()">
+          <option value="">Loading...</option>
+        </select>
+        <span id="pos-status" class="field-hint">⟳ Loading...</span>
+      </div>
+      <div class="field">
+        <label>Department <span class="required">*</span></label>
+        <select id="emp-dept" onchange="onDeptChange();v1()">
+          <option value="">Loading...</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Site / Cost Centre <span class="required">*</span></label>
+        <select id="emp-site" onchange="v1()">
+          <option value="">Loading...</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row cols-3">
+      <div class="field">
+        <label>Reports to (manager) <span class="required">*</span></label>
+        <select id="emp-manager" onchange="v1()">
+          <option value="">Select manager...</option>
+          <option value="CEO">CEO — Chief Executive Officer</option>
+        </select>
+        <span class="field-hint">Loaded from active employees</span>
+      </div>
+      <div class="field">
+        <label>Contract type <span class="required">*</span></label>
+        <select id="emp-contract" onchange="onContractChange();v1()">
+          <option value="">Select...</option>
+          <option>Rotation</option>
+          <option>Fixed-term contract</option>
+          <option>Daily Wages</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Start date <span class="required">*</span></label>
+        <input type="date" id="emp-start" oninput="v1()">
+      </div>
+    </div>
+    <div class="field-row cols-3" id="extra-contract-fields">
+      <div class="field" id="end-date-wrap">
+        <label>Contract end date</label>
+        <input type="date" id="emp-end">
+        <span class="field-hint">Required for Fixed-term</span>
+      </div>
+      <div class="field hidden" id="rotation-wrap">
+        <label>Monthly days off</label>
+        <input type="number" id="emp-rotation" min="1" max="31" placeholder="e.g. 28">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Emergency Contact -->
+    <div class="field-row cols-3">
+      <div class="field">
+        <label>Emergency contact name</label>
+        <input type="text" id="ec-name" placeholder="Full name">
+      </div>
+      <div class="field">
+        <label>Relationship</label>
+        <select id="ec-rel">
+          <option value="">Select...</option>
+          <option>Spouse</option><option>Parent</option>
+          <option>Sibling</option><option>Child</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Emergency phone</label>
+        <input type="tel" id="ec-phone" placeholder="+964 7xx xxx xxxx">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>HR notes</label>
+      <textarea id="hr-notes" rows="2" placeholder="Any additional information, qualifications, notes..."></textarea>
+    </div>
+
+    <div class="field" style="margin-top:14px;">
+      <label>HR submitted by (email) <span class="required">*</span></label>
+      <input type="email" id="hr-email" placeholder="hr@igccgroup-iq.com" oninput="v1()">
+    </div>
+  </div>
+
+  <!-- ══════════ STEP 2: PAYROLL ══════════ -->
+  <div class="section locked" id="step2-section">
+    <div class="section-header">
+      <div class="section-header-left">
+        <div class="section-num" style="background:var(--success);">2</div>
+        <div class="section-title">Pay Rate</div>
+      </div>
+      <span class="section-badge badge-payroll">Payroll team</span>
+    </div>
+    <div class="info-note" id="step1-summary-payroll"></div>
+    <div class="divider"></div>
+
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>Payroll submitted by (email) <span class="required">*</span></label>
+        <input type="email" id="payroll-email" placeholder="payroll@igccgroup-iq.com" oninput="v2()">
+      </div>
+      <div class="field">
+        <label>Date processed</label>
+        <input type="date" id="payroll-date" oninput="v2()">
+      </div>
+    </div>
+
+    <!-- Monthly pay -->
+    <div class="field-row cols-3 pay-monthly" id="pay-monthly">
+      <div class="field">
+        <label>Monthly salary <span class="required">*</span></label>
+        <input type="number" id="emp-salary" placeholder="0.00" min="0" step="0.01" oninput="v2()">
+      </div>
+      <div class="field">
+        <label>Currency</label>
+        <select id="emp-currency">
+          <option>USD</option><option>IQD</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Payment method</label>
+        <select id="emp-paymethod">
+          <option value="">Select...</option>
+          <option>Bank transfer</option><option>Cash</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Daily pay -->
+    <div class="field-row cols-3 pay-daily" id="pay-daily">
+      <div class="field">
+        <label>Daily rate <span class="required">*</span></label>
+        <input type="number" id="emp-daily-rate" placeholder="0.00" min="0" step="0.01" oninput="v2()">
+      </div>
+      <div class="field">
+        <label>Currency</label>
+        <select id="emp-daily-currency">
+          <option>USD</option><option>IQD</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>OT rate (per hour)</label>
+        <input type="number" id="emp-ot-rate" placeholder="0.00" min="0" step="0.01">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Payroll notes</label>
+      <textarea id="payroll-notes" rows="2" placeholder="Any payroll-specific notes, bank details reference, allowances..."></textarea>
+    </div>
+  </div>
+
+  <!-- ══════════ STEP 3: MANAGER ══════════ -->
+  <div class="section locked" id="step3-section">
+    <div class="section-header">
+      <div class="section-header-left">
+        <div class="section-num" style="background:var(--blue);">3</div>
+        <div class="section-title">Manager Review</div>
+      </div>
+      <span class="section-badge badge-manager">Direct manager</span>
+    </div>
+    <div class="info-note" id="step1-summary-manager"></div>
+    <div class="divider"></div>
+
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>Manager email <span class="required">*</span></label>
+        <input type="email" id="mgr-email" placeholder="manager@igccgroup-iq.com" oninput="v3()">
+      </div>
+      <div class="field">
+        <label>Review date</label>
+        <input type="date" id="mgr-date">
+      </div>
+    </div>
+
+    <!-- Email question -->
+    <div class="email-question">
+      <div class="email-q-title">Does this employee need a company email account? <span class="required">*</span></div>
+      <div class="radio-group">
+        <label class="radio-opt" id="opt-yes" onclick="selectEmail('yes')">
+          <input type="radio" name="needs-email" value="yes">
+          <span class="radio-label" style="color:var(--success);">✓ Yes — create company email</span>
+        </label>
+        <label class="radio-opt" id="opt-no" onclick="selectEmail('no')">
+          <input type="radio" name="needs-email" value="no">
+          <span class="radio-label" style="color:var(--muted);">✗ No — not required</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Manager remarks</label>
+      <textarea id="mgr-notes" rows="2" placeholder="Any notes about the new hire, team setup, equipment needed..."></textarea>
+    </div>
+  </div>
+
+  <!-- ══════════ STEP 4: IT ══════════ -->
+  <div class="section locked" id="step4-section">
+    <div class="section-header">
+      <div class="section-header-left">
+        <div class="section-num" style="background:var(--purple);">4</div>
+        <div class="section-title">IT Setup</div>
+      </div>
+      <span class="section-badge badge-it">IT team</span>
+    </div>
+    <div class="info-note" id="step1-summary-it"></div>
+    <div class="divider"></div>
+
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>IT submitted by (email) <span class="required">*</span></label>
+        <input type="email" id="it-email" placeholder="it@igccgroup-iq.com" oninput="v4()">
+      </div>
+      <div class="field">
+        <label>Setup date</label>
+        <input type="date" id="it-date">
+      </div>
+    </div>
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>Company email created <span class="required">*</span></label>
+        <input type="email" id="it-created-email" placeholder="firstname.lastname@igccgroup-iq.com" oninput="v4()">
+        <span class="field-hint">The new email address created for this employee</span>
+      </div>
+      <div class="field">
+        <label>Systems / access granted</label>
+        <input type="text" id="it-systems" placeholder="e.g. Portal, Email, VPN">
+      </div>
+    </div>
+    <div class="field">
+      <label>IT notes</label>
+      <textarea id="it-notes" rows="2" placeholder="Laptop serial, credentials sent, any setup notes..."></textarea>
+    </div>
+  </div>
+
+  <!-- VALIDATION -->
+  <div class="validation-panel" id="val-panel">
+    <div class="val-title">Checklist</div>
+    <div id="val-rows"></div>
+  </div>
+  <button class="btn-primary" id="btn-submit" onclick="submitStep()" disabled>Submit employee record</button>
+</div>
+
+<!-- SUCCESS -->
+<div class="success-screen" id="success-screen">
+  <div class="success-icon" id="success-icon"></div>
+  <div class="success-title" id="success-title">Step submitted</div>
+  <div class="success-sub" id="success-sub"></div>
+  <div class="next-action" id="next-action" style="max-width:580px;margin:0 auto 20px;"></div>
+  <div class="audit-box" id="audit-box"></div>
+  <button class="btn-secondary" style="max-width:420px;margin:0 auto;" id="btn-continue">Continue to next step</button>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyS62WsmpTRDjFhX3kG7uvoc-M-GZKc-rTwRqbJYCg3eo06hPu8A4_Oelgnis74ulC0/exec';
+const HR_REG_URL = 'https://script.google.com/macros/s/AKfycbyWr4pGHzsdUvfHARGhEtTaVNPn3tf4-7YZZLgys0B2KlyR-q1_REOvRvINgUODkW32/exec';
+
+const CSV_POSITIONS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQuddYxbfTTwrn1dK0UZccQ6ONvSq76EpuYe0Pb8elh2sx3WeC2bx8Z-JVxuuV6pvRbnV8fikMWreul/pub?gid=0&single=true&output=csv';
+const CSV_SITES     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSfLmsVdtOnq7zUKzaPX7Uwd-aQ6eiONkQv30vWRS0MO-3XRZzj5liNU08LyRoII522GqAqovxo3Z5N/pub?output=csv';
+const CSV_CTR       = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vThe2Huy18W_ynocBDQ1FQoI45gGU18pu33KD4iibTl3VU9WppGE1HwSHmuHViVWbPXd2g0GL4Yds6w/pub?gid=0&single=true&output=csv';
+
+const POSITIONS_LIST = [
+  'Project Director','Project Manager','Deputy Project Manager','Construction Manager',
+  'Site Manager','Civil Engineer','Senior Civil Engineer','Junior Civil Engineer',
+  'Mechanical Engineer','Senior Mechanical Engineer','Electrical Engineer',
+  'Senior Electrical Engineer','Instrument Engineer','Piping Engineer',
+  'Structural Engineer','Process Engineer','Commissioning Engineer',
+  'Planning Manager','Senior Planner','Planner','Cost Control Lead',
+  'Cost Control Engineer','Quantity Surveyor','HSE Manager','HSE Lead',
+  'HSE Supervisor','HSE Officer','Safety Officer','QA/QC Manager','QA/QC Engineer',
+  'QC Inspector','Welding Inspector','NDT Technician','Construction Supervisor',
+  'Civil Supervisor','Mechanical Supervisor','Electrical Supervisor',
+  'Civil Foreman','Mechanical Foreman','Electrical Foreman','Scaffold Foreman',
+  'Welder','Pipefitter','Electrician','Instrumentation Technician','Rigger',
+  'Scaffolder','Carpenter','Mason','Painter','Heavy Equipment Operator',
+  'Crane Operator','Forklift Operator','Surveyor','Document Controller',
+  'Administrator','HR Officer','HR Manager','Timekeeper',
+  'Logistics Manager','Warehouse Manager','Store Keeper','Driver',
+  'Finance Manager','Accountant','Payroll Officer',
+  'Security Supervisor','Security Guard','Camp Boss','Cook','Cleaner',
+  'IT Manager','IT Technician','Medical Officer','Site Nurse',
+  'General Manager','Operations Manager','Commercial Manager'
+].sort();
+
+const DEPTS_LIST = [
+  'Civil','Mechanical','Electrical','Instrumentation','Piping','Structural',
+  'Painting & Coating','Insulation','Scaffolding','Commissioning',
+  'QAQC','HSE','Planning','Engineering','Surveying','NDT',
+  'Project Management','Construction Management','Administration',
+  'Human Resources','Document Control','Finance','Accounting',
+  'Cost Control','Commercial','Procurement','Contracts',
+  'Logistics','Warehouse','Materials','Transportation','Camp Services',
+  'Information Technology','Security','Medical','Operations','General Services'
+].sort();
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+let currentStep = 1;
+let caseData    = {};
+let employees   = [];
+let emailChoice = null;
+
+const today  = new Date();
+const pad    = n => String(n).padStart(2,'0');
+const dateStr= `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+const reqId  = `REQ-HR-${today.getFullYear()}${pad(today.getMonth()+1)}${pad(today.getDate())}-${Math.floor(Math.random()*9000)+1000}`;
+
+document.getElementById('req-id-display').textContent = reqId;
+document.getElementById('form-ref').textContent = `${reqId}  ·  ${today.toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
+document.getElementById('emp-start').value = dateStr;
+document.getElementById('payroll-date').value = dateStr;
+document.getElementById('mgr-date').value = dateStr;
+document.getElementById('it-date').value  = dateStr;
+
+// ── LOAD MASTER DATA ──────────────────────────────────────────────────────────
+async function fetchCSVCol(url, col=0) {
+  const res  = await fetch(url);
+  const text = await res.text();
+  return text.trim().split('\n').slice(1)
+    .map(l => l.split(',')[col].trim().replace(/^"|"$/g,''))
+    .filter(Boolean);
+}
+
+async function loadMasters() {
+  // Positions
+  const posSel = document.getElementById('emp-position');
+  posSel.innerHTML = '<option value="">Select position...</option>';
+  POSITIONS_LIST.forEach(p => { const o=document.createElement('option'); o.value=p; o.textContent=p; posSel.appendChild(o); });
+  document.getElementById('pos-status').textContent = `✓ ${POSITIONS_LIST.length} positions`;
+
+  // Departments
+  const deptSel = document.getElementById('emp-dept');
+  deptSel.innerHTML = '<option value="">Select department...</option>';
+  DEPTS_LIST.forEach(d => { const o=document.createElement('option'); o.value=d; o.textContent=d; deptSel.appendChild(o); });
+
+  // Sites
+  try {
+    const sites = await fetchCSVCol(CSV_SITES, 0);
+    const siteSel = document.getElementById('emp-site');
+    siteSel.innerHTML = '<option value="">Select site...</option>';
+    sites.forEach(s => { const o=document.createElement('option'); o.value=s; o.textContent=s; siteSel.appendChild(o); });
+  } catch(e) {}
+
+  // Employees for manager list
+  try {
+    const res  = await fetch(`${HR_REG_URL}?action=read`);
+    const json = await res.json();
+    employees  = json.data||[];
+    const mgrSel = document.getElementById('emp-manager');
+    const prev = mgrSel.value;
+    employees.filter(e=>e['Status']==='Active').forEach(e => {
+      const o=document.createElement('option');
+      o.value=e['Employee ID'];
+      o.textContent=`${e['Employee ID']} — ${e['Full Name (EN)']} (${e['Position']||'—'})`;
+      mgrSel.appendChild(o);
+    });
+    if (prev) mgrSel.value = prev;
+  } catch(e) {}
+}
+
+// ── CONTRACT TYPE ─────────────────────────────────────────────────────────────
+function onContractChange() {
+  const c = document.getElementById('emp-contract').value;
+  document.getElementById('pay-monthly').classList.toggle('show', c !== 'Daily Wages' && !!c);
+  document.getElementById('pay-daily').classList.toggle('show', c === 'Daily Wages');
+  document.getElementById('end-date-wrap').classList.toggle('hidden', c === 'Rotation');
+  document.getElementById('rotation-wrap').classList.toggle('hidden', c !== 'Rotation');
+}
+
+function onDeptChange() { v1(); }
+
+// ── AUTO-GENERATE ID ──────────────────────────────────────────────────────────
+async function autoGenerateId() {
+  try {
+    const res  = await fetch(`${HR_REG_URL}?action=check_id`);
+    const json = await res.json();
+    document.getElementById('emp-id').value = json.nextId||'IG0001';
+  } catch(e) {
+    const nums = employees.map(e=>{ const m=(e['Employee ID']||'').match(/^IG(\d+)$/); return m?parseInt(m[1]):0; });
+    document.getElementById('emp-id').value = `IG${String(Math.max(0,...nums)+1).padStart(4,'0')}`;
+  }
+  updateIdPreview(); v1();
+}
+
+function updateIdPreview() {
+  document.getElementById('id-preview').textContent = document.getElementById('emp-id').value.trim()||'IG—';
+}
+
+// ── EMAIL QUESTION ────────────────────────────────────────────────────────────
+function selectEmail(choice) {
+  emailChoice = choice;
+  document.getElementById('opt-yes').className = `radio-opt ${choice==='yes'?'selected-yes':''}`;
+  document.getElementById('opt-no').className  = `radio-opt ${choice==='no'?'selected-no':''}`;
+  v3();
+}
+
+// ── STATUS BAR ────────────────────────────────────────────────────────────────
+function updateStatus(step, skippedIt=false) {
+  for (let i=1;i<=5;i++) {
+    const sc=document.getElementById(`sc${i}`), sn=document.getElementById(`sn${i}`);
+    const isSkipped = skippedIt && i===4;
+    if (isSkipped) { sc.className='step-circle skipped'; sc.textContent='—'; sn.className='step-name'; }
+    else if (i<step) { sc.className='step-circle done'; sc.textContent='✓'; sn.className='step-name done'; }
+    else if (i===step) { sc.className='step-circle active'; sc.textContent=i; sn.className='step-name active'; }
+    else { sc.className='step-circle'; sc.textContent=i; sn.className='step-name'; }
+    if (i<5) {
+      const conn = document.getElementById(`conn${i}`);
+      conn.className = (skippedIt&&i===3)?'step-connector skipped':i<step?'step-connector done':'step-connector';
+    }
+  }
+}
+
+// ── VALIDATION ────────────────────────────────────────────────────────────────
+const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+const isId    = v => /^IG\d+$/.test(v);
+
+function renderVal(checks) {
+  document.getElementById('val-rows').innerHTML = checks.map(([id,label,pass])=>`
+    <div class="val-row ${pass?'pass':'fail'}">
+      <div class="val-dot ${pass?'pass':'fail'}"></div>${label}
+    </div>`).join('');
+  document.getElementById('btn-submit').disabled = !checks.every(c=>c[2]);
+}
+
+function v1() {
+  const id       = document.getElementById('emp-id').value.trim();
+  const name     = document.getElementById('emp-name-en').value.trim();
+  const nat      = document.getElementById('emp-nationality').value;
+  const pos      = document.getElementById('emp-position').value;
+  const dept     = document.getElementById('emp-dept').value;
+  const site     = document.getElementById('emp-site').value;
+  const mgr      = document.getElementById('emp-manager').value;
+  const contract = document.getElementById('emp-contract').value;
+  const start    = document.getElementById('emp-start').value;
+  const hrEmail  = document.getElementById('hr-email').value.trim();
+  renderVal([
+    ['a','Employee ID format valid (IG + number)',isId(id)],
+    ['b','Full name (English) provided',!!name],
+    ['c','Nationality selected',!!nat],
+    ['d','Position selected',!!pos],
+    ['e','Department selected',!!dept],
+    ['f','Site selected',!!site],
+    ['g','Manager selected',!!mgr],
+    ['h','Contract type selected',!!contract],
+    ['i','Start date set',!!start],
+    ['j','HR email provided',isEmail(hrEmail)],
+  ]);
+}
+
+function v2() {
+  const email    = document.getElementById('payroll-email').value.trim();
+  const contract = caseData.step1?.contract||'';
+  const salary   = document.getElementById('emp-salary').value;
+  const daily    = document.getElementById('emp-daily-rate').value;
+  const payOk    = contract==='Daily Wages'?!!daily:!!salary;
+  renderVal([
+    ['a','Payroll email provided',isEmail(email)],
+    ['b','Pay rate filled',payOk],
+  ]);
+}
+
+function v3() {
+  const email = document.getElementById('mgr-email').value.trim();
+  renderVal([
+    ['a','Manager email provided',isEmail(email)],
+    ['b','Email account decision made',!!emailChoice],
+  ]);
+}
+
+function v4() {
+  const email   = document.getElementById('it-email').value.trim();
+  const created = document.getElementById('it-created-email').value.trim();
+  renderVal([
+    ['a','IT email provided',isEmail(email)],
+    ['b','Company email address created',isEmail(created)],
+  ]);
+}
+
+// ── SUBMIT ────────────────────────────────────────────────────────────────────
+async function submitStep() {
+  document.getElementById('btn-submit').disabled = true;
+  document.getElementById('btn-submit').textContent = 'Submitting...';
+  if (currentStep===1) await doStep1();
+  else if (currentStep===2) await doStep2();
+  else if (currentStep===3) await doStep3();
+  else if (currentStep===4) await doStep4();
+}
+
+async function doStep1() {
+  caseData.step1 = {
+    reqId, empId:document.getElementById('emp-id').value.trim(),
+    nameEn:document.getElementById('emp-name-en').value.trim(),
+    nameAr:document.getElementById('emp-name-ar').value.trim(),
+    dob:document.getElementById('emp-dob').value,
+    gender:document.getElementById('emp-gender').value,
+    nationality:document.getElementById('emp-nationality').value,
+    country:document.getElementById('emp-country').value.trim(),
+    nid:document.getElementById('emp-nid').value.trim(),
+    phone:document.getElementById('emp-phone').value.trim(),
+    personalEmail:document.getElementById('emp-personal-email').value.trim(),
+    position:document.getElementById('emp-position').value,
+    dept:document.getElementById('emp-dept').value,
+    site:document.getElementById('emp-site').value,
+    manager:document.getElementById('emp-manager').value,
+    contract:document.getElementById('emp-contract').value,
+    start:document.getElementById('emp-start').value,
+    end:document.getElementById('emp-end').value,
+    rotationDays:document.getElementById('emp-rotation').value,
+    ecName:document.getElementById('ec-name').value.trim(),
+    ecRel:document.getElementById('ec-rel').value,
+    ecPhone:document.getElementById('ec-phone').value.trim(),
+    hrNotes:document.getElementById('hr-notes').value.trim(),
+    hrEmail:document.getElementById('hr-email').value.trim(),
+    status:'Pending Payroll',
+    submittedAt:new Date().toISOString(),
+  };
+  await saveToScript({ action:'save_step1', data:caseData.step1 });
+
+  // Find manager info for summary
+  const mgr = employees.find(e=>e['Employee ID']===caseData.step1.manager);
+  const mgrName = mgr?mgr['Full Name (EN)']:caseData.step1.manager;
+
+  showSuccess(
+    '📋','Employee record created','Now pending payroll to add pay rate',
+    [['Request ID',reqId],['Employee',`${caseData.step1.empId} — ${caseData.step1.nameEn}`],
+     ['Position',caseData.step1.position],['Department',caseData.step1.dept],
+     ['Site',caseData.step1.site],['Manager',mgrName],['Status','Pending Payroll']],
+    { icon:'💰', title:'Next: Payroll team', sub:'Payroll will receive an email notification to fill the pay rate.' },
+    () => { currentStep=2; continueToStep(2); }
+  );
+}
+
+async function doStep2() {
+  caseData.step2 = {
+    payrollEmail:document.getElementById('payroll-email').value.trim(),
+    payrollDate:document.getElementById('payroll-date').value,
+    salary:document.getElementById('emp-salary').value,
+    currency:document.getElementById('emp-currency').value,
+    payMethod:document.getElementById('emp-paymethod').value,
+    dailyRate:document.getElementById('emp-daily-rate').value,
+    dailyCurrency:document.getElementById('emp-daily-currency').value,
+    otRate:document.getElementById('emp-ot-rate').value,
+    payrollNotes:document.getElementById('payroll-notes').value.trim(),
+    status:'Pending Manager',
+  };
+  await saveToScript({ action:'save_step2', reqId, data:caseData.step2 });
+
+  const payInfo = caseData.step1.contract==='Daily Wages'
+    ? `${caseData.step2.dailyRate} ${caseData.step2.dailyCurrency}/day`
+    : `${caseData.step2.salary} ${caseData.step2.currency}/month`;
+
+  showSuccess(
+    '💰','Pay rate recorded','Now pending manager review',
+    [['Request ID',reqId],['Employee',`${caseData.step1.empId} — ${caseData.step1.nameEn}`],
+     ['Pay rate',payInfo],['Status','Pending Manager Review']],
+    { icon:'👤', title:'Next: Direct manager', sub:'The manager will receive an email to review the new hire and confirm email requirements.' },
+    () => { currentStep=3; continueToStep(3); }
+  );
+}
+
+async function doStep3() {
+  caseData.step3 = {
+    mgrEmail:document.getElementById('mgr-email').value.trim(),
+    mgrDate:document.getElementById('mgr-date').value,
+    needsEmail:emailChoice,
+    mgrNotes:document.getElementById('mgr-notes').value.trim(),
+    status:emailChoice==='yes'?'Pending IT':'Completed',
+  };
+  await saveToScript({ action:'save_step3', reqId, data:caseData.step3 });
+
+  if (emailChoice==='yes') {
+    showSuccess(
+      '✅','Manager approved','Email account required — now pending IT',
+      [['Request ID',reqId],['Employee',`${caseData.step1.empId} — ${caseData.step1.nameEn}`],
+       ['Email required','Yes'],['Status','Pending IT Setup']],
+      { icon:'💻', title:'Next: IT team', sub:'IT will receive an email to create the company email account and grant system access.' },
+      () => { currentStep=4; continueToStep(4); }
+    );
+  } else {
+    // No email needed — complete directly
+    await saveToScript({ action:'complete', reqId, data:{ status:'Completed', completedAt:new Date().toISOString() } });
+    await activateEmployee();
+    showSuccess(
+      '🎉','Onboarding complete!','Employee is now active in the registry',
+      [['Request ID',reqId],['Employee',`${caseData.step1.empId} — ${caseData.step1.nameEn}`],
+       ['Email required','No'],['Status','Completed — Active']],
+      { icon:'✅', title:'Employee activated', sub:'No IT setup required. The employee record is now live in the registry.' },
+      () => location.reload(), true
+    );
+  }
+}
+
+async function doStep4() {
+  caseData.step4 = {
+    itEmail:document.getElementById('it-email').value.trim(),
+    itDate:document.getElementById('it-date').value,
+    createdEmail:document.getElementById('it-created-email').value.trim(),
+    systems:document.getElementById('it-systems').value.trim(),
+    itNotes:document.getElementById('it-notes').value.trim(),
+    status:'Completed',
+  };
+  await saveToScript({ action:'save_step4', reqId, data:caseData.step4 });
+  await activateEmployee();
+  showSuccess(
+    '🎉','Onboarding complete!','Employee is now active in the registry',
+    [['Request ID',reqId],['Employee',`${caseData.step1.empId} — ${caseData.step1.nameEn}`],
+     ['Company email',caseData.step4.createdEmail],['Status','Completed — Active']],
+    { icon:'✅', title:'All done', sub:'Employee record is live. Company email created and access granted.' },
+    () => location.reload(), true
+  );
+}
+
+// ── ACTIVATE EMPLOYEE IN REGISTRY ─────────────────────────────────────────────
+async function activateEmployee() {
+  const s1 = caseData.step1;
+  const s2 = caseData.step2||{};
+  const s4 = caseData.step4||{};
+  const record = {
+    'Employee ID':s1.empId,'Full Name (EN)':s1.nameEn,'Full Name (AR)':s1.nameAr,
+    'Date of Birth':s1.dob,'Gender':s1.gender,'Nationality':s1.nationality,
+    'Country':s1.country,'National ID':s1.nid,'Phone':s1.phone,
+    'Email':s4.createdEmail||s1.personalEmail,
+    'Position':s1.position,'Department':s1.dept,'Site':s1.site,
+    'Reports To':s1.manager,'Employment Type':'Full-time','Status':'Active',
+    'Contract Type':s1.contract,'Start Date':s1.start,'Contract End Date':s1.end,
+    'Rotation Days Off':s1.rotationDays,
+    'Monthly Salary':s2.salary||'','Currency':s2.currency||'',
+    'Payment Method':s2.payMethod||'','Daily Rate':s2.dailyRate||'',
+    'Currency (Daily)':s2.dailyCurrency||'','OT Rate (per hour)':s2.otRate||'',
+    'EC Name':s1.ecName,'EC Relationship':s1.ecRel,'EC Phone':s1.ecPhone,
+    'Notes':s1.hrNotes,'Registered On':new Date().toISOString(),
+  };
+  try {
+    const iframe = document.getElementById('reg-frame')||document.createElement('iframe');
+    iframe.id='reg-frame'; iframe.name='reg-frame'; iframe.style.display='none';
+    document.body.appendChild(iframe);
+    const form = document.createElement('form');
+    form.method='POST'; form.action=HR_REG_URL; form.target='reg-frame'; form.style.display='none';
+    const input = document.createElement('input');
+    input.type='hidden'; input.name='payload'; input.value=JSON.stringify(record);
+    form.appendChild(input); document.body.appendChild(form);
+    form.submit(); document.body.removeChild(form);
+    await new Promise(r=>setTimeout(r,3000));
+  } catch(e) { console.error('Registry activation failed:', e); }
+}
+
+// ── SAVE TO SCRIPT ────────────────────────────────────────────────────────────
+async function saveToScript(payload) {
+  if (!SCRIPT_URL||SCRIPT_URL==='YOUR_ONBOARDING_SCRIPT_URL') {
+    console.log('Onboarding data:', JSON.stringify(payload, null, 2));
+    return;
+  }
+  try {
+    const iframe = document.getElementById('save-frame')||document.createElement('iframe');
+    iframe.id='save-frame'; iframe.name='save-frame'; iframe.style.display='none';
+    document.body.appendChild(iframe);
+    const form = document.createElement('form');
+    form.method='POST'; form.action=SCRIPT_URL; form.target='save-frame'; form.style.display='none';
+    const input = document.createElement('input');
+    input.type='hidden'; input.name='payload'; input.value=JSON.stringify(payload);
+    form.appendChild(input); document.body.appendChild(form);
+    form.submit(); document.body.removeChild(form);
+    await new Promise(r=>setTimeout(r,2500));
+  } catch(e) { console.error('Save error:', e); }
+}
+
+// ── SHOW SUCCESS ──────────────────────────────────────────────────────────────
+function showSuccess(icon, title, sub, lines, nextAction, onContinue, isFinal=false) {
+  document.getElementById('form-container').style.display='none';
+  const ss = document.getElementById('success-screen');
+  ss.style.display='block';
+
+  const iconEl = document.getElementById('success-icon');
+  iconEl.textContent = icon;
+  iconEl.style.background = isFinal?'rgba(22,163,74,.1)':'rgba(2,132,199,.08)';
+  iconEl.style.border = `2px solid ${isFinal?'var(--success)':'var(--blue)'}`;
+
+  document.getElementById('success-title').textContent = title;
+  document.getElementById('success-sub').textContent = `${reqId}  ·  ${sub}`;
+
+  document.getElementById('next-action').innerHTML = `
+    <div class="next-action-icon">${nextAction.icon}</div>
+    <div><div class="next-action-title">${nextAction.title}</div>
+    <div class="next-action-sub">${nextAction.sub}</div></div>`;
+  document.getElementById('next-action').style.display = isFinal?'none':'flex';
+
+  document.getElementById('audit-box').innerHTML = lines.map(
+    ([k,v])=>`<div class="audit-line"><span class="audit-key">${k}</span><span class="audit-val">${v}</span></div>`
+  ).join('');
+
+  const btn = document.getElementById('btn-continue');
+  if (isFinal) { btn.textContent='Start new onboarding'; btn.onclick=()=>location.reload(); }
+  else { btn.textContent=`Continue to next step →`; btn.onclick=onContinue; }
+}
+
+// ── CONTINUE TO STEP ──────────────────────────────────────────────────────────
+function continueToStep(step) {
+  currentStep = step;
+  document.getElementById('success-screen').style.display='none';
+  document.getElementById('form-container').style.display='block';
+  activateStep(step);
+}
+
+function activateStep(step) {
+  const skippedIt = step===5 && emailChoice==='no';
+  updateStatus(step, skippedIt);
+
+  const titles = ['','New Hire Record','Pay Rate','Manager Review','IT Setup','Completed'];
+  document.getElementById('form-title').textContent = titles[step]||'';
+
+  const btns = ['','Submit employee record','Submit pay rate','Submit manager review','Complete IT setup',''];
+  document.getElementById('btn-submit').textContent = btns[step]||'Submit';
+  document.getElementById('btn-submit').disabled = true;
+
+  // Lock/unlock sections
+  ['step1','step2','step3','step4'].forEach((s,i)=>{
+    const sec=document.getElementById(`${s}-section`), n=i+1;
+    if (n<step) { sec.classList.remove('locked'); sec.classList.add('readonly'); }
+    else if (n===step) { sec.classList.remove('locked','readonly'); }
+    else { sec.classList.add('locked'); sec.classList.remove('readonly'); }
+  });
+
+  // Build read-only summaries
+  if (step>=2) buildStep2Summary();
+  if (step>=3) buildStep3Summary();
+  if (step>=4) buildStep4Summary();
+
+  // Show correct pay rate fields
+  if (step===2) {
+    const c = caseData.step1?.contract||'';
+    document.getElementById('pay-monthly').classList.toggle('show', c!=='Daily Wages'&&!!c);
+    document.getElementById('pay-daily').classList.toggle('show', c==='Daily Wages');
+  }
+
+  if (step===1) v1();
+  if (step===2) v2();
+  if (step===3) v3();
+  if (step===4) v4();
+}
+
+function summaryHTML(s1) {
+  return `📋 <strong>${s1.empId} — ${s1.nameEn}</strong> · ${s1.position} · ${s1.dept} · ${s1.site} · Contract: ${s1.contract} · Start: ${s1.start}`;
+}
+
+function buildStep2Summary() {
+  const s1 = caseData.step1||{};
+  document.getElementById('step1-summary-payroll').innerHTML = summaryHTML(s1);
+}
+function buildStep3Summary() {
+  const s1 = caseData.step1||{};
+  const s2 = caseData.step2||{};
+  const pay = s1.contract==='Daily Wages'?`${s2.dailyRate} ${s2.dailyCurrency}/day`:`${s2.salary} ${s2.currency}/month`;
+  document.getElementById('step1-summary-manager').innerHTML =
+    summaryHTML(s1) + ` · Pay: <strong>${pay}</strong>`;
+}
+function buildStep4Summary() {
+  const s1 = caseData.step1||{};
+  document.getElementById('step1-summary-it').innerHTML =
+    summaryHTML(s1) + ` · Manager confirmed email required`;
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+loadMasters();
+activateStep(1);
+</script>
+</body>
+</html>
