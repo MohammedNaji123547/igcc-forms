@@ -426,6 +426,10 @@ function showDashboard() {
   const badge    = `<span class="role-badge ${roleData.badgeClass}">${roleData.label}</span>`;
   document.getElementById('topbar-role-badge').innerHTML = badge;
 
+  // Restore padding when on dashboard
+  const content2 = document.getElementById('main-content');
+  content2.style.padding = '28px';
+  content2.style.height  = 'auto';
   const today = new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const accessibleModules = MODULES.filter(m => access[m.id] !== null);
 
@@ -497,10 +501,11 @@ function openModule(moduleId) {
   }
 
   // Load in iframe
+  // Remove content padding for full-screen iframe
+  content.style.padding = '0';
+  content.style.height  = 'calc(100vh - 101px)';
   content.innerHTML = `
-    <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);height:calc(100vh - 130px);">
-      <iframe src="${url}" style="width:100%;height:100%;border:none;" title="${module.title}"></iframe>
-    </div>`;
+    <iframe src="${url}" style="width:100%;height:100%;border:none;display:block;" title="${module.title}"></iframe>`;
 }
 
 // ── SIGN OUT ──────────────────────────────────────────────────────────────────
