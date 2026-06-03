@@ -278,7 +278,17 @@ async function handleGoogleLogin(response) {
     );
 
     if (!emp) {
-      document.getElementById('login-error').classList.add('show');
+      // Email not in registry yet — log in as employee with limited access
+      // HR can register them later via onboarding
+      loginUser({
+        name:    payload.name,
+        email:   email,
+        picture: payload.picture,
+        empId:   '',
+        dept:    '',
+        site:    '',
+        position:'',
+      }, 'employee');
       return;
     }
 
@@ -301,21 +311,26 @@ async function handleGoogleLogin(response) {
 }
 
 function determineRole(emp) {
-  // Role determined by position/department — customize as needed
   const pos   = (emp['Position']||'').toLowerCase();
   const dept  = (emp['Department']||'').toLowerCase();
   const empId = emp['Employee ID'];
+  const email = (emp['Email']||'').toLowerCase();
 
-  // Admin list — add employee IDs of admins
-  const ADMIN_IDS = ['IG0001'];
-  if (ADMIN_IDS.includes(empId)) return 'admin';
+  // Admin list — employee IDs or emails
+  const ADMIN_IDS    = ['IG0001'];
+  const ADMIN_EMAILS = ['m.latteef@igccgroup-iq.com','mohammed.lateef@igccgroup-iq.com'];
+  if (ADMIN_IDS.includes(empId) || ADMIN_EMAILS.includes(email)) return 'admin';
 
-  // HR department = HR Manager role
-  if (dept.includes('human resource') || dept.includes(' hr')) return 'hr';
+  // HR department
+  if (dept.includes('human resource') || dept.includes('hr')) return 'hr';
+
+  // Cost Control = admin-level access
+  if (dept.includes('cost control')) return 'admin';
 
   // Supervisor-level positions
   if (pos.includes('manager') || pos.includes('supervisor') ||
-      pos.includes('lead') || pos.includes('director')) return 'supervisor';
+      pos.includes('lead') || pos.includes('director') ||
+      pos.includes('chief')) return 'supervisor';
 
   return 'employee';
 }
@@ -485,7 +500,8 @@ function openModule(moduleId) {
 
   activeModule = moduleId;
   document.getElementById('topbar-title').textContent = module.title;
-  document.getElementById('topbar-sub').textContent   = { full:'Full access', view:'View only', own:'Your data only' }[level]||'';
+  document.getElementById('topbar-sub').textContent = {full:'Full access',view:'View only',own:'Your data only'}[level]||'';
+  setActiveNav(moduleId);
 
   const url = MODULE_URLS[moduleId];
   const content = document.getElementById('main-content');
@@ -500,22 +516,18 @@ function openModule(moduleId) {
     return;
   }
 
-  // Open in new tab — best experience for complex forms
-  window.open(url, '_blank');
-
-  // Show confirmation in portal
   content.innerHTML = `
     <div style="text-align:center;padding:60px 20px;">
       <div style="font-size:52px;margin-bottom:20px;">${module.icon}</div>
       <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:8px;">${module.title}</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:28px;">Opened in a new tab</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:28px;">Click below to open the module</div>
       <a href="${url}" target="_blank"
-        style="display:inline-block;background:var(--accent);color:#fff;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:600;font-size:14px;margin-bottom:12px;">
-        ↗ Open ${module.title}
+        style="display:inline-block;background:var(--accent);color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,.2);">
+        ↗ &nbsp;Open ${module.title}
       </a>
       <div style="margin-top:16px;">
         <button onclick="showDashboard();setActiveNav('dashboard')"
-          style="background:none;border:1.5px solid var(--border);border-radius:8px;color:var(--label);cursor:pointer;font-family:var(--sans);font-size:13px;padding:9px 20px;">
+          style="background:none;border:1.5px solid var(--border);border-radius:8px;color:var(--label);cursor:pointer;font-family:var(--sans);font-size:13px;padding:9px 20px;margin-top:8px;">
           ← Back to dashboard
         </button>
       </div>
