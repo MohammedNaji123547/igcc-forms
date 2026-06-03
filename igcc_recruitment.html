@@ -1148,22 +1148,44 @@ function showSuccess(icon, title, sub, lines, isRejected=false, isComplete=false
 
 // ── ACTIVATE CORRECT STEP ─────────────────────────────────────────────────────
 function activateStep(step) {
-  currentStep=step;
+  currentStep = step;
   buildStatusBar(step);
-  const titles={1:'New Recruitment Request',2:'Manager Review',3:'HR Review',4:'Site Manager Approval',5:'Contract & Onboarding',6:'Email Account Decision',7:'IT Setup'};
-  document.getElementById('form-title').textContent=titles[step]||'';
-  ['s1','s2','s3','s4','s5','s6','s7'].forEach((id,i)=>{
-    const sec=document.getElementById(id); if(!sec) return;
-    const n=i+1;
-    if(n<step){sec.classList.remove('locked');sec.classList.add('readonly');}
-    else if(n===step){sec.classList.remove('locked','readonly');}
-    else{sec.classList.add('locked');sec.classList.remove('readonly');}
+  const titles = {
+    1:'New Recruitment Request', 2:'Manager Review', 3:'HR Review',
+    4:'Site Manager Approval',   5:'Contract & Onboarding',
+    6:'Email Account Decision',  7:'IT Setup'
+  };
+  document.getElementById('form-title').textContent = titles[step]||'';
+
+  ['s1','s2','s3','s4','s5','s6','s7'].forEach((id,i) => {
+    const sec = document.getElementById(id); if (!sec) return;
+    const n   = i + 1;
+    if (n < step) {
+      // Previous steps: hide completely when accessed from email link
+      // Show as readonly only if this is a sequential flow (step 1 was filled in this session)
+      if (step > 1 && urlStep > 1) {
+        // Opened from email — hide previous steps
+        sec.classList.add('locked');
+        sec.classList.remove('readonly');
+      } else {
+        // Sequential flow — show as readonly
+        sec.classList.remove('locked');
+        sec.classList.add('readonly');
+      }
+    } else if (n === step) {
+      sec.classList.remove('locked', 'readonly');
+    } else {
+      sec.classList.add('locked');
+      sec.classList.remove('readonly');
+    }
   });
-  if(step>=2&&caseData.step1) buildSummary(step);
-  if(step===1) validate();
-  if(step===5) validate5();
-  if(step===6) validateStep6();
-  if(step===7) validateStep7();
+
+  // Build summary info box for current step
+  if (step >= 2 && caseData.step1) buildSummary(step);
+  if (step === 1) validate();
+  if (step === 5) validate5();
+  if (step === 6) validateStep6();
+  if (step === 7) validateStep7();
 }
 
 function buildSummary(step) {
