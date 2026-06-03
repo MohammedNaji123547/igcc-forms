@@ -917,6 +917,8 @@ async function autoId() {
 async function submitStep() {
   document.getElementById('btn-submit').disabled=true;
   document.getElementById('btn-submit').textContent='Submitting...';
+  // Give UI a moment to update before heavy processing
+  await new Promise(r => setTimeout(r, 50));
 
   // Get manager email from selected option
   const mgrSel   = document.getElementById('req-mgr');
@@ -1089,22 +1091,36 @@ function showReject(who) {
 
 // ── SAVE TO SCRIPT ────────────────────────────────────────────────────────────
 async function saveToScript(payload) {
-  if (!SCRIPT_URL||SCRIPT_URL==='YOUR_RECRUITMENT_SCRIPT_URL') {
-    console.log('Recruitment payload:', JSON.stringify({...payload,data:{...payload.data,files:'[files omitted]'}},null,2));
+  // Log always for debugging
+  console.log('Submitting:', payload.action, payload.reqId);
+
+  if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_RECRUITMENT_SCRIPT_URL') {
+    console.log('Script not connected — data logged only');
     return;
   }
+
+  // Fire and forget — don't block UI
   try {
-    const iframe=document.getElementById('save-frame')||document.createElement('iframe');
-    iframe.id='save-frame';iframe.name='save-frame';iframe.style.display='none';
-    document.body.appendChild(iframe);
-    const form=document.createElement('form');
-    form.method='POST';form.action=SCRIPT_URL;form.target='save-frame';form.style.display='none';
-    const input=document.createElement('input');
-    input.type='hidden';input.name='payload';input.value=JSON.stringify(payload);
-    form.appendChild(input);document.body.appendChild(form);
-    form.submit();document.body.removeChild(form);
-    await new Promise(r=>setTimeout(r,3000));
-  } catch(e){console.error('Save error:',e);}
+    let iframe = document.getElementById('save-frame');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id='save-frame'; iframe.name='save-frame';
+      iframe.style.display='none';
+      document.body.appendChild(iframe);
+    }
+    const form = document.createElement('form');
+    form.method='POST'; form.action=SCRIPT_URL;
+    form.target='save-frame'; form.style.display='none';
+    const input = document.createElement('input');
+    input.type='hidden'; input.name='payload';
+    input.value = JSON.stringify(payload);
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+    // Short wait — just enough for form to fire, not waiting for response
+    await new Promise(r => setTimeout(r, 800));
+  } catch(e) { console.error('Save error:', e); }
 }
 
 // ── SHOW SUCCESS ──────────────────────────────────────────────────────────────
