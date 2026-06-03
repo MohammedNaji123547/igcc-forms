@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IGCC — Recruitment Request</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--surface2:#f8fafc;--border:#dde3ed;
+  --accent:#0f172a;--blue:#0284c7;--blue-dim:rgba(2,132,199,.08);
+  --success:#16a34a;--danger:#dc2626;--warning:#d97706;--purple:#7c3aed;
+  --text:#0f172a;--muted:#64748b;--label:#475569;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 12px rgba(0,0,0,.1);
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;}
+.header{background:#fff;border-bottom:2px solid var(--accent);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.logo-badge{background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;}
+.header-left{display:flex;align-items:center;gap:12px;}
+.header-title{font-size:13px;font-weight:500;color:var(--label);}
+.req-badge{font-family:var(--mono);font-size:12px;color:var(--blue);background:var(--blue-dim);border:1px solid rgba(2,132,199,.25);padding:5px 12px;border-radius:6px;font-weight:600;}
+
+/* STATUS BAR */
+.status-bar{background:#fff;border-bottom:1px solid var(--border);padding:14px 24px;box-shadow:var(--shadow);overflow-x:auto;}
+.status-steps{display:flex;align-items:center;min-width:700px;max-width:1000px;margin:0 auto;}
+.step{display:flex;align-items:center;gap:6px;flex:1;}
+.step-circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--mono);flex-shrink:0;border:2px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .3s;}
+.step-circle.done{background:var(--success);border-color:var(--success);color:#fff;}
+.step-circle.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.step-circle.rejected{background:var(--danger);border-color:var(--danger);color:#fff;}
+.step-circle.resubmitted{background:var(--warning);border-color:var(--warning);color:#fff;}
+.step-info{flex:1;min-width:0;}
+.step-name{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.step-name.active{color:var(--text);}
+.step-name.done{color:var(--success);}
+.step-role{font-size:10px;font-family:var(--mono);color:var(--muted);}
+.step-connector{width:20px;height:2px;background:var(--border);flex-shrink:0;transition:background .3s;}
+.step-connector.done{background:var(--success);}
+
+/* CONTAINER */
+.container{max-width:860px;margin:0 auto;padding:24px 20px 60px;}
+.form-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.form-subtitle{font-size:13px;color:var(--muted);margin-bottom:24px;font-family:var(--mono);}
+
+/* SECTIONS */
+.section{background:#fff;border:1px solid var(--border);border-radius:12px;padding:22px 26px;margin-bottom:16px;box-shadow:var(--shadow);}
+.section.readonly{background:var(--surface2);pointer-events:none;opacity:.85;}
+.section.locked{display:none;}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--bg);}
+.section-left{display:flex;align-items:center;gap:10px;}
+.section-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+.section-title{font-size:13px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:.07em;}
+.section-badge{font-size:11px;font-family:var(--mono);padding:3px 10px;border-radius:20px;font-weight:500;}
+.badge-dept{background:rgba(15,23,42,.08);color:var(--accent);border:1px solid rgba(15,23,42,.15);}
+.badge-mgr{background:rgba(2,132,199,.1);color:var(--blue);border:1px solid rgba(2,132,199,.2);}
+.badge-hr{background:rgba(22,163,74,.1);color:var(--success);border:1px solid rgba(22,163,74,.2);}
+.badge-sm{background:rgba(124,58,237,.1);color:var(--purple);border:1px solid rgba(124,58,237,.2);}
+.badge-contract{background:rgba(217,119,6,.1);color:var(--warning);border:1px solid rgba(217,119,6,.2);}
+.badge-readonly{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+
+/* FIELDS */
+.field-row{display:grid;gap:16px;margin-bottom:14px;}
+.field-row.cols-2{grid-template-columns:1fr 1fr;}
+.field-row.cols-3{grid-template-columns:1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:5px;}
+label{font-size:11px;font-weight:600;color:var(--label);letter-spacing:.06em;text-transform:uppercase;}
+.required{color:var(--danger);}
+input,select,textarea{background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:14px;padding:10px 12px;transition:border-color .15s,box-shadow .15s;outline:none;width:100%;}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(2,132,199,.12);}
+input:disabled,select:disabled,textarea:disabled{background:var(--surface2);color:var(--muted);cursor:not-allowed;}
+.field-hint{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.ro-field{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text);min-height:40px;}
+.ro-highlight{border-color:rgba(2,132,199,.3);background:rgba(2,132,199,.04);}
+.divider{border:none;border-top:1.5px solid var(--bg);margin:16px 0;}
+.info-note{background:rgba(2,132,199,.06);border:1px solid rgba(2,132,199,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:14px;}
+
+/* FILE UPLOAD */
+.file-upload-area{border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2);}
+.file-upload-area:hover,.file-upload-area.dragover{border-color:var(--blue);background:var(--blue-dim);}
+.file-upload-area input[type=file]{display:none;}
+.file-upload-icon{font-size:28px;margin-bottom:8px;}
+.file-upload-text{font-size:13px;color:var(--muted);}
+.file-upload-hint{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:4px;}
+.file-list{margin-top:12px;display:flex;flex-direction:column;gap:6px;}
+.file-item{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:6px;padding:8px 12px;}
+.file-item-name{flex:1;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.file-item-size{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.file-item-remove{background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;padding:0;transition:color .15s;}
+.file-item-remove:hover{color:var(--danger);}
+
+/* ACTION BUTTONS */
+.action-group{display:flex;flex-direction:column;gap:8px;}
+.btn-approve{background:var(--success);border:none;border-radius:10px;color:#fff;cursor:pointer;font-family:var(--sans);font-size:14px;font-weight:600;padding:13px;width:100%;transition:all .15s;}
+.btn-approve:hover{background:#15803d;}
+.btn-approve:disabled{opacity:.4;cursor:not-allowed;}
+.btn-resubmit{background:#fff;border:1.5px solid var(--warning);border-radius:10px;color:var(--warning);cursor:pointer;font-family:var(--sans);font-size:14px;font-weight:600;padding:13px;width:100%;transition:all .15s;}
+.btn-resubmit:hover{background:rgba(217,119,6,.06);}
+.btn-reject{background:#fff;border:1.5px solid var(--danger);border-radius:10px;color:var(--danger);cursor:pointer;font-family:var(--sans);font-size:14px;font-weight:600;padding:13px;width:100%;transition:all .15s;}
+.btn-reject:hover{background:rgba(220,38,38,.06);}
+.btn-primary{background:var(--accent);border:none;border-radius:10px;color:#fff;cursor:pointer;font-family:var(--sans);font-size:14px;font-weight:600;padding:13px;width:100%;transition:all .15s;}
+.btn-primary:hover{opacity:.9;}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+
+/* REASON BOX */
+.reason-box{background:rgba(220,38,38,.04);border:1.5px solid rgba(220,38,38,.2);border-radius:8px;padding:14px;margin-top:8px;display:none;}
+.reason-box.show{display:block;}
+.reason-box label{color:var(--danger);}
+.reason-box textarea{border-color:rgba(220,38,38,.3);}
+.reason-box textarea:focus{border-color:var(--danger);box-shadow:0 0 0 3px rgba(220,38,38,.1);}
+
+/* RESUBMIT BOX */
+.resubmit-box{background:rgba(217,119,6,.04);border:1.5px solid rgba(217,119,6,.2);border-radius:8px;padding:14px;margin-top:8px;display:none;}
+.resubmit-box.show{display:block;}
+.resubmit-box label{color:var(--warning);}
+.resubmit-box textarea{border-color:rgba(217,119,6,.3);}
+
+/* HISTORY TRAIL */
+.history-trail{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px;}
+.history-title{font-size:11px;font-weight:600;color:var(--label);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;}
+.history-item{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);}
+.history-item:last-child{border-bottom:none;}
+.history-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.dot-approved{background:var(--success);}
+.dot-rejected{background:var(--danger);}
+.dot-resubmitted{background:var(--warning);}
+.dot-submitted{background:var(--blue);}
+.history-content{flex:1;}
+.history-action{font-size:12px;font-weight:600;color:var(--text);}
+.history-meta{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.history-reason{font-size:12px;color:var(--muted);margin-top:3px;font-style:italic;}
+
+/* VALIDATION */
+.val-panel{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:16px;box-shadow:var(--shadow);}
+.val-title{font-size:11px;font-weight:600;color:var(--label);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;}
+.val-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);padding:3px 0;font-family:var(--mono);}
+.val-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;}
+.val-dot.pass{background:var(--success);}
+.val-dot.fail{background:var(--danger);}
+.val-row.pass{color:var(--success);}
+.val-row.fail{color:var(--danger);}
+
+/* SUCCESS */
+.success-screen{display:none;text-align:center;padding:60px 20px;}
+.success-icon{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 20px;}
+.success-title{font-size:22px;font-weight:700;margin-bottom:8px;}
+.success-sub{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:28px;}
+.audit-box{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:18px;text-align:left;font-family:var(--mono);font-size:12px;max-width:600px;margin:0 auto 24px;box-shadow:var(--shadow);}
+.audit-line{padding:4px 0;display:flex;gap:12px;border-bottom:1px solid var(--border);}
+.audit-line:last-child{border-bottom:none;}
+.audit-key{color:var(--label);min-width:140px;font-weight:500;}
+.audit-val{color:var(--text);}
+
+.hidden{display:none!important;}
+@media(max-width:640px){.field-row.cols-2,.field-row.cols-3{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="logo-badge">IGCC</span>
+    <span class="header-title">Human Resources · Recruitment Request</span>
+  </div>
+  <span class="req-badge" id="req-badge">Loading...</span>
+</div>
+
+<div class="status-bar">
+  <div class="status-steps" id="status-steps"></div>
+</div>
+
+<div class="container" id="form-container">
+  <div class="form-title" id="form-title">New Recruitment Request</div>
+  <div class="form-subtitle" id="form-subtitle"></div>
+
+  <!-- HISTORY TRAIL (shown from step 2+) -->
+  <div class="history-trail hidden" id="history-trail">
+    <div class="history-title">Process history</div>
+    <div id="history-items"></div>
+  </div>
+
+  <!-- ══════════ STEP 1: DEPARTMENT ══════════ -->
+  <div class="section" id="s1">
+    <div class="section-header">
+      <div class="section-left">
+        <div class="section-num" style="background:var(--accent);">1</div>
+        <div class="section-title">Candidate Information</div>
+      </div>
+      <span class="section-badge badge-dept">Department</span>
+    </div>
+
+    <!-- Requester info -->
+    <div class="field-row cols-3">
+      <div class="field">
+        <label>Requested by (email) <span class="required">*</span></label>
+        <input type="email" id="req-by" placeholder="your@igccgroup-iq.com" oninput="validate()">
+      </div>
+      <div class="field">
+        <label>Department <span class="required">*</span></label>
+        <select id="req-dept" onchange="validate()">
+          <option value="">Select department...</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Your direct manager <span class="required">*</span></label>
+        <select id="req-mgr" onchange="validate()">
+          <option value="">Select your manager...</option>
+        </select>
+        <span class="field-hint">Request routed to this manager for approval</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Candidate info -->
+    <div class="field-row cols-3">
+      <div class="field">
+        <label>Candidate full name <span class="required">*</span></label>
+        <input type="text" id="c-name" placeholder="First Middle Last" oninput="validate()">
+      </div>
+      <div class="field">
+        <label>Gender <span class="required">*</span></label>
+        <select id="c-gender" onchange="validate()">
+          <option value="">Select...</option>
+          <option>Male</option><option>Female</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Contact number <span class="required">*</span></label>
+        <input type="tel" id="c-phone" placeholder="+964 7xx xxx xxxx" oninput="validate()">
+      </div>
+    </div>
+    <div class="field-row cols-3">
+      <div class="field">
+        <label>Nationality <span class="required">*</span></label>
+        <select id="c-nationality" onchange="validate()">
+          <option value="">Select...</option>
+          <option>Iraqi</option><option>Expat</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Position applied for <span class="required">*</span></label>
+        <select id="c-position" onchange="validate()">
+          <option value="">Select position...</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Site / Cost Centre <span class="required">*</span></label>
+        <select id="c-site" onchange="validate()">
+          <option value="">Select site...</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>New hire's direct manager <span class="required">*</span></label>
+        <select id="c-mgr" onchange="validate()">
+          <option value="">Select manager...</option>
+        </select>
+        <span class="field-hint">Who will this candidate report to?</span>
+      </div>
+      <div class="field">
+        <label>Proposed start date</label>
+        <input type="date" id="c-start">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Pay rate (confidential) -->
+    <div class="field-row cols-3" style="background:rgba(15,23,42,.02);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px;">
+      <div class="field">
+        <label>Proposed pay rate <span class="required">*</span></label>
+        <input type="number" id="c-payrate" placeholder="0.00" min="0" step="0.01" oninput="validate()">
+      </div>
+      <div class="field">
+        <label>Currency</label>
+        <select id="c-currency">
+          <option>USD</option><option>IQD</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Pay type</label>
+        <select id="c-paytype">
+          <option value="">Select...</option>
+          <option>Monthly salary</option>
+          <option>Daily rate</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Document attachments -->
+    <div class="field">
+      <label>Supporting documents (CV, certificates, ID, etc.)</label>
+      <div class="file-upload-area" id="upload-area" onclick="document.getElementById('file-input').click()"
+        ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFiles(event)">
+        <input type="file" id="file-input" multiple accept="*/*" onchange="handleFiles(this.files)">
+        <div class="file-upload-icon">📎</div>
+        <div class="file-upload-text">Click to attach files or drag & drop here</div>
+        <div class="file-upload-hint">PDF, Word, images, scans — any file type · Max 10MB per file</div>
+      </div>
+      <div class="file-list" id="file-list"></div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="field">
+      <label>Additional notes</label>
+      <textarea id="req-notes" rows="2" placeholder="Any additional context about this candidate or position..."></textarea>
+    </div>
+
+    <div class="val-panel"><div class="val-title">Checklist</div><div id="val-rows"></div></div>
+    <button class="btn-primary" id="btn-submit" onclick="submitStep()" disabled>Submit recruitment request</button>
+  </div>
+
+  <!-- ══════════ STEP 2: DIRECT MANAGER ══════════ -->
+  <div class="section locked" id="s2">
+    <div class="section-header">
+      <div class="section-left">
+        <div class="section-num" style="background:var(--blue);">2</div>
+        <div class="section-title">Manager Review</div>
+      </div>
+      <span class="section-badge badge-mgr">Direct Manager</span>
+    </div>
+    <div class="info-note" id="s2-summary"></div>
+    <div class="divider"></div>
+    <div class="field">
+      <label>Manager email <span class="required">*</span></label>
+      <input type="email" id="mgr-email" placeholder="manager@igccgroup-iq.com" oninput="validate()">
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <label>Manager comments</label>
+      <textarea id="mgr-comments" rows="2" placeholder="Any comments on this candidate..."></textarea>
+    </div>
+    <div class="divider"></div>
+    <div class="action-group">
+      <button class="btn-approve" onclick="doAction('approve')">✓ Approve — forward to HR</button>
+      <button class="btn-resubmit" onclick="showResubmit('mgr')">↩ Resubmit to requester</button>
+      <button class="btn-reject" onclick="showReject('mgr')">✗ Reject & close case</button>
+    </div>
+    <div class="resubmit-box" id="mgr-resubmit-box">
+      <label>Reason for resubmission <span class="required">*</span></label>
+      <textarea id="mgr-resubmit-reason" rows="2" placeholder="Explain what needs to be corrected or updated..." oninput="validate()"></textarea>
+      <button class="btn-resubmit" style="margin-top:10px;" onclick="doAction('resubmit','mgr')">↩ Confirm resubmission</button>
+    </div>
+    <div class="reason-box" id="mgr-reject-box">
+      <label>Reason for rejection <span class="required">*</span></label>
+      <textarea id="mgr-reject-reason" rows="2" placeholder="Explain why this request is being rejected..." oninput="validate()"></textarea>
+      <button class="btn-reject" style="margin-top:10px;" onclick="doAction('reject','mgr')">✗ Confirm rejection</button>
+    </div>
+  </div>
+
+  <!-- ══════════ STEP 3: HR ══════════ -->
+  <div class="section locked" id="s3">
+    <div class="section-header">
+      <div class="section-left">
+        <div class="section-num" style="background:var(--success);">3</div>
+        <div class="section-title">HR Review</div>
+      </div>
+      <span class="section-badge badge-hr">HR Department</span>
+    </div>
+    <div class="info-note" id="s3-summary"></div>
+    <div class="divider"></div>
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>HR officer email <span class="required">*</span></label>
+        <input type="email" id="hr-email" placeholder="hr@igccgroup-iq.com" oninput="validate()">
+      </div>
+      <div class="field">
+        <label>Site manager email <span class="required">*</span></label>
+        <input type="email" id="sm-email" placeholder="sitemanager@igccgroup-iq.com" oninput="validate()">
+        <span class="field-hint">Case will be forwarded to this site manager</span>
+      </div>
+    </div>
+    <div class="field" style="margin-top:4px;">
+      <label>HR comments</label>
+      <textarea id="hr-comments" rows="2" placeholder="HR review notes..."></textarea>
+    </div>
+    <div class="divider"></div>
+    <div class="action-group">
+      <button class="btn-approve" onclick="doAction('approve')">✓ Approve — forward to Site Manager</button>
+      <button class="btn-resubmit" onclick="showResubmit('hr')">↩ Resubmit to requester</button>
+      <button class="btn-reject" onclick="showReject('hr')">✗ Reject & close case</button>
+    </div>
+    <div class="resubmit-box" id="hr-resubmit-box">
+      <label>Reason for resubmission <span class="required">*</span></label>
+      <textarea id="hr-resubmit-reason" rows="2" placeholder="What needs to be corrected..." oninput="validate()"></textarea>
+      <button class="btn-resubmit" style="margin-top:10px;" onclick="doAction('resubmit','hr')">↩ Confirm resubmission</button>
+    </div>
+    <div class="reason-box" id="hr-reject-box">
+      <label>Reason for rejection <span class="required">*</span></label>
+      <textarea id="hr-reject-reason" rows="2" placeholder="Reason for rejection..." oninput="validate()"></textarea>
+      <button class="btn-reject" style="margin-top:10px;" onclick="doAction('reject','hr')">✗ Confirm rejection</button>
+    </div>
+  </div>
+
+  <!-- ══════════ STEP 4: SITE MANAGER ══════════ -->
+  <div class="section locked" id="s4">
+    <div class="section-header">
+      <div class="section-left">
+        <div class="section-num" style="background:var(--purple);">4</div>
+        <div class="section-title">Site Manager Approval</div>
+      </div>
+      <span class="section-badge badge-sm">Site Manager</span>
+    </div>
+    <div class="info-note" id="s4-summary"></div>
+    <div class="divider"></div>
+    <div class="field">
+      <label>Site manager email <span class="required">*</span></label>
+      <input type="email" id="sm-email-confirm" placeholder="sitemanager@igccgroup-iq.com" oninput="validate()">
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <label>Site manager comments</label>
+      <textarea id="sm-comments" rows="2" placeholder="Any comments..."></textarea>
+    </div>
+    <div class="divider"></div>
+    <div class="action-group">
+      <button class="btn-approve" onclick="doAction('approve')">✓ Approve — return to HR for contract</button>
+      <button class="btn-resubmit" onclick="showResubmit('sm-req')">↩ Resubmit to requester</button>
+      <button class="btn-resubmit" style="border-color:var(--success);color:var(--success);" onclick="showResubmit('sm-hr')">↩ Resubmit to HR</button>
+      <button class="btn-reject" onclick="showReject('sm')">✗ Reject & close case</button>
+    </div>
+    <div class="resubmit-box" id="sm-req-resubmit-box">
+      <label>Reason for resubmission to requester <span class="required">*</span></label>
+      <textarea id="sm-req-resubmit-reason" rows="2" placeholder="What needs to be corrected by the requester..." oninput="validate()"></textarea>
+      <button class="btn-resubmit" style="margin-top:10px;" onclick="doAction('resubmit','sm-req')">↩ Confirm — send to requester</button>
+    </div>
+    <div class="resubmit-box" id="sm-hr-resubmit-box" style="background:rgba(22,163,74,.04);border-color:rgba(22,163,74,.2);">
+      <label style="color:var(--success);">Reason for resubmission to HR <span class="required">*</span></label>
+      <textarea id="sm-hr-resubmit-reason" rows="2" placeholder="What needs HR to address..." style="border-color:rgba(22,163,74,.3);" oninput="validate()"></textarea>
+      <button class="btn-resubmit" style="margin-top:10px;border-color:var(--success);color:var(--success);" onclick="doAction('resubmit','sm-hr')">↩ Confirm — send to HR</button>
+    </div>
+    <div class="reason-box" id="sm-reject-box">
+      <label>Reason for rejection <span class="required">*</span></label>
+      <textarea id="sm-reject-reason" rows="2" placeholder="Reason for rejection..." oninput="validate()"></textarea>
+      <button class="btn-reject" style="margin-top:10px;" onclick="doAction('reject','sm')">✗ Confirm rejection</button>
+    </div>
+  </div>
+
+  <!-- ══════════ STEP 5: HR CONTRACT & ONBOARDING ══════════ -->
+  <div class="section locked" id="s5">
+    <div class="section-header">
+      <div class="section-left">
+        <div class="section-num" style="background:var(--warning);">5</div>
+        <div class="section-title">Contract & Onboarding</div>
+      </div>
+      <span class="section-badge badge-contract">HR Department</span>
+    </div>
+    <div class="info-note" id="s5-summary"></div>
+    <div class="divider"></div>
+
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>HR officer email <span class="required">*</span></label>
+        <input type="email" id="hr2-email" placeholder="hr@igccgroup-iq.com" oninput="validate()">
+      </div>
+      <div class="field">
+        <label>Contract signed date <span class="required">*</span></label>
+        <input type="date" id="contract-date" oninput="validate()">
+      </div>
+    </div>
+
+    <!-- Full employee info -->
+    <div class="field-row cols-3">
+      <div class="field">
+        <label>Employee ID <span class="required">*</span></label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="emp-id" placeholder="e.g. IG0042" oninput="validate()" style="flex:1;">
+          <button onclick="autoId()" style="background:var(--blue-dim);border:1px solid rgba(2,132,199,.3);border-radius:8px;color:var(--blue);cursor:pointer;font-size:12px;padding:0 12px;white-space:nowrap;">Auto</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Full name (Arabic)</label>
+        <input type="text" id="emp-name-ar" placeholder="الاسم الكامل" dir="rtl">
+      </div>
+      <div class="field">
+        <label>Date of birth</label>
+        <input type="date" id="emp-dob">
+      </div>
+    </div>
+    <div class="field-row cols-3">
+      <div class="field">
+        <label>National ID / Passport <span class="required">*</span></label>
+        <input type="text" id="emp-nid" placeholder="ID number" oninput="validate()">
+      </div>
+      <div class="field">
+        <label>Contract type <span class="required">*</span></label>
+        <select id="emp-contract" onchange="validate()">
+          <option value="">Select...</option>
+          <option>Rotation</option>
+          <option>Fixed-term contract</option>
+          <option>Daily Wages</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Contract end date</label>
+        <input type="date" id="emp-end">
+      </div>
+    </div>
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>Emergency contact name</label>
+        <input type="text" id="ec-name" placeholder="Full name">
+      </div>
+      <div class="field">
+        <label>Emergency contact phone</label>
+        <input type="tel" id="ec-phone" placeholder="+964 7xx xxx xxxx">
+      </div>
+    </div>
+
+    <!-- Signed contract upload -->
+    <div class="field">
+      <label>Signed contract <span class="required">*</span></label>
+      <div class="file-upload-area" id="contract-upload-area" onclick="document.getElementById('contract-file-input').click()">
+        <input type="file" id="contract-file-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="handleContractFile(this.files)">
+        <div class="file-upload-icon">📄</div>
+        <div class="file-upload-text">Upload signed contract</div>
+        <div class="file-upload-hint">PDF or Word preferred</div>
+      </div>
+      <div id="contract-file-display"></div>
+    </div>
+
+    <div class="field" style="margin-top:12px;">
+      <label>HR onboarding notes</label>
+      <textarea id="onboarding-notes" rows="2" placeholder="Any notes about the onboarding process..."></textarea>
+    </div>
+
+    <div class="val-panel"><div class="val-title">Checklist</div><div id="val-rows-5"></div></div>
+    <button class="btn-approve" id="btn-complete" onclick="completeOnboarding()" disabled>✓ Complete onboarding — activate employee</button>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div class="success-screen" id="success-screen">
+  <div class="success-icon" id="success-icon" style="background:rgba(22,163,74,.1);border:2px solid var(--success);">✓</div>
+  <div class="success-title" id="success-title">Submitted</div>
+  <div class="success-sub" id="success-sub"></div>
+  <div class="audit-box" id="audit-box"></div>
+  <button style="background:var(--accent);border:none;border-radius:10px;color:#fff;cursor:pointer;font-family:var(--sans);font-size:14px;font-weight:600;padding:12px 28px;margin-top:8px;" onclick="location.reload()">Start new request</button>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbwwQwU6qh3M0SWqXoHZHO8WEhAfpv9qBD3KCEEiAQYByt1lRfdeJ9cfWm1JtjNssNROdg/exec';
+const HR_REG_URL   = 'https://script.google.com/macros/s/AKfycbyWr4pGHzsdUvfHARGhEtTaVNPn3tf4-7YZZLgys0B2KlyR-q1_REOvRvINgUODkW32/exec';
+const CSV_SITES    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSfLmsVdtOnq7zUKzaPX7Uwd-aQ6eiONkQv30vWRS0MO-3XRZzj5liNU08LyRoII522GqAqovxo3Z5N/pub?output=csv';
+
+const POSITIONS_LIST = ['Project Manager','Construction Manager','Site Manager','Civil Engineer','Senior Civil Engineer','Mechanical Engineer','Senior Mechanical Engineer','Electrical Engineer','Senior Electrical Engineer','Instrument Engineer','Piping Engineer','Structural Engineer','Process Engineer','Commissioning Engineer','Planning Manager','Senior Planner','Planner','Cost Control Lead','Cost Control Engineer','Quantity Surveyor','HSE Manager','HSE Lead','HSE Supervisor','HSE Officer','Safety Officer','QA/QC Manager','QA/QC Engineer','QC Inspector','Welding Inspector','NDT Technician','Construction Supervisor','Civil Supervisor','Mechanical Supervisor','Electrical Supervisor','Civil Foreman','Mechanical Foreman','Electrical Foreman','Scaffold Foreman','Welder','Pipefitter','Electrician','Instrumentation Technician','Rigger','Scaffolder','Carpenter','Mason','Painter','Heavy Equipment Operator','Crane Operator','Forklift Operator','Surveyor','Document Controller','Administrator','HR Officer','HR Manager','Timekeeper','Logistics Manager','Warehouse Manager','Store Keeper','Driver','Finance Manager','Accountant','Payroll Officer','Security Guard','Camp Boss','Cook','IT Manager','IT Technician','Medical Officer','General Manager'].sort();
+
+const DEPTS_LIST = ['Civil','Mechanical','Electrical','Instrumentation','Piping','Structural','Painting & Coating','Insulation','Scaffolding','Commissioning','QAQC','HSE','Planning','Engineering','Project Management','Construction Management','Administration','Human Resources','Document Control','Finance','Accounting','Cost Control','Commercial','Procurement','Contracts','Logistics','Warehouse','Materials','Transportation','Camp Services','Information Technology','Security','Medical','Operations'].sort();
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let currentStep = 1;
+let caseData    = {};
+let employees   = [];
+let uploadedFiles = [];
+let contractFile  = null;
+let history     = [];
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+const today  = new Date();
+const pad    = n => String(n).padStart(2,'0');
+const dateStr= `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+const reqId  = new URLSearchParams(window.location.search).get('req') ||
+               `REC-${today.getFullYear()}${pad(today.getMonth()+1)}${pad(today.getDate())}-${Math.floor(Math.random()*9000)+1000}`;
+const urlStep= parseInt(new URLSearchParams(window.location.search).get('step'))||1;
+
+document.getElementById('req-badge').textContent = reqId;
+document.getElementById('form-subtitle').textContent = `${reqId}  ·  ${today.toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
+document.getElementById('contract-date').value = dateStr;
+
+// ── STEP CONFIG ───────────────────────────────────────────────────────────────
+const STEPS = [
+  { id:1, name:'Candidate Info',   role:'Department' },
+  { id:2, name:'Manager Review',   role:'Direct Manager' },
+  { id:3, name:'HR Review',        role:'HR Department' },
+  { id:4, name:'Site Manager',     role:'Site Manager' },
+  { id:5, name:'Contract',         role:'HR Department' },
+  { id:6, name:'Completed',        role:'—' },
+];
+
+function buildStatusBar(step, statusMap={}) {
+  const bar = document.getElementById('status-steps');
+  bar.innerHTML = STEPS.map((s,i) => {
+    const st = statusMap[s.id]||'pending';
+    const cls = s.id<step?'done':s.id===step?'active':st==='rejected'?'rejected':st==='resubmitted'?'resubmitted':'';
+    const conn = i<STEPS.length-1?`<div class="step-connector ${s.id<step?'done':''}"></div>`:'';
+    return `<div class="step">
+      <div class="step-circle ${cls}">${s.id<step?'✓':s.id===step?s.id:'○'}</div>
+      <div class="step-info">
+        <div class="step-name ${s.id===step?'active':s.id<step?'done':''}">${s.name}</div>
+        <div class="step-role">${s.role}</div>
+      </div>
+    </div>${conn}`;
+  }).join('');
+}
+
+// ── LOAD MASTER DATA ──────────────────────────────────────────────────────────
+async function loadMasters() {
+  // Positions
+  const posSel = document.getElementById('c-position');
+  posSel.innerHTML = '<option value="">Select position...</option>';
+  POSITIONS_LIST.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;posSel.appendChild(o);});
+
+  // Departments
+  const deptSel = document.getElementById('req-dept');
+  deptSel.innerHTML = '<option value="">Select department...</option>';
+  DEPTS_LIST.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;deptSel.appendChild(o);});
+
+  // Sites
+  try {
+    const res  = await fetch(CSV_SITES);
+    const text = await res.text();
+    const sites= text.trim().split('\n').slice(1).map(l=>l.split(',')[0].trim().replace(/^"|"$/g,'')).filter(Boolean);
+    const siteSel = document.getElementById('c-site');
+    siteSel.innerHTML = '<option value="">Select site...</option>';
+    sites.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;siteSel.appendChild(o);});
+  } catch(e){}
+
+  // Employees for manager dropdowns
+  try {
+    const res  = await fetch(`${HR_REG_URL}?action=read`);
+    const json = await res.json();
+    employees  = (json.data||[]).filter(e=>e['Status']==='Active');
+    ['req-mgr','c-mgr'].forEach(selId => {
+      const sel = document.getElementById(selId);
+      sel.innerHTML = '<option value="">Select manager...</option>';
+      sel.innerHTML += '<option value="CEO">CEO — Chief Executive Officer</option>';
+      employees.forEach(e=>{
+        const o=document.createElement('option');
+        o.value=e['Employee ID'];
+        o.dataset.email=e['Email']||'';
+        o.textContent=`${e['Employee ID']} — ${e['Full Name (EN)']} (${e['Position']||'—'})`;
+        sel.appendChild(o);
+      });
+    });
+  } catch(e){}
+}
+
+// ── FILE HANDLING ─────────────────────────────────────────────────────────────
+function handleFiles(files) {
+  Array.from(files).forEach(f => {
+    if (f.size > 10*1024*1024) { alert(`${f.name} is too large (max 10MB)`); return; }
+    uploadedFiles.push(f);
+    renderFileList();
+  });
+  document.getElementById('file-input').value = '';
+  validate();
+}
+
+function renderFileList() {
+  const list = document.getElementById('file-list');
+  list.innerHTML = uploadedFiles.map((f,i)=>`
+    <div class="file-item">
+      <span style="font-size:16px;">${fileIcon(f.name)}</span>
+      <span class="file-item-name">${f.name}</span>
+      <span class="file-item-size">${(f.size/1024).toFixed(0)} KB</span>
+      <button class="file-item-remove" onclick="removeFile(${i})">×</button>
+    </div>`).join('');
+}
+
+function removeFile(i) { uploadedFiles.splice(i,1); renderFileList(); validate(); }
+
+function fileIcon(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  if (['pdf'].includes(ext)) return '📄';
+  if (['doc','docx'].includes(ext)) return '📝';
+  if (['jpg','jpeg','png','gif','webp'].includes(ext)) return '🖼️';
+  return '📎';
+}
+
+function handleContractFile(files) {
+  if (!files.length) return;
+  contractFile = files[0];
+  document.getElementById('contract-file-display').innerHTML = `
+    <div class="file-item" style="margin-top:8px;">
+      <span style="font-size:16px;">${fileIcon(contractFile.name)}</span>
+      <span class="file-item-name">${contractFile.name}</span>
+      <span class="file-item-size">${(contractFile.size/1024).toFixed(0)} KB</span>
+      <button class="file-item-remove" onclick="contractFile=null;document.getElementById('contract-file-display').innerHTML='';validate5()">×</button>
+    </div>`;
+  validate5();
+}
+
+function dragOver(e) { e.preventDefault(); document.getElementById('upload-area').classList.add('dragover'); }
+function dragLeave(e) { document.getElementById('upload-area').classList.remove('dragover'); }
+function dropFiles(e) { e.preventDefault(); dragLeave(e); handleFiles(e.dataTransfer.files); }
+
+// ── FILE TO BASE64 ────────────────────────────────────────────────────────────
+function fileToBase64(file) {
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>resolve(r.result.split(',')[1]);
+    r.onerror=reject;
+    r.readAsDataURL(file);
+  });
+}
+
+// ── VALIDATION ────────────────────────────────────────────────────────────────
+const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
+function renderVal(checks, panelId='val-rows') {
+  const el = document.getElementById(panelId);
+  if (!el) return;
+  el.innerHTML = checks.map(([l,p])=>`
+    <div class="val-row ${p?'pass':'fail'}">
+      <div class="val-dot ${p?'pass':'fail'}"></div>${l}
+    </div>`).join('');
+  const btn = document.getElementById('btn-submit');
+  if (btn) btn.disabled = !checks.every(c=>c[1]);
+}
+
+function validate() {
+  if (currentStep!==1) return;
+  const checks=[
+    ['Requester email valid',isEmail(document.getElementById('req-by').value.trim())],
+    ['Department selected',!!document.getElementById('req-dept').value],
+    ['Your direct manager selected',!!document.getElementById('req-mgr').value],
+    ['Candidate name provided',!!document.getElementById('c-name').value.trim()],
+    ['Gender selected',!!document.getElementById('c-gender').value],
+    ['Contact number provided',!!document.getElementById('c-phone').value.trim()],
+    ['Nationality selected',!!document.getElementById('c-nationality').value],
+    ['Position selected',!!document.getElementById('c-position').value],
+    ['Site selected',!!document.getElementById('c-site').value],
+    ["Candidate's manager selected",!!document.getElementById('c-mgr').value],
+    ['Pay rate provided',!!document.getElementById('c-payrate').value],
+  ];
+  renderVal(checks);
+}
+
+function validate5() {
+  const checks=[
+    ['HR email valid',isEmail(document.getElementById('hr2-email').value.trim())],
+    ['Contract signed date set',!!document.getElementById('contract-date').value],
+    ['Employee ID provided',!!document.getElementById('emp-id').value.trim()],
+    ['National ID / Passport provided',!!document.getElementById('emp-nid').value.trim()],
+    ['Contract type selected',!!document.getElementById('emp-contract').value],
+    ['Signed contract uploaded',!!contractFile],
+  ];
+  renderVal(checks,'val-rows-5');
+  document.getElementById('btn-complete').disabled = !checks.every(c=>c[1]);
+}
+
+// ── AUTO ID ───────────────────────────────────────────────────────────────────
+async function autoId() {
+  try {
+    const res=await fetch(`${HR_REG_URL}?action=check_id`);
+    const j=await res.json();
+    document.getElementById('emp-id').value=j.nextId||'IG0001';
+  } catch(e){
+    const nums=employees.map(e=>{const m=(e['Employee ID']||'').match(/^IG(\d+)$/);return m?parseInt(m[1]):0;});
+    document.getElementById('emp-id').value=`IG${String(Math.max(0,...nums)+1).padStart(4,'0')}`;
+  }
+  validate5();
+}
+
+// ── SUBMIT STEP 1 ─────────────────────────────────────────────────────────────
+async function submitStep() {
+  document.getElementById('btn-submit').disabled=true;
+  document.getElementById('btn-submit').textContent='Submitting...';
+
+  // Get manager email from selected option
+  const mgrSel = document.getElementById('req-mgr');
+  const mgrEmail = mgrSel.options[mgrSel.selectedIndex]?.dataset?.email||'';
+  const mgrName  = mgrSel.options[mgrSel.selectedIndex]?.textContent||'';
+
+  // Convert files to base64
+  const fileMeta = [];
+  for (const f of uploadedFiles) {
+    const b64 = await fileToBase64(f);
+    fileMeta.push({ name:f.name, type:f.type, size:f.size, data:b64 });
+  }
+
+  caseData.step1 = {
+    reqId, reqBy:document.getElementById('req-by').value.trim(),
+    reqDept:document.getElementById('req-dept').value,
+    reqMgr:document.getElementById('req-mgr').value,
+    reqMgrEmail:mgrEmail, reqMgrName:mgrName,
+    cName:document.getElementById('c-name').value.trim(),
+    cGender:document.getElementById('c-gender').value,
+    cPhone:document.getElementById('c-phone').value.trim(),
+    cNationality:document.getElementById('c-nationality').value,
+    cPosition:document.getElementById('c-position').value,
+    cSite:document.getElementById('c-site').value,
+    cMgr:document.getElementById('c-mgr').value,
+    cStart:document.getElementById('c-start').value,
+    payRate:document.getElementById('c-payrate').value,
+    currency:document.getElementById('c-currency').value,
+    payType:document.getElementById('c-paytype').value,
+    notes:document.getElementById('req-notes').value.trim(),
+    files:fileMeta,
+    status:'Pending Manager',
+    submittedAt:new Date().toISOString(),
+  };
+
+  await saveToScript({ action:'step1', data:caseData.step1 });
+  addHistory('submitted','Department','Request submitted','',caseData.step1.reqBy);
+  showSuccess('📋','Request submitted','Your manager will receive an email to review and approve',[
+    ['Request ID',reqId],['Candidate',caseData.step1.cName],
+    ['Position',caseData.step1.cPosition],['Site',caseData.step1.cSite],
+    ['Status','Pending Manager Approval']
+  ]);
+}
+
+// ── ACTIONS (approve/reject/resubmit) ─────────────────────────────────────────
+async function doAction(type, subtype='') {
+  const step = currentStep;
+
+  if (type==='approve') {
+    let payload = { action:`step${step}_approve`, reqId };
+    if (step===2) {
+      payload.mgrEmail = document.getElementById('mgr-email').value.trim();
+      payload.comments = document.getElementById('mgr-comments').value.trim();
+      payload.nextStatus = 'Pending HR';
+    } else if (step===3) {
+      payload.hrEmail  = document.getElementById('hr-email').value.trim();
+      payload.smEmail  = document.getElementById('sm-email').value.trim();
+      payload.comments = document.getElementById('hr-comments').value.trim();
+      payload.nextStatus = 'Pending Site Manager';
+    } else if (step===4) {
+      payload.smEmail  = document.getElementById('sm-email-confirm').value.trim();
+      payload.comments = document.getElementById('sm-comments').value.trim();
+      payload.nextStatus = 'Pending Contract';
+    }
+    await saveToScript(payload);
+    const nextLabels={2:'HR department',3:'Site Manager',4:'HR for contract'};
+    addHistory('approved',STEPS[step-1].role,`Approved — forwarded to ${nextLabels[step]||'next step'}`,'',payload.mgrEmail||payload.hrEmail||payload.smEmail);
+    showSuccess('✅',`Approved — forwarded to ${nextLabels[step]||'next step'}`,'Notification sent automatically',[
+      ['Request ID',reqId],['Action','Approved'],['Status',payload.nextStatus]
+    ]);
+
+  } else if (type==='resubmit') {
+    const reasonMap = {
+      'mgr':    ['mgr-resubmit-reason','mgr-email'],
+      'hr':     ['hr-resubmit-reason','hr-email'],
+      'sm-req': ['sm-req-resubmit-reason','sm-email-confirm'],
+      'sm-hr':  ['sm-hr-resubmit-reason','sm-email-confirm'],
+    };
+    const [reasonId, emailId] = reasonMap[subtype]||[];
+    const reason = document.getElementById(reasonId)?.value?.trim()||'';
+    const byEmail= document.getElementById(emailId)?.value?.trim()||'';
+    if (!reason) { alert('Please provide a reason for resubmission'); return; }
+    await saveToScript({ action:`step${step}_resubmit`, reqId, subtype, reason, byEmail });
+    addHistory('resubmitted',STEPS[step-1].role,'Resubmitted to requester',reason,byEmail);
+    showSuccess('↩','Resubmitted to requester','The requester will receive an email with your feedback',[
+      ['Request ID',reqId],['Action','Resubmitted'],['Reason',reason],['Status','Awaiting Requester Update']
+    ]);
+
+  } else if (type==='reject') {
+    const reasonMap = { 'mgr':['mgr-reject-reason','mgr-email'],'hr':['hr-reject-reason','hr-email'],'sm':['sm-reject-reason','sm-email-confirm'] };
+    const [reasonId,emailId]=reasonMap[subtype]||[];
+    const reason = document.getElementById(reasonId)?.value?.trim()||'';
+    const byEmail= document.getElementById(emailId)?.value?.trim()||'';
+    if (!reason) { alert('Please provide a reason for rejection'); return; }
+    await saveToScript({ action:`step${step}_reject`, reqId, reason, byEmail });
+    addHistory('rejected',STEPS[step-1].role,'Rejected — case closed',reason,byEmail);
+    showSuccess('❌','Request rejected','Case has been closed. The requester has been notified.',[
+      ['Request ID',reqId],['Action','Rejected & Closed'],['Reason',reason],['Status','Closed']
+    ], true);
+  }
+}
+
+// ── COMPLETE ONBOARDING ───────────────────────────────────────────────────────
+async function completeOnboarding() {
+  document.getElementById('btn-complete').disabled=true;
+  document.getElementById('btn-complete').textContent='Processing...';
+
+  let contractB64='';
+  if (contractFile) contractB64 = await fileToBase64(contractFile);
+
+  const payload = {
+    action:'step5_complete', reqId,
+    hrEmail:document.getElementById('hr2-email').value.trim(),
+    contractDate:document.getElementById('contract-date').value,
+    empId:document.getElementById('emp-id').value.trim(),
+    nameAr:document.getElementById('emp-name-ar').value.trim(),
+    dob:document.getElementById('emp-dob').value,
+    nid:document.getElementById('emp-nid').value.trim(),
+    contract:document.getElementById('emp-contract').value,
+    endDate:document.getElementById('emp-end').value,
+    ecName:document.getElementById('ec-name').value.trim(),
+    ecPhone:document.getElementById('ec-phone').value.trim(),
+    onboardingNotes:document.getElementById('onboarding-notes').value.trim(),
+    contractFile:contractB64,
+    contractFileName:contractFile?.name||'',
+  };
+  await saveToScript(payload);
+  showSuccess('🎉','Onboarding complete!','Employee is now active in the registry',[
+    ['Request ID',reqId],['Employee ID',payload.empId],
+    ['Contract type',document.getElementById('emp-contract').value],
+    ['Contract date',payload.contractDate],['Status','Active — Onboarding Complete']
+  ], false, true);
+}
+
+// ── HISTORY ───────────────────────────────────────────────────────────────────
+function addHistory(type, role, action, reason='', by='') {
+  history.push({ type, role, action, reason, by, ts:new Date().toLocaleString('en-GB') });
+  renderHistory();
+}
+
+function renderHistory() {
+  if (!history.length) return;
+  document.getElementById('history-trail').classList.remove('hidden');
+  const dotMap={submitted:'dot-submitted',approved:'dot-approved',rejected:'dot-rejected',resubmitted:'dot-resubmitted'};
+  document.getElementById('history-items').innerHTML = history.map(h=>`
+    <div class="history-item">
+      <div class="history-dot ${dotMap[h.type]||'dot-submitted'}"></div>
+      <div class="history-content">
+        <div class="history-action">${h.role} — ${h.action}</div>
+        <div class="history-meta">${h.ts}${h.by?' · '+h.by:''}</div>
+        ${h.reason?`<div class="history-reason">"${h.reason}"</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+// ── SHOW/HIDE REASON BOXES ────────────────────────────────────────────────────
+function showResubmit(who) {
+  // Hide all boxes first
+  document.querySelectorAll('.resubmit-box,.reason-box').forEach(b=>b.classList.remove('show'));
+  document.getElementById(`${who}-resubmit-box`)?.classList.add('show');
+}
+function showReject(who) {
+  document.querySelectorAll('.resubmit-box,.reason-box').forEach(b=>b.classList.remove('show'));
+  document.getElementById(`${who}-reject-box`)?.classList.add('show');
+}
+
+// ── SAVE TO SCRIPT ────────────────────────────────────────────────────────────
+async function saveToScript(payload) {
+  if (!SCRIPT_URL||SCRIPT_URL==='YOUR_RECRUITMENT_SCRIPT_URL') {
+    console.log('Recruitment payload:', JSON.stringify({...payload,data:{...payload.data,files:'[files omitted]'}},null,2));
+    return;
+  }
+  try {
+    const iframe=document.getElementById('save-frame')||document.createElement('iframe');
+    iframe.id='save-frame';iframe.name='save-frame';iframe.style.display='none';
+    document.body.appendChild(iframe);
+    const form=document.createElement('form');
+    form.method='POST';form.action=SCRIPT_URL;form.target='save-frame';form.style.display='none';
+    const input=document.createElement('input');
+    input.type='hidden';input.name='payload';input.value=JSON.stringify(payload);
+    form.appendChild(input);document.body.appendChild(form);
+    form.submit();document.body.removeChild(form);
+    await new Promise(r=>setTimeout(r,3000));
+  } catch(e){console.error('Save error:',e);}
+}
+
+// ── SHOW SUCCESS ──────────────────────────────────────────────────────────────
+function showSuccess(icon, title, sub, lines, isRejected=false, isComplete=false) {
+  document.getElementById('form-container').style.display='none';
+  const ss=document.getElementById('success-screen');
+  ss.style.display='block';
+  const iconEl=document.getElementById('success-icon');
+  iconEl.textContent=icon;
+  iconEl.style.background=isRejected?'rgba(220,38,38,.1)':isComplete?'rgba(22,163,74,.1)':'rgba(2,132,199,.08)';
+  iconEl.style.border=`2px solid ${isRejected?'var(--danger)':isComplete?'var(--success)':'var(--blue)'}`;
+  document.getElementById('success-title').textContent=title;
+  document.getElementById('success-sub').textContent=`${reqId}  ·  ${sub}`;
+  document.getElementById('audit-box').innerHTML=lines.map(
+    ([k,v])=>`<div class="audit-line"><span class="audit-key">${k}</span><span class="audit-val">${v}</span></div>`
+  ).join('');
+}
+
+// ── ACTIVATE CORRECT STEP ─────────────────────────────────────────────────────
+function activateStep(step) {
+  currentStep=step;
+  buildStatusBar(step);
+  const titles={1:'New Recruitment Request',2:'Manager Review',3:'HR Review',4:'Site Manager Approval',5:'Contract & Onboarding'};
+  document.getElementById('form-title').textContent=titles[step]||'';
+  ['s1','s2','s3','s4','s5'].forEach((id,i)=>{
+    const sec=document.getElementById(id), n=i+1;
+    if(n<step){sec.classList.remove('locked');sec.classList.add('readonly');}
+    else if(n===step){sec.classList.remove('locked','readonly');}
+    else{sec.classList.add('locked');sec.classList.remove('readonly');}
+  });
+  // Build summaries for review steps
+  if(step>=2&&caseData.step1) buildSummary(step);
+  if(step===1) validate();
+  if(step===5) validate5();
+}
+
+function buildSummary(step) {
+  const s1=caseData.step1||{};
+  const summary=`📋 <strong>${s1.cName}</strong> · ${s1.cPosition} · ${s1.cSite} · ${s1.cNationality} · Pay: ${s1.payRate} ${s1.currency}/${s1.payType==='Daily rate'?'day':'month'}`;
+  ['s2-summary','s3-summary','s4-summary','s5-summary'].slice(0,step-1).forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.innerHTML=summary;
+  });
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+buildStatusBar(1);
+loadMasters();
+validate();
+
+// If opened via email link with step param, load that step
+if (urlStep > 1) {
+  // Load case data from script then activate step
+  (async()=>{
+    if (SCRIPT_URL&&SCRIPT_URL!=='YOUR_RECRUITMENT_SCRIPT_URL') {
+      try {
+        const res=await fetch(`${SCRIPT_URL}?action=get&reqId=${reqId}`);
+        const j=await res.json();
+        if(j.data) { caseData=j.data; history=j.history||[]; renderHistory(); }
+      } catch(e){}
+    }
+    activateStep(urlStep);
+  })();
+} else {
+  activateStep(1);
+}
+</script>
+</body>
+</html>
