@@ -1167,12 +1167,51 @@ function activateStep(step) {
 }
 
 function buildSummary(step) {
-  const s1=caseData.step1||{};
-  const summary=`📋 <strong>${s1.cName}</strong> · ${s1.cPosition} · ${s1.cSite} · ${s1.cNationality} · Pay: ${s1.payRate} ${s1.currency}/${s1.payType==='Daily rate'?'day':'month'}`;
-  ['s2-summary','s3-summary','s4-summary','s5-summary'].slice(0,step-1).forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.innerHTML=summary;
+  const s1 = caseData.step1 || {};
+  const s2 = caseData.step2 || {};
+  const s3 = caseData.step3 || {};
+
+  // Candidate info box shown in all review steps
+  const candidateHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px;">
+      <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Candidate</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);">${s1.cName||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Position</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);">${s1.cPosition||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Site</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);">${s1.cSite||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Gender</div>
+        <div style="font-size:13px;color:var(--text);">${s1.cGender||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Nationality</div>
+        <div style="font-size:13px;color:var(--text);">${s1.cNationality||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Phone</div>
+        <div style="font-size:13px;color:var(--text);">${s1.cPhone||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Department</div>
+        <div style="font-size:13px;color:var(--text);">${s1.reqDept||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Proposed start</div>
+        <div style="font-size:13px;color:var(--text);">${s1.cStart||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Requested by</div>
+        <div style="font-size:13px;color:var(--text);">${s1.reqBy||'—'}</div></div>
+    </div>
+    ${s1.notes?`<div style="font-size:12px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;margin-top:4px;"><b>Notes:</b> ${s1.notes}</div>`:''}
+    ${s1.files&&s1.files.length?`<div style="font-size:12px;color:var(--blue);border-top:1px solid var(--border);padding-top:8px;margin-top:4px;">
+      📎 ${s1.files.length} document(s) attached: ${s1.files.map((f,i)=>`<a href="${f}" target="_blank" style="color:var(--blue);">Doc ${i+1}</a>`).join(' · ')}
+    </div>`:''}`;
+
+  // Show in all review step summary boxes
+  const summaryIds = ['s2-summary','s3-summary','s4-summary','s5-summary','s6-summary','s7-summary'];
+  summaryIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = candidateHTML;
   });
+
+  // Add manager action history to steps 3+
+  if (step >= 3 && s2.action) {
+    const mgrBox = document.getElementById('s3-summary');
+    if (mgrBox) mgrBox.innerHTML += `<div style="margin-top:8px;padding:8px;background:rgba(22,163,74,.06);border-radius:6px;font-size:12px;">
+      ✓ <b>Manager approved</b> · ${s2.mgrEmail||''} · ${s2.comments||'No comments'}
+    </div>`;
+  }
 }
 
 // ── STEP 6 VALIDATION ────────────────────────────────────────────────────────
@@ -1311,18 +1350,53 @@ buildStatusBar(1);
 loadMasters();
 validate();
 
-// If opened via email link with step param, load that step
+// If opened via email link with step param, load case data and activate step
 if (urlStep > 1) {
-  // Load case data from script then activate step
-  (async()=>{
-    if (SCRIPT_URL&&SCRIPT_URL!=='YOUR_RECRUITMENT_SCRIPT_URL') {
-      try {
-        const res=await fetch(`${SCRIPT_URL}?action=get&reqId=${reqId}`);
-        const j=await res.json();
-        if(j.data) { caseData=j.data; history=j.history||[]; renderHistory(); }
-      } catch(e){}
+  // Show loading indicator
+  document.getElementById('form-title').textContent = 'Loading case...';
+  document.getElementById('form-subtitle').textContent = `Loading ${reqId}...`;
+
+  (async () => {
+    try {
+      // Fetch case data from Apps Script
+      const res  = await fetch(`${SCRIPT_URL}?action=get&reqId=${encodeURIComponent(reqId)}`);
+      const json = await res.json();
+
+      if (json.status === 'ok' && json.data && json.data.step1) {
+        // Restore full case data
+        caseData = json.data;
+        history  = json.history || [];
+        renderHistory();
+      } else {
+        // Script returned but no data found — show error
+        document.getElementById('form-title').textContent = 'Case not found';
+        document.getElementById('form-subtitle').textContent = `Could not find case ${reqId}. Please contact HR.`;
+        return;
+      }
+    } catch(e) {
+      console.error('Load error:', e);
+      document.getElementById('form-title').textContent = 'Connection error';
+      document.getElementById('form-subtitle').textContent = 'Could not load case data. Check your connection and try again.';
+      return;
     }
+
+    // Activate the correct step
     activateStep(urlStep);
+
+    // Pre-fill known email for this role
+    const emailMap = {
+      2: 'mgr-email',
+      3: 'hr-email',
+      4: 'sm-email-confirm',
+      5: 'hr2-email',
+      6: 'mgr2-email',
+      7: 'it-email',
+    };
+    const emailFieldId = emailMap[urlStep];
+    if (emailFieldId) {
+      const el = document.getElementById(emailFieldId);
+      // Leave blank — reviewer fills their own email
+    }
   })();
 } else {
   activateStep(1);
