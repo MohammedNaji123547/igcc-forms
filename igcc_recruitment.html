@@ -325,7 +325,7 @@ input:disabled,select:disabled,textarea:disabled{background:var(--surface2);colo
     </div>
 
     <div class="val-panel"><div class="val-title">Checklist</div><div id="val-rows"></div></div>
-    <button class="btn-primary" id="btn-submit" onclick="submitStep()" disabled>Submit recruitment request</button>
+    <button class="btn-primary" id="btn-submit" onclick="submitNow()" disabled>Submit recruitment request</button>
   </div>
 
   <!-- ══════════ STEP 2: DIRECT MANAGER ══════════ -->
@@ -915,59 +915,66 @@ async function autoId() {
 
 // ── SUBMIT STEP 1 ─────────────────────────────────────────────────────────────
 async function submitStep() {
-  document.getElementById('btn-submit').disabled=true;
-  document.getElementById('btn-submit').textContent='Submitting...';
-  // Give UI a moment to update before heavy processing
-  await new Promise(r => setTimeout(r, 50));
+  document.getElementById('btn-submit').disabled = true;
+  document.getElementById('btn-submit').textContent = 'Submitting...';
 
-  // Get manager email from selected option
-  const mgrSel   = document.getElementById('req-mgr');
-  const selOpt   = mgrSel.options[mgrSel.selectedIndex];
-  const mgrEmail = selOpt?.dataset?.email || '';
-  const mgrName  = selOpt?.textContent || '';
-  // Also store selected manager ID for lookup
-  const mgrId    = mgrSel.value;
-
-  // Convert files to base64
-  const fileMeta = [];
-  for (const f of uploadedFiles) {
-    const b64 = await fileToBase64(f);
-    fileMeta.push({ name:f.name, type:f.type, size:f.size, data:b64 });
-  }
+  // Collect all data first (no async operations)
+  const mgrSel    = document.getElementById('req-mgr');
+  const selOpt    = mgrSel ? mgrSel.options[mgrSel.selectedIndex] : null;
+  const mgrEmail  = ssEmail('req-mgr') || selOpt?.dataset?.email || '';
+  const mgrName   = selOpt?.textContent || '';
 
   caseData.step1 = {
-    reqId, reqBy:document.getElementById('req-by').value.trim(),
-    reqDept:document.getElementById('req-dept').value,
-    reqMgr:document.getElementById('req-mgr').value,
-    reqMgrEmail:mgrEmail, reqMgrName:mgrName,
-    cName:document.getElementById('c-name').value.trim(),
-    cGender:document.getElementById('c-gender').value,
-    cPhone:document.getElementById('c-phone').value.trim(),
+    reqId,
+    reqBy:       document.getElementById('req-by').value.trim(),
+    reqDept:     ssVal('req-dept'),
+    reqMgr:      ssVal('req-mgr'),
+    reqMgrEmail: mgrEmail,
+    reqMgrName:  mgrName,
+    cName:       document.getElementById('c-name').value.trim(),
+    cGender:     document.getElementById('c-gender').value,
+    cPhone:      document.getElementById('c-phone').value.trim(),
     cNationality:document.getElementById('c-nationality').value,
-    cPosition:ssVal('c-position'),
-    cSite:ssVal('c-site'),
-    cMgr:ssVal('c-mgr'),
-    cMgrEmail:ssEmail('c-mgr'),
-    cStart:document.getElementById('c-start').value,
-    payRate:document.getElementById('c-payrate').value,
-    currency:document.getElementById('c-currency').value,
-    payType:document.getElementById('c-paytype').value,
-    notes:document.getElementById('req-notes').value.trim(),
-    files:fileMeta,
-    status:'Pending Manager',
-    submittedAt:new Date().toISOString(),
+    cPosition:   ssVal('c-position'),
+    cSite:       ssVal('c-site'),
+    cMgr:        ssVal('c-mgr'),
+    cMgrEmail:   ssEmail('c-mgr'),
+    cStart:      document.getElementById('c-start').value,
+    payRate:     document.getElementById('c-payrate').value,
+    currency:    document.getElementById('c-currency').value,
+    payType:     document.getElementById('c-paytype').value,
+    notes:       document.getElementById('req-notes').value.trim(),
+    files:       [],  // files sent separately after success shown
+    status:      'Pending Manager',
+    submittedAt: new Date().toISOString(),
   };
 
-  await saveToScript({ action:'step1', data:caseData.step1 });
-  addHistory('submitted','Department','Request submitted','',caseData.step1.reqBy);
-  showSuccess('📋','Request submitted','Your manager will receive an email to review and approve',[
-    ['Request ID',reqId],['Candidate',caseData.step1.cName],
-    ['Position',caseData.step1.cPosition],['Site',caseData.step1.cSite],
-    ['Status','Pending Manager Approval']
+  // Show success immediately — don't wait for file conversion or script
+  addHistory('submitted', 'Department', 'Request submitted', '', caseData.step1.reqBy);
+  showSuccess('📋', 'Request submitted', 'Your manager will receive an email to review and approve', [
+    ['Request ID',   reqId],
+    ['Candidate',    caseData.step1.cName],
+    ['Position',     caseData.step1.cPosition],
+    ['Site',         caseData.step1.cSite],
+    ['Status',       'Pending Manager Approval']
   ]);
+
+  // Save in background — convert files then post
+  (async () => {
+    const fileMeta = [];
+    for (const f of uploadedFiles) {
+      try {
+        const b64 = await fileToBase64(f);
+        fileMeta.push({ name: f.name, type: f.type, size: f.size, data: b64 });
+      } catch(e) { console.error('File convert error:', e); }
+    }
+    caseData.step1.files = fileMeta;
+    await saveToScript({ action: 'step1', data: caseData.step1 });
+    console.log('Background save complete');
+  })();
 }
 
-// ── ACTIONS (approve/reject/resubmit) ─────────────────────────────────────────
+
 async function doAction(type, subtype='') {
   const step = currentStep;
 
@@ -1221,6 +1228,82 @@ async function submitIT() {
   showSuccess('🎉','Onboarding complete!','Company email created. Employee is fully active.',[
     ['Request ID',reqId],['Company email',p.createdEmail],['Status','Completed']
   ], false, true);
+}
+
+// ── SIMPLE SUBMIT (replaces async submitStep) ────────────────────────────────
+function submitNow() {
+  // Step 1: disable button
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  btn.textContent = 'Please wait...';
+
+  // Step 2: collect data synchronously
+  caseData.step1 = {
+    reqId,
+    reqBy:        document.getElementById('req-by').value.trim(),
+    reqDept:      ssVal('req-dept'),
+    reqMgr:       ssVal('req-mgr'),
+    reqMgrEmail:  ssEmail('req-mgr'),
+    cName:        document.getElementById('c-name').value.trim(),
+    cGender:      document.getElementById('c-gender').value,
+    cPhone:       document.getElementById('c-phone').value.trim(),
+    cNationality: document.getElementById('c-nationality').value,
+    cPosition:    ssVal('c-position'),
+    cSite:        ssVal('c-site'),
+    cMgr:         ssVal('c-mgr'),
+    cMgrEmail:    ssEmail('c-mgr'),
+    cStart:       document.getElementById('c-start').value,
+    payRate:      document.getElementById('c-payrate').value,
+    currency:     document.getElementById('c-currency').value,
+    payType:      document.getElementById('c-paytype').value,
+    notes:        document.getElementById('req-notes').value.trim(),
+    files:        [],
+    status:       'Pending Manager',
+    submittedAt:  new Date().toISOString(),
+  };
+
+  // Step 3: show success immediately (synchronous)
+  addHistory('submitted', 'Department', 'Request submitted', '', caseData.step1.reqBy);
+  showSuccess('📋', 'Request submitted',
+    'Your manager will receive an email to review and approve', [
+    ['Request ID', reqId],
+    ['Candidate',  caseData.step1.cName],
+    ['Position',   caseData.step1.cPosition],
+    ['Site',       caseData.step1.cSite],
+    ['Status',     'Pending Manager Approval']
+  ]);
+
+  // Step 4: fire-and-forget save (does NOT block UI)
+  fireAndForget(caseData.step1);
+}
+
+function fireAndForget(data) {
+  try {
+    let iframe = document.getElementById('ff-frame');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = 'ff-frame';
+      iframe.name = 'ff-frame';
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+    }
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = SCRIPT_URL;
+    form.target = 'ff-frame';
+    form.style.display = 'none';
+    const inp = document.createElement('input');
+    inp.type = 'hidden';
+    inp.name = 'payload';
+    inp.value = JSON.stringify({ action: 'step1', data });
+    form.appendChild(inp);
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+    console.log('Fired form POST to script');
+  } catch(e) {
+    console.error('fireAndForget error:', e);
+  }
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
