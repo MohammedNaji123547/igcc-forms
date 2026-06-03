@@ -624,7 +624,7 @@ input:disabled,select:disabled,textarea:disabled{background:var(--surface2);colo
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbxfgSZfK1gUU-vE1Nd1L5Fv5kq_5lQNhxA4a7Ylz8CGMsUaPTWpzI2pbNx-12oB4bu2-A/exec';   
+const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbyFApzAeAi7t0ICVzSoY2Pv9eZx4PiivWtvwSYW-BJ3Txr1VP9v0fRXM58K_vUWK6T6gQ/exec';
 const HR_REG_URL   = 'https://script.google.com/macros/s/AKfycbyWr4pGHzsdUvfHARGhEtTaVNPn3tf4-7YZZLgys0B2KlyR-q1_REOvRvINgUODkW32/exec';
 const CSV_SITES    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSfLmsVdtOnq7zUKzaPX7Uwd-aQ6eiONkQv30vWRS0MO-3XRZzj5liNU08LyRoII522GqAqovxo3Z5N/pub?output=csv';
 
@@ -1349,21 +1349,33 @@ function submitNow() {
   ]);
 
   // Step 4: fire-and-forget save (does NOT block UI)
-  fireAndForget(caseData.step1);
+  fireAndForget({ action: 'step1', data: caseData.step1 });
 }
 
 function fireAndForget(data) {
   console.log('fireAndForget:', data.action, data.reqId||'');
-  // Use GET request via image/script tag — most reliable cross-origin method
-  // Apps Script handles both GET and POST
-  const payload = encodeURIComponent(JSON.stringify(data));
-  const url     = SCRIPT_URL + '?payload=' + payload;
+  try {
+    // Send as GET request via URL params — Apps Script receives via e.parameter
+    // We know GET works from execution logs
+    const json    = JSON.stringify(data);
+    const encoded = encodeURIComponent(json);
+    const url     = SCRIPT_URL + '?payload=' + encoded;
 
-  // Method: fetch no-cors GET
-  fetch(url, { method:'GET', mode:'no-cors' })
-    .then(()=> console.log('GET fired:', data.action))
-    .catch(err => console.log('GET error:', err.message));
+    // Use an image tag to trigger the GET — no CORS issues, truly fire and forget
+    const img = document.createElement('img');
+    img.src   = url;
+    img.style.display = 'none';
+    document.body.appendChild(img);
+    img.onload = img.onerror = () => {
+      try { document.body.removeChild(img); } catch(e){}
+      console.log('GET fired for:', data.action);
+    };
+  } catch(e) {
+    console.error('fireAndForget error:', e);
+  }
 }
+
+
 
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
