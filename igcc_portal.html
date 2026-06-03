@@ -58,12 +58,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .btn-signout:hover{background:rgba(255,255,255,.15);color:#fff;}
 
 /* MAIN CONTENT */
-.main{margin-left:240px;min-height:100vh;display:flex;flex-direction:column;}
+.main{margin-left:240px;height:100vh;display:flex;flex-direction:column;overflow:hidden;position:relative;}
 .topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow);position:sticky;top:0;z-index:50;}
 .topbar-title{font-size:16px;font-weight:700;color:var(--text);}
 .topbar-sub{font-size:12px;color:var(--muted);margin-top:1px;}
 .topbar-right{display:flex;align-items:center;gap:12px;}
-.content{flex:1;padding:28px;}
+.content{flex:1;padding:28px;overflow:auto;min-width:0;}
 
 /* DASHBOARD GRID */
 .dashboard-greeting{font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px;}
@@ -428,14 +428,14 @@ function showDashboard() {
 
   // Restore padding when on dashboard
   const content2 = document.getElementById('main-content');
-  content2.style.padding = '28px';
-  content2.style.height  = 'auto';
+  content2.style.cssText = 'flex:1;padding:28px;overflow:auto;';
   const today = new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const accessibleModules = MODULES.filter(m => access[m.id] !== null);
 
   const accessLabel = { full:'Full access', view:'View only', own:'Own data' };
 
   const content = document.getElementById('main-content');
+  content.style.cssText = 'flex:1;padding:28px;overflow:auto;';
   content.innerHTML = `
     <div class="dashboard-greeting">Welcome back, ${currentUser.name.split(' ')[0]} 👋</div>
     <div class="dashboard-date">${today} · ${currentUser.empId||''} · ${currentUser.dept||''}</div>
@@ -500,12 +500,13 @@ function openModule(moduleId) {
     return;
   }
 
-  // Load in iframe
-  // Remove content padding for full-screen iframe
-  content.style.padding = '0';
-  content.style.height  = 'calc(100vh - 101px)';
+  // Full-screen iframe — position fixed to fill entire right panel
+  content.style.cssText = 'flex:1;padding:0;overflow:hidden;position:relative;';
   content.innerHTML = `
-    <iframe src="${url}" style="width:100%;height:100%;border:none;display:block;" title="${module.title}"></iframe>`;
+    <iframe src="${url}"
+      style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;display:block;"
+      title="${module.title}">
+    </iframe>`;
 }
 
 // ── SIGN OUT ──────────────────────────────────────────────────────────────────
