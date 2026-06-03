@@ -489,24 +489,37 @@ function openModule(moduleId) {
 
   const url = MODULE_URLS[moduleId];
   const content = document.getElementById('main-content');
+  content.style.cssText = 'flex:1;padding:28px;overflow:auto;';
 
   if (!url || url.includes('igcc_leave.html')) {
-    // Module not yet built
     content.innerHTML = `<div class="access-denied">
       <div class="access-denied-icon">${module.icon}</div>
       <div class="access-denied-title">${module.title}</div>
-      <div class="access-denied-sub">This module is coming soon. Check back later.</div>
+      <div class="access-denied-sub">This module is coming soon.</div>
     </div>`;
     return;
   }
 
-  // Full-screen iframe — position fixed to fill entire right panel
-  content.style.cssText = 'flex:1;padding:0;overflow:hidden;position:relative;';
+  // Open in new tab — best experience for complex forms
+  window.open(url, '_blank');
+
+  // Show confirmation in portal
   content.innerHTML = `
-    <iframe src="${url}"
-      style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;display:block;"
-      title="${module.title}">
-    </iframe>`;
+    <div style="text-align:center;padding:60px 20px;">
+      <div style="font-size:52px;margin-bottom:20px;">${module.icon}</div>
+      <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:8px;">${module.title}</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:28px;">Opened in a new tab</div>
+      <a href="${url}" target="_blank"
+        style="display:inline-block;background:var(--accent);color:#fff;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:600;font-size:14px;margin-bottom:12px;">
+        ↗ Open ${module.title}
+      </a>
+      <div style="margin-top:16px;">
+        <button onclick="showDashboard();setActiveNav('dashboard')"
+          style="background:none;border:1.5px solid var(--border);border-radius:8px;color:var(--label);cursor:pointer;font-family:var(--sans);font-size:13px;padding:9px 20px;">
+          ← Back to dashboard
+        </button>
+      </div>
+    </div>`;
 }
 
 // ── SIGN OUT ──────────────────────────────────────────────────────────────────
