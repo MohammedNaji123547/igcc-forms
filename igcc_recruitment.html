@@ -624,7 +624,7 @@ input:disabled,select:disabled,textarea:disabled{background:var(--surface2);colo
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbyFApzAeAi7t0ICVzSoY2Pv9eZx4PiivWtvwSYW-BJ3Txr1VP9v0fRXM58K_vUWK6T6gQ/exec';
+const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbyFApzAeAi7t0ICVzSoY2Pv9eZx4PiivWtvwSYW-BJ3Txr1VP9v0fRXM58K_vUWK6T6gQ/exec';                      
 const HR_REG_URL   = 'https://script.google.com/macros/s/AKfycbyWr4pGHzsdUvfHARGhEtTaVNPn3tf4-7YZZLgys0B2KlyR-q1_REOvRvINgUODkW32/exec';
 const CSV_SITES    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSfLmsVdtOnq7zUKzaPX7Uwd-aQ6eiONkQv30vWRS0MO-3XRZzj5liNU08LyRoII522GqAqovxo3Z5N/pub?output=csv';
 
@@ -951,7 +951,15 @@ async function submitStep() {
     cPosition:   ssVal('c-position'),
     cSite:       ssVal('c-site'),
     cMgr:        ssVal('c-mgr'),
-    cMgrEmail:   ssEmail('c-mgr'),
+    cMgrEmail:   (()=>{
+      let em = ssEmail('c-mgr');
+      if (!em) {
+        const mgrid = ssVal('c-mgr');
+        const emp   = employees.find(e=>e['Employee ID']===mgrid);
+        em = emp ? (emp['Email']||'') : '';
+      }
+      return em;
+    })(),
     cStart:      document.getElementById('c-start').value,
     payRate:     document.getElementById('c-payrate').value,
     currency:    document.getElementById('c-currency').value,
@@ -1318,7 +1326,17 @@ function submitNow() {
     reqBy:        document.getElementById('req-by').value.trim(),
     reqDept:      ssVal('req-dept'),
     reqMgr:       ssVal('req-mgr'),
-    reqMgrEmail:  ssEmail('req-mgr'),
+    reqMgrEmail:  (()=>{
+      // Try searchable select email first
+      let em = ssEmail('req-mgr');
+      // If empty, look up from loaded employees array
+      if (!em) {
+        const mgrid = ssVal('req-mgr');
+        const emp   = employees.find(e=>e['Employee ID']===mgrid);
+        em = emp ? (emp['Email']||'') : '';
+      }
+      return em;
+    })(),
     cName:        document.getElementById('c-name').value.trim(),
     cGender:      document.getElementById('c-gender').value,
     cPhone:       document.getElementById('c-phone').value.trim(),
