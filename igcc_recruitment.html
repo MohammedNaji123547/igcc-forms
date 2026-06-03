@@ -644,9 +644,22 @@ let history     = [];
 const today  = new Date();
 const pad    = n => String(n).padStart(2,'0');
 const dateStr= `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-const reqId  = new URLSearchParams(window.location.search).get('req') ||
-               `REC-${today.getFullYear()}${pad(today.getMonth()+1)}${pad(today.getDate())}-${Math.floor(Math.random()*9000)+1000}`;
-const urlStep= parseInt(new URLSearchParams(window.location.search).get('step'))||1;
+const urlParams = new URLSearchParams(window.location.search);
+const reqId   = urlParams.get('req') ||
+                `REC-${today.getFullYear()}${pad(today.getMonth()+1)}${pad(today.getDate())}-${Math.floor(Math.random()*9000)+1000}`;
+const urlStep = parseInt(urlParams.get('step'))||1;
+
+function loadDataFromURL() {
+  if (!urlParams.get('name')) return null;
+  return {
+    reqId, reqBy:urlParams.get('reqby')||'', reqDept:urlParams.get('dept')||'',
+    cName:urlParams.get('name')||'', cGender:urlParams.get('gender')||'',
+    cPhone:urlParams.get('phone')||'', cNationality:urlParams.get('nat')||'',
+    cPosition:urlParams.get('pos')||'', cSite:urlParams.get('site')||'',
+    cStart:urlParams.get('start')||'', notes:urlParams.get('notes')||'',
+    files:[], status:'In Review',
+  };
+}
 
 document.getElementById('req-badge').textContent = reqId;
 document.getElementById('form-subtitle').textContent = `${reqId}  ·  ${today.toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
@@ -1374,50 +1387,30 @@ validate();
 
 // If opened via email link with step param, load case data and activate step
 if (urlStep > 1) {
-  // Show loading indicator
-  document.getElementById('form-title').textContent = 'Loading case...';
-  document.getElementById('form-subtitle').textContent = `Loading ${reqId}...`;
+  // Try to load data from URL params first (instant, no network needed)
+  const urlData = loadDataFromURL();
+  if (urlData) {
+    caseData.step1 = urlData;
+    console.log('Loaded from URL params:', urlData.cName);
+  }
 
+  // Activate step immediately with URL data
+  activateStep(urlStep);
+
+  // Then try to fetch full data from script in background to enrich
   (async () => {
     try {
-      // Fetch case data from Apps Script
       const res  = await fetch(`${SCRIPT_URL}?action=get&reqId=${encodeURIComponent(reqId)}`);
       const json = await res.json();
-
       if (json.status === 'ok' && json.data && json.data.step1) {
-        // Restore full case data
         caseData = json.data;
         history  = json.history || [];
         renderHistory();
-      } else {
-        // Script returned but no data found — show error
-        document.getElementById('form-title').textContent = 'Case not found';
-        document.getElementById('form-subtitle').textContent = `Could not find case ${reqId}. Please contact HR.`;
-        return;
+        buildSummary(urlStep); // Refresh summary with full data
+        console.log('Enriched with script data');
       }
     } catch(e) {
-      console.error('Load error:', e);
-      document.getElementById('form-title').textContent = 'Connection error';
-      document.getElementById('form-subtitle').textContent = 'Could not load case data. Check your connection and try again.';
-      return;
-    }
-
-    // Activate the correct step
-    activateStep(urlStep);
-
-    // Pre-fill known email for this role
-    const emailMap = {
-      2: 'mgr-email',
-      3: 'hr-email',
-      4: 'sm-email-confirm',
-      5: 'hr2-email',
-      6: 'mgr2-email',
-      7: 'it-email',
-    };
-    const emailFieldId = emailMap[urlStep];
-    if (emailFieldId) {
-      const el = document.getElementById(emailFieldId);
-      // Leave blank — reviewer fills their own email
+      console.log('Script fetch failed, using URL data only:', e.message);
     }
   })();
 } else {
