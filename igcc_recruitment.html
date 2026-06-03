@@ -982,7 +982,7 @@ async function submitStep() {
       } catch(e) { console.error('File convert error:', e); }
     }
     caseData.step1.files = fileMeta;
-    await saveToScript({ action: 'step1', data: caseData.step1 });
+    fireAndForget({ action: 'step1', data: caseData.step1 });
     console.log('Background save complete');
   })();
 }
@@ -1007,7 +1007,8 @@ async function doAction(type, subtype='') {
       payload.comments = document.getElementById('sm-comments').value.trim();
       payload.nextStatus = 'Pending Contract';
     }
-    await saveToScript(payload);
+    // Use fireAndForget — instant, no blocking
+    fireAndForget(payload);
     const nextLabels={2:'HR department',3:'Site Manager',4:'HR for contract'};
     addHistory('approved',STEPS[step-1].role,`Approved — forwarded to ${nextLabels[step]||'next step'}`,'',payload.mgrEmail||payload.hrEmail||payload.smEmail);
     showSuccess('✅',`Approved — forwarded to ${nextLabels[step]||'next step'}`,'Notification sent automatically',[
@@ -1025,7 +1026,7 @@ async function doAction(type, subtype='') {
     const reason = document.getElementById(reasonId)?.value?.trim()||'';
     const byEmail= document.getElementById(emailId)?.value?.trim()||'';
     if (!reason) { alert('Please provide a reason for resubmission'); return; }
-    await saveToScript({ action:`step${step}_resubmit`, reqId, subtype, reason, byEmail });
+    fireAndForget({ action:`step${step}_resubmit`, reqId, subtype, reason, byEmail });
     addHistory('resubmitted',STEPS[step-1].role,'Resubmitted to requester',reason,byEmail);
     showSuccess('↩','Resubmitted to requester','The requester will receive an email with your feedback',[
       ['Request ID',reqId],['Action','Resubmitted'],['Reason',reason],['Status','Awaiting Requester Update']
@@ -1037,7 +1038,7 @@ async function doAction(type, subtype='') {
     const reason = document.getElementById(reasonId)?.value?.trim()||'';
     const byEmail= document.getElementById(emailId)?.value?.trim()||'';
     if (!reason) { alert('Please provide a reason for rejection'); return; }
-    await saveToScript({ action:`step${step}_reject`, reqId, reason, byEmail });
+    fireAndForget({ action:`step${step}_reject`, reqId, reason, byEmail });
     addHistory('rejected',STEPS[step-1].role,'Rejected — case closed',reason,byEmail);
     showSuccess('❌','Request rejected','Case has been closed. The requester has been notified.',[
       ['Request ID',reqId],['Action','Rejected & Closed'],['Reason',reason],['Status','Closed']
@@ -1069,7 +1070,7 @@ async function completeOnboarding() {
     contractFile:contractB64,
     contractFileName:contractFile?.name||'',
   };
-  await saveToScript(payload);
+  fireAndForget(payload);
   showSuccess('🎉','Onboarding complete!','Employee is now active in the registry',[
     ['Request ID',reqId],['Employee ID',payload.empId],
     ['Contract type',document.getElementById('emp-contract').value],
@@ -1261,13 +1262,13 @@ async function submitEmailDecision(choice) {
   if (!isEmail(email)) { alert('Please enter your email first'); return; }
   const comments = document.getElementById('mgr2-comments').value.trim();
   if (choice === 'yes') {
-    await saveToScript({ action:'step6_email_yes', reqId, mgrEmail:email, comments });
+    fireAndForget({ action:'step6_email_yes', reqId, mgrEmail:email, comments });
     addHistory('approved','Direct Manager','Email required — forwarded to IT','',email);
     showSuccess('💻','Email account required','IT team will receive a notification to set up the account',[
       ['Request ID',reqId],['Action','Email account required'],['Status','Pending IT Setup']
     ]);
   } else {
-    await saveToScript({ action:'step6_email_no', reqId, mgrEmail:email, comments });
+    fireAndForget({ action:'step6_email_no', reqId, mgrEmail:email, comments });
     addHistory('approved','Direct Manager','No email needed — case completed','',email);
     showSuccess('🎉','Case complete!','No IT setup required. Employee is now fully active.',[
       ['Request ID',reqId],['Action','No email required'],['Status','Completed']
@@ -1297,7 +1298,7 @@ async function submitIT() {
     systems:    document.getElementById('it-systems').value.trim(),
     itNotes:    document.getElementById('it-notes').value.trim(),
   };
-  await saveToScript(p);
+  fireAndForget(p);
   addHistory('approved','IT Team','IT setup complete — case closed','',p.itEmail);
   showSuccess('🎉','Onboarding complete!','Company email created. Employee is fully active.',[
     ['Request ID',reqId],['Company email',p.createdEmail],['Status','Completed']
@@ -1352,32 +1353,25 @@ function submitNow() {
 }
 
 function fireAndForget(data) {
-  try {
-    let iframe = document.getElementById('ff-frame');
-    if (!iframe) {
-      iframe = document.createElement('iframe');
-      iframe.id = 'ff-frame';
-      iframe.name = 'ff-frame';
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
-    }
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = SCRIPT_URL;
-    form.target = 'ff-frame';
-    form.style.display = 'none';
-    const inp = document.createElement('input');
-    inp.type = 'hidden';
-    inp.name = 'payload';
-    inp.value = JSON.stringify({ action: 'step1', data });
-    form.appendChild(inp);
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-    console.log('Fired form POST to script');
-  } catch(e) {
-    console.error('fireAndForget error:', e);
-  }
+  const payload = JSON.stringify(data);
+  console.log('fireAndForget:', data.action, data.reqId||'');
+
+  // Use fetch with no-cors — fire and forget, doesn't wait for response
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'payload=' + encodeURIComponent(payload)
+  }).catch(() => {
+    // Fallback: iframe form POST
+    try {
+      let fr = document.getElementById('ff-frame');
+      if (!fr) { fr=document.createElement('iframe'); fr.id='ff-frame'; fr.name='ff-frame'; fr.style.display='none'; document.body.appendChild(fr); }
+      const fm=document.createElement('form'); fm.method='POST'; fm.action=SCRIPT_URL; fm.target='ff-frame'; fm.style.display='none';
+      const ip=document.createElement('input'); ip.type='hidden'; ip.name='payload'; ip.value=payload;
+      fm.appendChild(ip); document.body.appendChild(fm); fm.submit(); document.body.removeChild(fm);
+    } catch(e){ console.error('iframe fallback error:',e); }
+  });
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
