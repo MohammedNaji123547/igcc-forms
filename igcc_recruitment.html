@@ -1383,33 +1383,35 @@ buildStatusBar(1);
 loadMasters();
 validate();
 
-// If opened via email link with step param, load case data and activate step
+// If opened via email link with step param, load case data then activate
 if (urlStep > 1) {
-  // Try to load data from URL params first (instant, no network needed)
-  const urlData = loadDataFromURL();
-  if (urlData) {
-    caseData.step1 = urlData;
-    console.log('Loaded from URL params:', urlData.cName);
-  }
+  // Show loading state
+  document.getElementById('form-title').textContent = 'Loading request...';
 
-  // Activate step immediately with URL data
-  activateStep(urlStep);
-
-  // Then try to fetch full data from script in background to enrich
   (async () => {
+    // 1. Try URL params first (instant)
+    const urlData = loadDataFromURL();
+    if (urlData && urlData.cName) {
+      caseData.step1 = urlData;
+      console.log('URL params loaded:', urlData.cName);
+    }
+
+    // 2. Fetch full data from script (authoritative)
     try {
-      const res  = await fetch(`${SCRIPT_URL}?action=get&reqId=${encodeURIComponent(reqId)}`);
+      const res  = await fetch(SCRIPT_URL + '?action=get&reqId=' + encodeURIComponent(reqId));
       const json = await res.json();
       if (json.status === 'ok' && json.data && json.data.step1) {
-        caseData = json.data;
-        history  = json.history || [];
-        renderHistory();
-        buildSummary(urlStep); // Refresh summary with full data
-        console.log('Enriched with script data');
+        caseData   = json.data;
+        history    = json.history || [];
+        console.log('Script data loaded:', caseData.step1.cName);
       }
     } catch(e) {
-      console.log('Script fetch failed, using URL data only:', e.message);
+      console.log('Script fetch failed:', e.message);
     }
+
+    // 3. Activate step NOW — data is ready
+    activateStep(urlStep);
+    renderHistory();
   })();
 } else {
   activateStep(1);
