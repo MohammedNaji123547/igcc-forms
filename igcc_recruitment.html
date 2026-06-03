@@ -1353,26 +1353,18 @@ function submitNow() {
 }
 
 function fireAndForget(data) {
-  const payload = JSON.stringify(data);
   console.log('fireAndForget:', data.action, data.reqId||'');
+  // Use GET request via image/script tag — most reliable cross-origin method
+  // Apps Script handles both GET and POST
+  const payload = encodeURIComponent(JSON.stringify(data));
+  const url     = SCRIPT_URL + '?payload=' + payload;
 
-  // Use fetch with no-cors — fire and forget, doesn't wait for response
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'payload=' + encodeURIComponent(payload)
-  }).catch(() => {
-    // Fallback: iframe form POST
-    try {
-      let fr = document.getElementById('ff-frame');
-      if (!fr) { fr=document.createElement('iframe'); fr.id='ff-frame'; fr.name='ff-frame'; fr.style.display='none'; document.body.appendChild(fr); }
-      const fm=document.createElement('form'); fm.method='POST'; fm.action=SCRIPT_URL; fm.target='ff-frame'; fm.style.display='none';
-      const ip=document.createElement('input'); ip.type='hidden'; ip.name='payload'; ip.value=payload;
-      fm.appendChild(ip); document.body.appendChild(fm); fm.submit(); document.body.removeChild(fm);
-    } catch(e){ console.error('iframe fallback error:',e); }
-  });
+  // Method: fetch no-cors GET
+  fetch(url, { method:'GET', mode:'no-cors' })
+    .then(()=> console.log('GET fired:', data.action))
+    .catch(err => console.log('GET error:', err.message));
 }
+
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 buildStatusBar(1);
