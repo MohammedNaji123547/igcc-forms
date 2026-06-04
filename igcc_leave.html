@@ -827,8 +827,7 @@ if (urlMod==='exception') {
   document.getElementById('leave-container').style.display='block';
 
   // Show step 1 readonly, activate step 2
-  document.getElementById('ls1').classList.add('readonly');
-  document.getElementById('ls1').classList.remove('locked');
+  document.getElementById('ls1').classList.add('locked');  // hide step 1 completely
   document.getElementById('ls2').classList.remove('locked','readonly');
   document.getElementById('ls1-readonly').innerHTML = buildLeaveReadonly(leaveData);
   buildStatusBar(2,'leave');
