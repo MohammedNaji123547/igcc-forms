@@ -180,13 +180,14 @@ const HR_SCRIPT_URL    = 'https://script.google.com/macros/s/AKfycbyWr4pGHzsdUvf
 
 // Module URLs — update with your GitHub Pages URLs
 const MODULE_URLS = {
-  manpower:   'https://mohammednaji123547.github.io/igcc-forms/index.html',
-  logistics:  'https://mohammednaji123547.github.io/igcc-forms/igcc_logistics_form.html',
-  ivms:       'https://mohammednaji123547.github.io/igcc-forms/igcc_ivms_dashboard.html',
-  registry:   'https://mohammednaji123547.github.io/igcc-forms/igcc_employee_registry.html',
-  onboarding: 'https://mohammednaji123547.github.io/igcc-forms/igcc_hr_onboarding.html',
-  orgchart:   'https://mohammednaji123547.github.io/igcc-forms/igcc_org_chart.html',
-  leave:      'https://mohammednaji123547.github.io/igcc-forms/igcc_leave.html',
+  manpower:    'https://mohammednaji123547.github.io/igcc-forms/index.html',
+  logistics:   'https://mohammednaji123547.github.io/igcc-forms/igcc_logistics_form.html',
+  ivms:        'https://mohammednaji123547.github.io/igcc-forms/igcc_ivms_dashboard.html',
+  registry:    'https://mohammednaji123547.github.io/igcc-forms/igcc_employee_registry.html',
+  recruitment: 'https://mohammednaji123547.github.io/igcc-forms/igcc_recruitment.html',
+  onboarding:  'https://mohammednaji123547.github.io/igcc-forms/igcc_hr_onboarding.html',
+  orgchart:    'https://mohammednaji123547.github.io/igcc-forms/igcc_org_chart.html',
+  leave:       'https://mohammednaji123547.github.io/igcc-forms/igcc_leave.html',
 };
 
 // ── ROLE DEFINITIONS ──────────────────────────────────────────────────────────
@@ -197,7 +198,7 @@ const ROLES = {
     badgeClass: 'role-admin',
     access: {
       manpower: 'full', logistics: 'full', ivms: 'full',
-      registry: 'full', onboarding: 'full', orgchart: 'full', leave: 'full', profile: 'full'
+      registry: 'full', recruitment: 'full', onboarding: 'full', orgchart: 'full', leave: 'full', profile: 'full'
     }
   },
   hr: {
@@ -205,7 +206,7 @@ const ROLES = {
     badgeClass: 'role-hr',
     access: {
       manpower: 'full', logistics: 'view', ivms: 'view',
-      registry: 'full', onboarding: 'full', orgchart: 'full', leave: 'full', profile: 'full'
+      registry: 'full', recruitment: 'full', onboarding: 'full', orgchart: 'full', leave: 'full', profile: 'full'
     }
   },
   supervisor: {
@@ -213,7 +214,7 @@ const ROLES = {
     badgeClass: 'role-supervisor',
     access: {
       manpower: 'own', logistics: 'own', ivms: null,
-      registry: 'view', onboarding: null, orgchart: 'own', leave: 'own', profile: 'full'
+      registry: 'view', recruitment: 'own', onboarding: null, orgchart: 'own', leave: 'own', profile: 'full'
     }
   },
   employee: {
@@ -221,7 +222,7 @@ const ROLES = {
     badgeClass: 'role-employee',
     access: {
       manpower: null, logistics: null, ivms: null,
-      registry: null, onboarding: null, orgchart: 'view', leave: 'own', profile: 'full'
+      registry: null, recruitment: null, onboarding: null, orgchart: 'view', leave: 'own', profile: 'full'
     }
   }
 };
@@ -231,8 +232,9 @@ const MODULES = [
   { id:'manpower',  title:'Daily Manpower',       desc:'Submit daily manpower reports per CTR',      icon:'👷', color:'#0284c7' },
   { id:'logistics', title:'Logistics Requests',   desc:'Request and track equipment assignments',    icon:'🚧', color:'#16a34a' },
   { id:'ivms',      title:'IVMS Dashboard',       desc:'Monitor equipment GPS and attendance',       icon:'📡', color:'#7c3aed' },
-  { id:'registry',   title:'Employee Directory',   desc:'Search and view all employee records',        icon:'👥', color:'#0f172a' },
-  { id:'onboarding', title:'New Hire Onboarding',  desc:'Register new employees through the full process', icon:'🆕', color:'#0284c7' },
+  { id:'registry',    title:'Employee Directory',    desc:'Search and view all employee records',           icon:'👥', color:'#0f172a' },
+  { id:'recruitment', title:'Recruitment Request',  desc:'Submit and track new hire recruitment requests',  icon:'📋', color:'#16a34a' },
+  { id:'onboarding',  title:'New Hire Onboarding',  desc:'Register new employees through the full process', icon:'🆕', color:'#0284c7' },
   { id:'orgchart',   title:'Organisation Chart',   desc:'View company hierarchy and reporting lines',    icon:'🏢', color:'#d97706' },
   { id:'leave',     title:'Leave Management',     desc:'Request and approve leave applications',     icon:'📅', color:'#dc2626' },
   { id:'profile',   title:'My Profile',           desc:'View and update your personal information',  icon:'👤', color:'#64748b' },
@@ -241,7 +243,7 @@ const MODULES = [
 // Nav sections
 const NAV_SECTIONS = [
   { title:'Operations', ids:['manpower','logistics','ivms'] },
-  { title:'People',     ids:['registry','onboarding','orgchart','leave'] },
+  { title:'People',     ids:['registry','recruitment','onboarding','orgchart','leave'] },
   { title:'My Account', ids:['profile'] },
 ];
 
