@@ -814,19 +814,47 @@ async function loadMasters() {
     const res  = await fetch(SCRIPT_URL + '?action=get_employees');
     const json = await res.json();
     employees  = (json.data||[]).filter(e=>e['Status']==='Active');
+    console.log('Employees loaded:', employees.length);
+
     ['req-mgr','c-mgr'].forEach(selId => {
-      const sel = document.getElementById(selId);
+      // Get the original select — may already be replaced if called twice
+      // Look for hidden input (already replaced) or original select
+      const existing = document.getElementById(selId);
+      let sel;
+
+      if (existing && existing.tagName === 'SELECT') {
+        // Original select still present — use it
+        sel = existing;
+      } else if (existing && existing.type === 'hidden') {
+        // Already replaced by makeSearchable — rebuild from scratch
+        // Find the ss-wrap parent and remove it, then re-add select
+        const wrap = existing.closest('.ss-wrap');
+        if (wrap) {
+          sel = document.createElement('select');
+          sel.id = selId;
+          wrap.replaceWith(sel);
+        }
+      }
+
+      if (!sel) return;
       sel.innerHTML = '<option value="">Select manager...</option>';
+      // Add CEO first
+      const ceoOpt = document.createElement('option');
+      ceoOpt.value = 'CEO';
+      ceoOpt.dataset.email = 'ceo@igccgroup-iq.com';
+      ceoOpt.textContent = 'CEO — Chief Executive Officer';
+      sel.appendChild(ceoOpt);
+      // Add all active employees
       employees.forEach(e=>{
-        const o=document.createElement('option');
-        o.value=e['Employee ID'];
-        o.dataset.email=e['Email']||'';
-        o.textContent=(e['Employee ID']||'') + ' — ' + (e['Full Name']||e['Full Name (EN)']||'') + ' (' + (e['Position']||'—') + ')';
+        if (e['Employee ID'] === 'CEO') return; // already added
+        const o = document.createElement('option');
+        o.value = e['Employee ID'];
+        o.dataset.email = e['Email']||'';
+        o.textContent = (e['Employee ID']||'') + ' — ' + (e['Full Name']||e['Full Name (EN)']||'') + ' (' + (e['Position']||'—') + ')';
         sel.appendChild(o);
       });
-      makeSearchable(document.getElementById(selId));
+      makeSearchable(sel);
     });
-    console.log('Employees loaded from local sheet:', employees.length);
   } catch(e){ console.error('Employee load error:', e); }
 }
 
