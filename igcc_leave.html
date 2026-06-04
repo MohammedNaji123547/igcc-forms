@@ -304,8 +304,8 @@ input[readonly],input:disabled,select:disabled{background:var(--surface2);color:
     </div>
   </div>
 
-  <!-- STEP 3: HR RECORDS -->
-  <div class="section locked" id="ls3">
+  <!-- STEP 3: HR RECORDS — hidden, HR notified by email only -->
+  <div class="section locked hidden" id="ls3">
     <div class="section-header">
       <div class="section-left">
         <div class="section-num" style="background:var(--success);">3</div>
@@ -591,7 +591,7 @@ function switchModule(mod) {
 // ── STATUS BAR ────────────────────────────────────────────────────────────────
 function buildStatusBar(step, mod) {
   const steps = mod==='leave'
-    ? [{name:'Employee',role:'Request'},{name:'Manager',role:'Approval'},{name:'HR',role:'Processing'}]
+    ? [{name:'Employee',role:'Request'},{name:'Manager',role:'Approval &#10003; HR Notified'}]
     : [{name:'Submit',role:'Employee/Manager'},{name:'Manager',role:'Decision'}];
   const bar = document.getElementById('status-steps');
   bar.innerHTML = steps.map((s,i)=>{
@@ -842,15 +842,17 @@ function leaveAction(type) {
     ], true);
   } else {
     fireAndForget({ action:'leave_approve', leaveId, mgrEmail:email, comments });
-    leaveStep = 3;
-    buildStatusBar(3,'leave');
-    activateLeaveStep(3);
-    showLeaveSuccess('✅','Leave approved','HR has been notified to process',[
+    leaveStep = 2;
+    buildStatusBar(2,'leave');
+    showLeaveSuccess('✅','Leave approved','HR has been notified for their records',[
       ['Leave ID',   leaveId],
       ['Employee',   leaveData.empName||''],
+      ['Leave type', leaveData.leaveType||''],
+      ['Period',     (leaveData.startDate||'') + ' → ' + (leaveData.endDate||'')],
+      ['Duration',   (leaveData.duration||'') + ' days'],
       ['Approved by',email],
-      ['Status',    'Approved — Pending HR'],
-    ], false, true);
+      ['Status',     'Approved ✓'],
+    ]);
   }
 }
 
