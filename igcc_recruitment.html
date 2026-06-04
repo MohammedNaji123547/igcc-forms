@@ -624,8 +624,8 @@ input:disabled,select:disabled,textarea:disabled{background:var(--surface2);colo
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbxfgSZfK1gUU-vE1Nd1L5Fv5kq_5lQNhxA4a7Ylz8CGMsUaPTWpzI2pbNx-12oB4bu2-A/exec';                      
-const HR_REG_URL   = 'https://script.google.com/macros/s/AKfycbyWr4pGHzsdUvfHARGhEtTaVNPn3tf4-7YZZLgys0B2KlyR-q1_REOvRvINgUODkW32/exec';
+const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbyFApzAeAi7t0ICVzSoY2Pv9eZx4PiivWtvwSYW-BJ3Txr1VP9v0fRXM58K_vUWK6T6gQ/exec';
+// Employees loaded from recruitment script local sheet — no separate registry URL needed
 const CSV_SITES    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSfLmsVdtOnq7zUKzaPX7Uwd-aQ6eiONkQv30vWRS0MO-3XRZzj5liNU08LyRoII522GqAqovxo3Z5N/pub?output=csv';
 
 const POSITIONS_LIST = ['Project Manager','Construction Manager','Site Manager','Civil Engineer','Senior Civil Engineer','Mechanical Engineer','Senior Mechanical Engineer','Electrical Engineer','Senior Electrical Engineer','Instrument Engineer','Piping Engineer','Structural Engineer','Process Engineer','Commissioning Engineer','Planning Manager','Senior Planner','Planner','Cost Control Lead','Cost Control Engineer','Quantity Surveyor','HSE Manager','HSE Lead','HSE Supervisor','HSE Officer','Safety Officer','QA/QC Manager','QA/QC Engineer','QC Inspector','Welding Inspector','NDT Technician','Construction Supervisor','Civil Supervisor','Mechanical Supervisor','Electrical Supervisor','Civil Foreman','Mechanical Foreman','Electrical Foreman','Scaffold Foreman','Welder','Pipefitter','Electrician','Instrumentation Technician','Rigger','Scaffolder','Carpenter','Mason','Painter','Heavy Equipment Operator','Crane Operator','Forklift Operator','Surveyor','Document Controller','Administrator','HR Officer','HR Manager','Timekeeper','Logistics Manager','Warehouse Manager','Store Keeper','Driver','Finance Manager','Accountant','Payroll Officer','Security Guard','Camp Boss','Cook','IT Manager','IT Technician','Medical Officer','General Manager'].sort();
@@ -788,25 +788,25 @@ async function loadMasters() {
     makeSearchable(siteSel);
   } catch(e){}
 
-  // Employees for manager dropdowns
+  // Employees for manager dropdowns — read from local Employees sheet
   try {
-    const res  = await fetch(`${HR_REG_URL}?action=read`);
+    const res  = await fetch(SCRIPT_URL + '?action=get_employees');
     const json = await res.json();
     employees  = (json.data||[]).filter(e=>e['Status']==='Active');
     ['req-mgr','c-mgr'].forEach(selId => {
       const sel = document.getElementById(selId);
       sel.innerHTML = '<option value="">Select manager...</option>';
-      sel.innerHTML += '<option value="CEO">CEO — Chief Executive Officer</option>';
       employees.forEach(e=>{
         const o=document.createElement('option');
         o.value=e['Employee ID'];
         o.dataset.email=e['Email']||'';
-        o.textContent=`${e['Employee ID']} — ${e['Full Name (EN)']} (${e['Position']||'—'})`;
+        o.textContent=(e['Employee ID']||'') + ' — ' + (e['Full Name']||e['Full Name (EN)']||'') + ' (' + (e['Position']||'—') + ')';
         sel.appendChild(o);
       });
       makeSearchable(document.getElementById(selId));
     });
-  } catch(e){}
+    console.log('Employees loaded from local sheet:', employees.length);
+  } catch(e){ console.error('Employee load error:', e); }
 }
 
 // ── FILE HANDLING ─────────────────────────────────────────────────────────────
@@ -915,13 +915,19 @@ function validate5() {
 
 // ── AUTO ID ───────────────────────────────────────────────────────────────────
 async function autoId() {
+  // Generate next ID from loaded employees list
   try {
-    const res=await fetch(`${HR_REG_URL}?action=check_id`);
-    const j=await res.json();
-    document.getElementById('emp-id').value=j.nextId||'IG0001';
-  } catch(e){
-    const nums=employees.map(e=>{const m=(e['Employee ID']||'').match(/^IG(\d+)$/);return m?parseInt(m[1]):0;});
-    document.getElementById('emp-id').value=`IG${String(Math.max(0,...nums)+1).padStart(4,'0')}`;
+    const res  = await fetch(SCRIPT_URL + '?action=next_id');
+    const json = await res.json();
+    document.getElementById('emp-id').value = json.nextId||'IG0001';
+  } catch(e) {
+    // Fallback: calculate from loaded employees
+    const nums = employees.map(e=>{
+      const m = (e['Employee ID']||'').match(/^IG(\d+)$/);
+      return m ? parseInt(m[1]) : 0;
+    });
+    const next = String(Math.max(0,...nums)+1).padStart(4,'0');
+    document.getElementById('emp-id').value = 'IG' + next;
   }
   validate5();
 }
