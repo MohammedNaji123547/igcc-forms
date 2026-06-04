@@ -10,7 +10,7 @@
 :root{
   --bg:#f0f4f8;--surface:#fff;--surface2:#f8fafc;--border:#dde3ed;
   --accent:#0f172a;--blue:#0284c7;--blue-dim:rgba(2,132,199,.08);
-  --success:#16a34a;--danger:#dc2626;--warning:#d97706;--purple:#7c3aed;
+  --success:#16a34a;--danger:#dc2626;--warning:#d97706;
   --text:#0f172a;--muted:#64748b;--label:#475569;
   --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
   --shadow:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 12px rgba(0,0,0,.1);
@@ -21,16 +21,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .header-left{display:flex;align-items:center;gap:12px;}
 .header-title{font-size:13px;font-weight:500;color:var(--label);}
 .req-badge{font-family:var(--mono);font-size:12px;color:var(--blue);background:var(--blue-dim);border:1px solid rgba(2,132,199,.25);padding:5px 12px;border-radius:6px;font-weight:600;}
-
-/* TABS */
-.tabs{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:0;box-shadow:var(--shadow);}
+.tabs{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;box-shadow:var(--shadow);}
 .tab{padding:14px 20px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;user-select:none;}
 .tab:hover{color:var(--text);}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-
-/* STATUS BAR */
-.status-bar{background:#fff;border-bottom:1px solid var(--border);padding:12px 24px;box-shadow:var(--shadow);}
-.status-steps{display:flex;align-items:center;max-width:700px;margin:0 auto;}
+.status-bar{background:#fff;border-bottom:1px solid var(--border);padding:12px 24px;box-shadow:var(--shadow);overflow-x:auto;}
+.status-steps{display:flex;align-items:center;max-width:600px;margin:0 auto;}
 .step{display:flex;align-items:center;gap:6px;flex:1;}
 .step-circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--mono);flex-shrink:0;border:2px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .3s;}
 .step-circle.done{background:var(--success);border-color:var(--success);color:#fff;}
@@ -42,13 +38,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .step-role{font-size:10px;font-family:var(--mono);color:var(--muted);}
 .step-connector{width:24px;height:2px;background:var(--border);flex-shrink:0;transition:background .3s;}
 .step-connector.done{background:var(--success);}
-
-/* CONTAINER */
 .container{max-width:860px;margin:0 auto;padding:24px 20px 60px;}
 .form-title{font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px;}
 .form-subtitle{font-size:12px;color:var(--muted);margin-bottom:20px;font-family:var(--mono);}
-
-/* SECTIONS */
 .section{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:14px;box-shadow:var(--shadow);}
 .section.readonly{background:var(--surface2);pointer-events:none;opacity:.85;}
 .section.locked{display:none;}
@@ -59,9 +51,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .section-badge{font-size:11px;font-family:var(--mono);padding:3px 10px;border-radius:20px;font-weight:500;}
 .badge-emp{background:rgba(15,23,42,.08);color:var(--accent);border:1px solid rgba(15,23,42,.15);}
 .badge-mgr{background:rgba(2,132,199,.1);color:var(--blue);border:1px solid rgba(2,132,199,.2);}
-.badge-hr{background:rgba(22,163,74,.1);color:var(--success);border:1px solid rgba(22,163,74,.2);}
-
-/* FIELDS */
 .field-row{display:grid;gap:14px;margin-bottom:12px;}
 .field-row.cols-2{grid-template-columns:1fr 1fr;}
 .field-row.cols-3{grid-template-columns:1fr 1fr 1fr;}
@@ -72,29 +61,36 @@ label{font-size:11px;font-weight:600;color:var(--label);letter-spacing:.06em;tex
 input,select,textarea{background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:13px;padding:9px 11px;transition:border-color .15s,box-shadow .15s;outline:none;width:100%;}
 input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(2,132,199,.12);}
 input[readonly],input:disabled,select:disabled{background:var(--surface2);color:var(--muted);cursor:not-allowed;}
-.field-hint{font-size:11px;color:var(--muted);font-family:var(--mono);}
 .ro-field{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:9px 11px;font-size:13px;color:var(--text);min-height:38px;}
 .ro-highlight{border-color:rgba(2,132,199,.3);background:rgba(2,132,199,.04);font-weight:600;}
 .divider{border:none;border-top:1.5px solid var(--bg);margin:14px 0;}
 .info-note{background:rgba(2,132,199,.06);border:1px solid rgba(2,132,199,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:12px;}
-.hr-only-box{background:rgba(22,163,74,.04);border:1.5px solid rgba(22,163,74,.2);border-radius:8px;padding:14px 16px;margin-bottom:12px;}
-.hr-only-title{font-size:11px;font-weight:600;color:var(--success);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;}
-
-/* ID LOOKUP */
-.id-lookup-wrap{display:flex;gap:8px;align-items:flex-end;}
+.field-hint{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.id-lookup-wrap{display:flex;gap:8px;}
 .id-lookup-wrap input{flex:1;}
-.btn-lookup{background:var(--blue);border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:600;padding:9px 14px;white-space:nowrap;transition:background .15s;}
+.btn-lookup{background:var(--blue);border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:600;padding:9px 14px;white-space:nowrap;}
 .btn-lookup:hover{background:#0369a1;}
 .lookup-status{font-size:11px;font-family:var(--mono);margin-top:4px;}
 .lookup-ok{color:var(--success);}
 .lookup-err{color:var(--danger);}
-
-/* DURATION DISPLAY */
 .duration-badge{background:var(--accent);color:#fff;border-radius:8px;padding:10px 16px;text-align:center;font-family:var(--mono);}
 .duration-num{font-size:28px;font-weight:700;line-height:1;}
 .duration-label{font-size:11px;opacity:.7;margin-top:2px;}
-
-/* EXCEPTION TYPE CARDS */
+/* Searchable select */
+.ss-wrap{position:relative;width:100%;}
+.ss-display{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:13px;padding:9px 11px;outline:none;cursor:pointer;transition:border-color .15s;text-align:left;}
+.ss-display:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(2,132,199,.12);}
+.ss-display.has-value{border-color:var(--success);}
+.ss-dd{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--blue);border-radius:10px;z-index:9999;display:none;box-shadow:var(--shadow-md);}
+.ss-dd.open{display:block;}
+.ss-search-input{width:100%;border:none;border-bottom:1px solid var(--border);padding:9px 12px;font-size:13px;outline:none;border-radius:10px 10px 0 0;font-family:var(--sans);}
+.ss-list{max-height:210px;overflow-y:auto;}
+.ss-opt{padding:9px 12px;font-size:13px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);}
+.ss-opt:last-child{border-bottom:none;}
+.ss-opt:hover{background:var(--blue-dim);color:var(--blue);}
+.ss-opt mark{background:none;color:var(--blue);font-weight:700;}
+.ss-none{padding:9px 12px;font-size:12px;color:var(--muted);font-family:var(--mono);}
+/* Exception cards */
 .exception-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
 .exc-card{border:2px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all .2s;background:#fff;}
 .exc-card:hover{border-color:var(--blue);}
@@ -102,8 +98,7 @@ input[readonly],input:disabled,select:disabled{background:var(--surface2);color:
 .exc-card-icon{font-size:24px;margin-bottom:6px;}
 .exc-card-title{font-size:13px;font-weight:600;color:var(--text);}
 .exc-card-desc{font-size:11px;color:var(--muted);margin-top:3px;}
-
-/* ACTION BUTTONS */
+/* Buttons */
 .btn-approve{background:var(--success);border:none;border-radius:10px;color:#fff;cursor:pointer;font-family:var(--sans);font-size:14px;font-weight:600;padding:13px;width:100%;transition:all .15s;margin-bottom:8px;}
 .btn-approve:hover{background:#15803d;}
 .btn-approve:disabled{opacity:.4;cursor:not-allowed;}
@@ -115,8 +110,6 @@ input[readonly],input:disabled,select:disabled{background:var(--surface2);color:
 .reason-box{background:rgba(220,38,38,.04);border:1.5px solid rgba(220,38,38,.2);border-radius:8px;padding:12px;margin-top:8px;display:none;}
 .reason-box.show{display:block;}
 .reason-box label{color:var(--danger);}
-
-/* VALIDATION */
 .val-panel{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:14px;box-shadow:var(--shadow);}
 .val-title{font-size:11px;font-weight:600;color:var(--label);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;}
 .val-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);padding:3px 0;font-family:var(--mono);}
@@ -125,8 +118,6 @@ input[readonly],input:disabled,select:disabled{background:var(--surface2);color:
 .val-dot.fail{background:var(--danger);}
 .val-row.pass{color:var(--success);}
 .val-row.fail{color:var(--danger);}
-
-/* SUCCESS */
 .success-screen{display:none;text-align:center;padding:50px 20px;}
 .success-icon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 18px;}
 .success-title{font-size:20px;font-weight:700;margin-bottom:6px;}
@@ -136,13 +127,14 @@ input[readonly],input:disabled,select:disabled{background:var(--surface2);color:
 .audit-line:last-child{border-bottom:none;}
 .audit-key{color:var(--label);min-width:130px;font-weight:500;}
 .audit-val{color:var(--text);}
-
+.loading-screen{text-align:center;padding:60px 20px;color:var(--muted);}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
 .hidden{display:none!important;}
 @media(max-width:640px){.field-row.cols-2,.field-row.cols-3,.field-row.cols-4{grid-template-columns:1fr;}.exception-cards{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
-
 <div class="header">
   <div class="header-left">
     <span class="logo-badge">IGCC</span>
@@ -150,138 +142,82 @@ input[readonly],input:disabled,select:disabled{background:var(--surface2);color:
   </div>
   <span class="req-badge" id="req-badge">—</span>
 </div>
-
-<!-- MODULE TABS -->
 <div class="tabs" id="module-tabs">
   <div class="tab active" id="tab-leave" onclick="switchModule('leave')">📅 Leave Request</div>
   <div class="tab" id="tab-exception" onclick="switchModule('exception')">⚠️ Days Exception</div>
 </div>
+<div class="status-bar"><div class="status-steps" id="status-steps"></div></div>
 
-<!-- STATUS BAR -->
-<div class="status-bar" id="status-bar">
-  <div class="status-steps" id="status-steps"></div>
-</div>
-
-<!-- ══════════════════════ LEAVE REQUEST ══════════════════════ -->
+<!-- ══════════════════════ LEAVE ══════════════════════ -->
 <div id="module-leave">
-<div class="container" id="leave-form-container">
-  <div class="form-title">Leave Request — استمارة طلب إجازة</div>
-  <div class="form-subtitle" id="leave-ref">IGCC-STD-HRE-FMT-0052 · <span id="leave-sn"></span></div>
+<div class="loading-screen hidden" id="leave-loading"><div class="spinner"></div>Loading request data...</div>
+<div class="container" id="leave-container">
+  <div class="form-title" id="leave-title">Leave Request — استمارة طلب إجازة</div>
+  <div class="form-subtitle">IGCC-STD-HRE-FMT-0052 · <span id="leave-sn"></span></div>
 
   <!-- STEP 1: EMPLOYEE -->
   <div class="section" id="ls1">
     <div class="section-header">
-      <div class="section-left">
-        <div class="section-num" style="background:var(--accent);">1</div>
-        <div class="section-title">Employee Information</div>
-      </div>
+      <div class="section-left"><div class="section-num" style="background:var(--accent);">1</div><div class="section-title">Employee Information</div></div>
       <span class="section-badge badge-emp">Employee</span>
     </div>
-
     <div class="field-row cols-2">
       <div class="field">
         <label>Employee ID <span class="required">*</span></label>
         <div class="id-lookup-wrap">
           <input type="text" id="l-empid" placeholder="e.g. IG0001" oninput="lValidate()">
-          <button class="btn-lookup" onclick="lookupEmployee('leave')">Lookup</button>
+          <button class="btn-lookup" onclick="lookupEmp('leave')">Lookup</button>
         </div>
         <span class="lookup-status" id="l-lookup-status"></span>
       </div>
-      <div class="field">
-        <label>Employee Name — الموظف أسم</label>
-        <div class="ro-field ro-highlight" id="l-empname">—</div>
-      </div>
+      <div class="field"><label>Employee Name — أسم الموظف</label><div class="ro-field ro-highlight" id="l-empname">—</div></div>
     </div>
     <div class="field-row cols-3">
-      <div class="field">
-        <label>Department — القسم</label>
-        <div class="ro-field" id="l-dept">—</div>
-      </div>
-      <div class="field">
-        <label>Job Title — المسمى الوظيفي</label>
-        <div class="ro-field" id="l-jobtitle">—</div>
-      </div>
-      <div class="field">
-        <label>Business Unit — المشروع</label>
-        <div class="ro-field" id="l-site">—</div>
-      </div>
+      <div class="field"><label>Department — القسم</label><div class="ro-field" id="l-dept">—</div></div>
+      <div class="field"><label>Job Title — المسمى الوظيفي</label><div class="ro-field" id="l-jobtitle">—</div></div>
+      <div class="field"><label>Site — الموقع</label><div class="ro-field" id="l-site">—</div></div>
     </div>
     <div class="field-row cols-3">
-      <div class="field">
-        <label>Mobile No. — رقم الهاتف <span class="required">*</span></label>
-        <input type="tel" id="l-mobile" placeholder="+964 7xx xxx xxxx" oninput="lValidate()">
-      </div>
-      <div class="field">
-        <label>Replacement — الموظف البديل</label>
-        <input type="text" id="l-replacement" placeholder="Name or N/A">
-      </div>
-      <div class="field">
-        <label>Work Phone No.</label>
-        <input type="text" id="l-workphone" placeholder="Extension or N/A">
-      </div>
+      <div class="field"><label>Mobile No. <span class="required">*</span></label><input type="tel" id="l-mobile" placeholder="+964 7xx xxx xxxx" oninput="lValidate()"></div>
+      <div class="field"><label>Replacement — البديل</label><input type="text" id="l-replacement" placeholder="Name or N/A"></div>
+      <div class="field"><label>Work Phone</label><input type="text" id="l-workphone" placeholder="N/A"></div>
     </div>
     <div class="field-row cols-2">
       <div class="field">
         <label>Direct Manager — المدير المباشر <span class="required">*</span></label>
-        <select id="l-manager-sel" onchange="onLeaveManagerChange()">
-          <option value="">Select manager...</option>
-        </select>
-        <span class="field-hint" id="l-manager-status">Loaded from employee list</span>
+        <div class="ss-wrap" id="mgr-ss-wrap">
+          <button type="button" class="ss-display" id="ss-btn-l-mgr" onclick="toggleSS('l-mgr')">Select manager...</button>
+          <input type="hidden" id="l-mgr" onchange="onMgrChange()">
+          <div class="ss-dd" id="ss-dd-l-mgr">
+            <input type="text" class="ss-search-input" id="ss-search-l-mgr" placeholder="Type to search..." oninput="filterSS('l-mgr')">
+            <div class="ss-list" id="ss-list-l-mgr"></div>
+          </div>
+        </div>
+        <span class="field-hint" id="l-mgr-hint">Loaded from employee list</span>
       </div>
-      <div class="field">
-        <label>Manager Email — سيتم ملؤه تلقائياً</label>
-        <input type="email" id="l-manager-email" placeholder="Auto-filled from selection" readonly
-          style="background:var(--surface2);color:var(--muted);">
-      </div>
+      <div class="field"><label>Manager Email — auto-filled</label><input type="email" id="l-mgr-email" readonly style="background:var(--surface2);color:var(--muted);"></div>
     </div>
-
     <div class="divider"></div>
-
-    <!-- Leave Details -->
     <div class="field-row cols-2">
-      <div class="field">
-        <label>Leave Type — نوع الإجازة <span class="required">*</span></label>
+      <div class="field"><label>Leave Type — نوع الإجازة <span class="required">*</span></label>
         <select id="l-type" onchange="lValidate()">
           <option value="">Select leave type...</option>
-          <option>Rotation</option>
-          <option>Annual Leave</option>
-          <option>Sick Leave</option>
-          <option>Emergency Leave</option>
-          <option>Unpaid Leave</option>
-          <option>Maternity Leave</option>
-          <option>Paternity Leave</option>
-          <option>Hajj Leave</option>
-          <option>Compassionate Leave</option>
-          <option>Compensation Leave</option>
+          <option>Rotation</option><option>Annual Leave</option><option>Sick Leave</option>
+          <option>Emergency Leave</option><option>Unpaid Leave</option><option>Maternity Leave</option>
+          <option>Paternity Leave</option><option>Hajj Leave</option>
+          <option>Compassionate Leave</option><option>Compensation Leave</option>
         </select>
       </div>
-      <div class="field">
-        <label>Reason for Leave — سبب الإجازة <span class="required">*</span></label>
-        <input type="text" id="l-reason" placeholder="Reason..." oninput="lValidate()">
-      </div>
+      <div class="field"><label>Reason — سبب الإجازة <span class="required">*</span></label><input type="text" id="l-reason" placeholder="Reason..." oninput="lValidate()"></div>
     </div>
     <div class="field-row cols-4">
-      <div class="field">
-        <label>Start Date — بداية الإجازة <span class="required">*</span></label>
-        <input type="date" id="l-start" oninput="calcLeaveDuration();lValidate()">
-      </div>
-      <div class="field">
-        <label>End Date — نهاية الإجازة <span class="required">*</span></label>
-        <input type="date" id="l-end" oninput="calcLeaveDuration();lValidate()">
-      </div>
-      <div class="field">
-        <label>Return to Work — أول يوم دوام</label>
-        <input type="date" id="l-return" readonly>
-      </div>
-      <div>
-        <label style="margin-bottom:8px;display:block;">Duration — مدة الإجازة</label>
-        <div class="duration-badge">
-          <div class="duration-num" id="l-duration">—</div>
-          <div class="duration-label">days</div>
-        </div>
+      <div class="field"><label>Start Date <span class="required">*</span></label><input type="date" id="l-start" oninput="calcDur();lValidate()"></div>
+      <div class="field"><label>End Date <span class="required">*</span></label><input type="date" id="l-end" oninput="calcDur();lValidate()"></div>
+      <div class="field"><label>Return to Work</label><input type="date" id="l-return" readonly></div>
+      <div><label style="margin-bottom:8px;display:block;">Duration</label>
+        <div class="duration-badge"><div class="duration-num" id="l-duration">—</div><div class="duration-label">days</div></div>
       </div>
     </div>
-
     <div class="val-panel"><div class="val-title">Checklist</div><div id="l-val-rows"></div></div>
     <button class="btn-primary" id="l-btn-submit" onclick="submitLeave()" disabled>Submit Leave Request</button>
   </div>
@@ -289,86 +225,25 @@ input[readonly],input:disabled,select:disabled{background:var(--surface2);color:
   <!-- STEP 2: MANAGER -->
   <div class="section locked" id="ls2">
     <div class="section-header">
-      <div class="section-left">
-        <div class="section-num" style="background:var(--blue);">2</div>
-        <div class="section-title">Manager Approval</div>
-      </div>
+      <div class="section-left"><div class="section-num" style="background:var(--blue);">2</div><div class="section-title">Manager Approval</div></div>
       <span class="section-badge badge-mgr">Direct Supervisor</span>
     </div>
-    <div class="info-note" id="ls2-summary"></div>
+    <div class="info-note">📋 Leave request details (read-only — submitted by employee)</div>
+    <div id="ls1-readonly"></div>
     <div class="divider"></div>
     <div class="field-row cols-2">
-      <div class="field">
-        <label>Supervisor email <span class="required">*</span></label>
-        <input type="email" id="l-mgr-email" placeholder="supervisor@igccgroup-iq.com" oninput="lValidateMgr()">
-      </div>
-      <div class="field">
-        <label>Comments</label>
-        <input type="text" id="l-mgr-comments" placeholder="Optional comments...">
-      </div>
+      <div class="field"><label>Your email <span class="required">*</span></label><input type="email" id="l-mgr-confirm-email" placeholder="your@igccgroup-iq.com" oninput="lValidateMgr()"></div>
+      <div class="field"><label>Comments</label><input type="text" id="l-mgr-comments" placeholder="Optional comments..."></div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-      <button class="btn-approve" id="l-btn-approve" onclick="leaveAction('approve')" disabled>✓ Approve leave request</button>
-      <button class="btn-reject" onclick="showLeaveReject()">✗ Reject</button>
-    </div>
+    <button class="btn-approve" id="l-btn-approve" onclick="leaveApprove()" disabled>✓ Approve leave request</button>
+    <button class="btn-reject" onclick="document.getElementById('l-reject-box').classList.toggle('show')">✗ Reject</button>
     <div class="reason-box" id="l-reject-box">
       <label>Reason for rejection <span class="required">*</span></label>
-      <textarea id="l-reject-reason" rows="2" placeholder="Explain reason..." oninput="lValidateMgr()" style="margin-top:6px;"></textarea>
-      <button class="btn-reject" style="margin-top:8px;" onclick="leaveAction('reject')">✗ Confirm rejection</button>
+      <textarea id="l-reject-reason" rows="2" placeholder="Explain reason..." style="margin-top:6px;" oninput="lValidateMgr()"></textarea>
+      <button class="btn-reject" style="margin-top:8px;" onclick="leaveReject()">✗ Confirm rejection</button>
     </div>
-  </div>
-
-  <!-- STEP 3: HR RECORDS — hidden, HR notified by email only -->
-  <div class="section locked hidden" id="ls3">
-    <div class="section-header">
-      <div class="section-left">
-        <div class="section-num" style="background:var(--success);">3</div>
-        <div class="section-title">HR Processing</div>
-      </div>
-      <span class="section-badge badge-hr">HR Department</span>
-    </div>
-    <div class="info-note" id="ls3-summary"></div>
-    <div class="divider"></div>
-    <div class="hr-only-box">
-      <div class="hr-only-title">HR Use Only — استخدام قسم الموارد البشرية</div>
-      <div class="field-row cols-2">
-        <div class="field">
-          <label>Leave Paid / Unpaid</label>
-          <select id="l-paid">
-            <option value="">Select...</option>
-            <option>Paid</option>
-            <option>Unpaid</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Current Leave Balance</label>
-          <input type="number" id="l-balance" placeholder="Days remaining">
-        </div>
-        <div class="field">
-          <label>Days to be Deducted</label>
-          <input type="number" id="l-deducted" placeholder="Auto from duration" readonly>
-        </div>
-        <div class="field">
-          <label>New Leave Balance</label>
-          <input type="number" id="l-newbalance" placeholder="Auto calculated" readonly>
-        </div>
-      </div>
-    </div>
-    <div class="field-row cols-2">
-      <div class="field">
-        <label>HR Officer Email <span class="required">*</span></label>
-        <input type="email" id="l-hr-email" placeholder="hr@igccgroup-iq.com" oninput="lValidateHR()">
-      </div>
-      <div class="field">
-        <label>Processed date</label>
-        <input type="date" id="l-hr-date">
-      </div>
-    </div>
-    <button class="btn-approve" id="l-btn-hr" onclick="leaveHRProcess()" disabled>✓ Process & Record Leave</button>
   </div>
 </div>
-
-<!-- LEAVE SUCCESS -->
 <div class="success-screen" id="leave-success">
   <div class="success-icon" id="l-success-icon"></div>
   <div class="success-title" id="l-success-title"></div>
@@ -378,614 +253,468 @@ input[readonly],input:disabled,select:disabled{background:var(--surface2);color:
 </div>
 </div>
 
-<!-- ══════════════════════ DAYS EXCEPTION ══════════════════════ -->
+<!-- ══════════════════════ EXCEPTION ══════════════════════ -->
 <div id="module-exception" class="hidden">
-<div class="container" id="exc-form-container">
+<div class="loading-screen hidden" id="exc-loading"><div class="spinner"></div>Loading request data...</div>
+<div class="container" id="exc-container">
   <div class="form-title">Days Exception — طلب استثناء</div>
   <div class="form-subtitle" id="exc-ref"></div>
-
-  <div class="section" id="exc-main">
+  <div class="section" id="exc-s1">
     <div class="section-header">
-      <div class="section-left">
-        <div class="section-num" style="background:var(--warning);">1</div>
-        <div class="section-title">Exception Request</div>
-      </div>
+      <div class="section-left"><div class="section-num" style="background:var(--warning);">1</div><div class="section-title">Exception Request</div></div>
       <span class="section-badge" style="background:rgba(217,119,6,.1);color:var(--warning);border:1px solid rgba(217,119,6,.2);">Employee / Manager</span>
     </div>
-
-    <!-- Submitted by -->
     <div class="info-note">This form can be submitted by the employee or by their manager on their behalf.</div>
     <div class="field-row cols-3">
-      <div class="field">
-        <label>Submitted by (email) <span class="required">*</span></label>
-        <input type="email" id="e-submitter" placeholder="submitter@igccgroup-iq.com" oninput="eValidate()">
-      </div>
-      <div class="field">
-        <label>Submission date</label>
-        <input type="date" id="e-submit-date">
-      </div>
-      <div class="field">
-        <label>Submitted on behalf of?</label>
-        <select id="e-behalf" onchange="onBehalfChange()">
-          <option value="self">Myself</option>
-          <option value="other">Team member</option>
-        </select>
+      <div class="field"><label>Submitted by (email) <span class="required">*</span></label><input type="email" id="e-submitter" placeholder="your@igccgroup-iq.com" oninput="eValidate()"></div>
+      <div class="field"><label>Date</label><input type="date" id="e-submit-date"></div>
+      <div class="field"><label>Submitted on behalf of?</label>
+        <select id="e-behalf" onchange="eValidate()"><option value="self">Myself</option><option value="other">Team member</option></select>
       </div>
     </div>
-
-    <!-- Employee info -->
-    <div class="field-row cols-2" id="e-emp-lookup-row">
-      <div class="field">
-        <label>Employee ID <span class="required">*</span></label>
-        <div class="id-lookup-wrap">
-          <input type="text" id="e-empid" placeholder="e.g. IG0001" oninput="eValidate()">
-          <button class="btn-lookup" onclick="lookupEmployee('exception')">Lookup</button>
-        </div>
+    <div class="field-row cols-2">
+      <div class="field"><label>Employee ID <span class="required">*</span></label>
+        <div class="id-lookup-wrap"><input type="text" id="e-empid" placeholder="e.g. IG0001" oninput="eValidate()"><button class="btn-lookup" onclick="lookupEmp('exception')">Lookup</button></div>
         <span class="lookup-status" id="e-lookup-status"></span>
       </div>
-      <div class="field">
-        <label>Employee Name</label>
-        <div class="ro-field ro-highlight" id="e-empname">—</div>
-      </div>
+      <div class="field"><label>Employee Name</label><div class="ro-field ro-highlight" id="e-empname">—</div></div>
     </div>
     <div class="field-row cols-3">
-      <div class="field">
-        <label>Department</label>
-        <div class="ro-field" id="e-dept">—</div>
-      </div>
-      <div class="field">
-        <label>Job Title</label>
-        <div class="ro-field" id="e-jobtitle">—</div>
-      </div>
-      <div class="field">
-        <label>Site</label>
-        <div class="ro-field" id="e-site">—</div>
-      </div>
+      <div class="field"><label>Department</label><div class="ro-field" id="e-dept">—</div></div>
+      <div class="field"><label>Job Title</label><div class="ro-field" id="e-jobtitle">—</div></div>
+      <div class="field"><label>Site</label><div class="ro-field" id="e-site">—</div></div>
     </div>
-
     <div class="divider"></div>
-
-    <!-- Exception type -->
-    <label style="margin-bottom:10px;display:block;">Exception Type — نوع الاستثناء <span class="required">*</span></label>
+    <label style="margin-bottom:10px;display:block;font-size:11px;font-weight:600;color:var(--label);text-transform:uppercase;letter-spacing:.06em;">Exception Type <span class="required">*</span></label>
     <div class="exception-cards">
-      <div class="exc-card" id="exc-late" onclick="selectException('late')">
-        <div class="exc-card-icon">🕐</div>
-        <div class="exc-card-title">Late Arrival — تأخر في الحضور</div>
-        <div class="exc-card-desc">Arrived late to work</div>
-      </div>
-      <div class="exc-card" id="exc-early" onclick="selectException('early')">
-        <div class="exc-card-icon">🚪</div>
-        <div class="exc-card-title">Early Departure — مغادرة مبكرة</div>
-        <div class="exc-card-desc">Left before end of shift</div>
-      </div>
-      <div class="exc-card" id="exc-fingerprint" onclick="selectException('fingerprint')">
-        <div class="exc-card-icon">👆</div>
-        <div class="exc-card-title">Missing Fingerprint — بصمة مفقودة</div>
-        <div class="exc-card-desc">IN or OUT not recorded</div>
-      </div>
-      <div class="exc-card" id="exc-fullday" onclick="selectException('fullday')">
-        <div class="exc-card-icon">📅</div>
-        <div class="exc-card-title">Full Day Exception — استثناء يوم كامل</div>
-        <div class="exc-card-desc">Whole day needs justification</div>
-      </div>
+      <div class="exc-card" id="exc-late" onclick="selExc('late')"><div class="exc-card-icon">🕐</div><div class="exc-card-title">Late Arrival</div><div class="exc-card-desc">Arrived late to work</div></div>
+      <div class="exc-card" id="exc-early" onclick="selExc('early')"><div class="exc-card-icon">🚪</div><div class="exc-card-title">Early Departure</div><div class="exc-card-desc">Left before end of shift</div></div>
+      <div class="exc-card" id="exc-fingerprint" onclick="selExc('fingerprint')"><div class="exc-card-icon">👆</div><div class="exc-card-title">Missing Fingerprint</div><div class="exc-card-desc">IN or OUT not recorded</div></div>
+      <div class="exc-card" id="exc-fullday" onclick="selExc('fullday')"><div class="exc-card-icon">📅</div><div class="exc-card-title">Full Day Exception</div><div class="exc-card-desc">Whole day needs justification</div></div>
     </div>
-
-    <!-- Exception date & details -->
     <div class="field-row cols-2">
-      <div class="field">
-        <label>Exception Date — تاريخ الاستثناء <span class="required">*</span></label>
-        <input type="date" id="e-date" oninput="eValidate()">
-      </div>
-      <div class="field" id="e-hours-field" style="display:none;">
-        <label>Hours — عدد الساعات <span class="required">*</span></label>
-        <input type="number" id="e-hours" min="0.5" max="12" step="0.5" placeholder="e.g. 2.5" oninput="eValidate()">
-        <span class="field-hint">Hours late / departed early</span>
-      </div>
-      <div class="field" id="e-fingerprint-field" style="display:none;">
-        <label>Missing record <span class="required">*</span></label>
-        <select id="e-fingerprint-type" onchange="eValidate()">
-          <option value="">Select...</option>
-          <option value="in">IN — morning check-in missing</option>
-          <option value="out">OUT — end of day check-out missing</option>
-          <option value="both">Both IN and OUT missing</option>
-        </select>
+      <div class="field"><label>Exception Date <span class="required">*</span></label><input type="date" id="e-date" oninput="eValidate()"></div>
+      <div class="field hidden" id="e-hours-field"><label>Hours <span class="required">*</span></label><input type="number" id="e-hours" min="0.5" max="12" step="0.5" placeholder="e.g. 2.5" oninput="eValidate()"></div>
+      <div class="field hidden" id="e-fp-field"><label>Missing record <span class="required">*</span></label>
+        <select id="e-fp-type" onchange="eValidate()"><option value="">Select...</option><option value="in">IN — morning check-in missing</option><option value="out">OUT — end of day check-out missing</option><option value="both">Both IN and OUT missing</option></select>
       </div>
     </div>
-
-    <div class="field">
-      <label>Justification — المبرر <span class="required">*</span></label>
-      <textarea id="e-justification" rows="3" placeholder="Provide a clear justification for this exception..." oninput="eValidate()"></textarea>
-    </div>
-
+    <div class="field"><label>Justification — المبرر <span class="required">*</span></label><textarea id="e-justification" rows="3" placeholder="Provide a clear justification..." oninput="eValidate()"></textarea></div>
     <div class="divider"></div>
-
-    <!-- Manager approval info -->
     <div class="field-row cols-2">
-      <div class="field">
-        <label>Direct Manager Email <span class="required">*</span></label>
-        <input type="email" id="e-mgr-email" placeholder="manager@igccgroup-iq.com" oninput="eValidate()">
-        <span class="field-hint">Manager will receive notification</span>
-      </div>
-      <div class="field">
-        <label>Manager Name</label>
-        <input type="text" id="e-mgr-name" placeholder="Manager full name">
-      </div>
+      <div class="field"><label>Direct Manager Email <span class="required">*</span></label><input type="email" id="e-mgr-email" placeholder="manager@igccgroup-iq.com" oninput="eValidate()"><span class="field-hint">Manager will be notified</span></div>
+      <div class="field"><label>Manager Name</label><input type="text" id="e-mgr-name" placeholder="Manager full name"></div>
     </div>
-
     <div class="val-panel"><div class="val-title">Checklist</div><div id="e-val-rows"></div></div>
-    <button class="btn-primary" id="e-btn-submit" onclick="submitException()" disabled>Submit Exception Request</button>
+    <button class="btn-primary" id="e-btn-submit" onclick="submitExc()" disabled>Submit Exception Request</button>
   </div>
-
-  <!-- MANAGER APPROVAL SECTION -->
-  <div class="section locked" id="exc-mgr">
+  <!-- STEP 2: MANAGER -->
+  <div class="section locked" id="exc-s2">
     <div class="section-header">
-      <div class="section-left">
-        <div class="section-num" style="background:var(--blue);">2</div>
-        <div class="section-title">Manager Decision</div>
-      </div>
+      <div class="section-left"><div class="section-num" style="background:var(--blue);">2</div><div class="section-title">Manager Decision</div></div>
       <span class="section-badge badge-mgr">Direct Manager</span>
     </div>
-    <div class="info-note" id="exc-mgr-summary"></div>
+    <div class="info-note">📋 Exception details (read-only — submitted by employee)</div>
+    <div id="exc-s1-readonly"></div>
     <div class="divider"></div>
     <div class="field-row cols-2">
-      <div class="field">
-        <label>Manager email <span class="required">*</span></label>
-        <input type="email" id="e-mgr-confirm-email" placeholder="manager@igccgroup-iq.com" oninput="eValidateMgr()">
-      </div>
-      <div class="field">
-        <label>Comments</label>
-        <input type="text" id="e-mgr-comments" placeholder="Optional...">
-      </div>
+      <div class="field"><label>Your email <span class="required">*</span></label><input type="email" id="e-mgr-confirm-email" placeholder="your@igccgroup-iq.com" oninput="eValidateMgr()"></div>
+      <div class="field"><label>Comments</label><input type="text" id="e-mgr-comments" placeholder="Optional..."></div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-      <button class="btn-approve" id="e-btn-approve" onclick="excAction('approve')" disabled>✓ Approve exception</button>
-      <button class="btn-reject" onclick="showExcReject()">✗ Reject</button>
-    </div>
+    <button class="btn-approve" id="e-btn-approve" onclick="excApprove()" disabled>✓ Approve exception</button>
+    <button class="btn-reject" onclick="document.getElementById('e-reject-box').classList.toggle('show')">✗ Reject</button>
     <div class="reason-box" id="e-reject-box">
       <label>Reason for rejection <span class="required">*</span></label>
       <textarea id="e-reject-reason" rows="2" style="margin-top:6px;" oninput="eValidateMgr()"></textarea>
-      <button class="btn-reject" style="margin-top:8px;" onclick="excAction('reject')">✗ Confirm rejection</button>
+      <button class="btn-reject" style="margin-top:8px;" onclick="excReject()">✗ Confirm rejection</button>
     </div>
   </div>
 </div>
-
-<!-- EXCEPTION SUCCESS -->
 <div class="success-screen" id="exc-success">
   <div class="success-icon" id="e-success-icon"></div>
   <div class="success-title" id="e-success-title"></div>
   <div class="success-sub" id="e-success-sub"></div>
   <div class="audit-box" id="e-audit-box"></div>
-  <button class="btn-primary" style="max-width:400px;margin:0 auto;" onclick="resetException()">New exception request</button>
+  <button class="btn-primary" style="max-width:400px;margin:0 auto;" onclick="resetExc()">New exception request</button>
 </div>
 </div>
 
 <script>
-// ── CONFIG ────────────────────────────────────────────────────────────────────
-const SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycbzzGKi_g0py47W2yk80sUS8FDSn0Z-jHmVIqcTauVWOBsDD98BEG-6JRuTHXRpamc2K/exec';
-const REC_SCRIPT  = 'https://script.google.com/macros/s/AKfycbyFApzAeAi7t0ICVzSoY2Pv9eZx4PiivWtvwSYW-BJ3Txr1VP9v0fRXM58K_vUWK6T6gQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzzGKi_g0py47W2yk80sUS8FDSn0Z-jHmVIqcTauVWOBsDD98BEG-6JRuTHXRpamc2K/exec';
+const REC_URL    = 'https://script.google.com/macros/s/AKfycbyFApzAeAi7t0ICVzSoY2Pv9eZx4PiivWtvwSYW-BJ3Txr1VP9v0fRXM58K_vUWK6T6gQ/exec';
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
-const today   = new Date();
-const pad     = n => String(n).padStart(2,'0');
-const dateStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-const urlParams = new URLSearchParams(window.location.search);
+const today  = new Date();
+const pad    = n => String(n).padStart(2,'0');
+const dateStr= `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+const urlP   = new URLSearchParams(window.location.search);
+const urlMod = urlP.get('mod')||'leave';
+const urlStep= parseInt(urlP.get('step'))||1;
+const urlLid = urlP.get('lid')||'';
+const urlEid = urlP.get('eid')||'';
 
-let currentModule = 'leave';
-let leaveStep     = 1;
-let excStep       = 1;
-let leaveData     = {};
-let excData       = {};
-let selectedExcType = '';
-let empCache      = {};
+const leaveId= urlLid || `LR-${today.getFullYear()}${pad(today.getMonth()+1)}${pad(today.getDate())}-${Math.floor(Math.random()*9000)+1000}`;
+const excId  = urlEid || `EX-${today.getFullYear()}${pad(today.getMonth()+1)}${pad(today.getDate())}-${Math.floor(Math.random()*9000)+1000}`;
 
-// Set defaults
-document.getElementById('e-submit-date').value = dateStr;
+let empCache  = {};
+let leaveData = {};
+let excData   = {};
+let excType   = '';
+let mgrOpts   = []; // for searchable dropdown
 
-// Generate IDs
-const leaveId = urlParams.get('lid') || `LR-${today.getFullYear()}${pad(today.getMonth()+1)}${pad(today.getDate())}-${Math.floor(Math.random()*9000)+1000}`;
-const excId   = urlParams.get('eid') || `EX-${today.getFullYear()}${pad(today.getMonth()+1)}${pad(today.getDate())}-${Math.floor(Math.random()*9000)+1000}`;
-const urlStep = parseInt(urlParams.get('step'))||1;
-const urlMod  = urlParams.get('mod')||'leave';
-
-document.getElementById('req-badge').textContent = urlMod==='exception' ? excId : leaveId;
+document.getElementById('req-badge').textContent = urlMod==='exception'?excId:leaveId;
 document.getElementById('leave-sn').textContent  = leaveId;
 document.getElementById('exc-ref').textContent   = excId + '  ·  ' + today.toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+document.getElementById('e-submit-date').value   = dateStr;
 
-// ── MODULE SWITCH ─────────────────────────────────────────────────────────────
+// ── MODULE SWITCH ──────────────────────────────────────────────────────────────
 function switchModule(mod) {
-  currentModule = mod;
   document.getElementById('module-leave').classList.toggle('hidden', mod!=='leave');
   document.getElementById('module-exception').classList.toggle('hidden', mod!=='exception');
   document.getElementById('tab-leave').classList.toggle('active', mod==='leave');
   document.getElementById('tab-exception').classList.toggle('active', mod==='exception');
-  document.getElementById('req-badge').textContent = mod==='exception' ? excId : leaveId;
-  buildStatusBar(mod==='leave'?leaveStep:excStep, mod);
+  document.getElementById('req-badge').textContent = mod==='exception'?excId:leaveId;
+  buildStatusBar(mod==='leave'?1:1, mod);
 }
 
-// ── STATUS BAR ────────────────────────────────────────────────────────────────
+// ── STATUS BAR ──────────────────────────────────────────────────────────────────
 function buildStatusBar(step, mod) {
-  const steps = mod==='leave'
-    ? [{name:'Employee',role:'Request'},{name:'Manager',role:'Approval &#10003; HR Notified'}]
-    : [{name:'Submit',role:'Employee/Manager'},{name:'Manager',role:'Decision'}];
-  const bar = document.getElementById('status-steps');
-  bar.innerHTML = steps.map((s,i)=>{
-    const n   = i+1;
-    const cls = n<step?'done':n===step?'active':'';
-    const conn= i<steps.length-1?`<div class="step-connector ${n<step?'done':''}"></div>`:'';
-    return `<div class="step">
-      <div class="step-circle ${cls}">${n<step?'✓':n}</div>
-      <div class="step-info">
-        <div class="step-name ${cls==='active'?'active':cls==='done'?'done':''}">${s.name}</div>
-        <div class="step-role">${s.role}</div>
-      </div>
-    </div>${conn}`;
+  const steps = [{name:'Employee',role:'Request'},{name:'Manager',role:'Approval ✓ HR Notified'}];
+  document.getElementById('status-steps').innerHTML = steps.map((s,i)=>{
+    const n=i+1, cls=n<step?'done':n===step?'active':'';
+    const conn=i<steps.length-1?`<div class="step-connector ${n<step?'done':''}"></div>`:'';
+    return `<div class="step"><div class="step-circle ${cls}">${n<step?'✓':n}</div><div class="step-info"><div class="step-name ${cls}">${s.name}</div><div class="step-role">${s.role}</div></div></div>${conn}`;
   }).join('');
 }
 
-// ── EMPLOYEE LOOKUP ───────────────────────────────────────────────────────────
-async function lookupEmployee(mod) {
-  const idEl     = document.getElementById(mod==='leave'?'l-empid':'e-empid');
-  const statusEl = document.getElementById(mod==='leave'?'l-lookup-status':'e-lookup-status');
-  const empId    = idEl.value.trim().toUpperCase();
-  if (!empId) { statusEl.textContent='Enter an Employee ID first'; statusEl.className='lookup-status lookup-err'; return; }
+// ── SEARCHABLE SELECT ──────────────────────────────────────────────────────────
+document.addEventListener('click', e=>{
+  if (!e.target.closest('.ss-wrap')) document.querySelectorAll('.ss-dd.open').forEach(d=>d.classList.remove('open'));
+});
 
-  statusEl.textContent = '⟳ Looking up...';
-  statusEl.className   = 'lookup-status';
-
-  // Check cache
-  if (empCache[empId]) {
-    fillEmpFields(mod, empCache[empId]);
-    statusEl.textContent = '✓ Found: ' + (empCache[empId]['Full Name']||empCache[empId]['Full Name (EN)']||'');
-    statusEl.className   = 'lookup-status lookup-ok';
-    if (Object.keys(empCache).length > 1) populateManagerDropdown();
-    if (mod==='leave') lValidate(); else eValidate();
-    return;
+function toggleSS(id) {
+  const dd=document.getElementById(`ss-dd-${id}`);
+  dd.classList.toggle('open');
+  if (dd.classList.contains('open')) {
+    const si=document.getElementById(`ss-search-${id}`);
+    si.value=''; si.focus();
+    renderSSList(id, mgrOpts, '');
   }
+}
 
-  // Load all employees into cache first if not done yet
-  if (Object.keys(empCache).length === 0) {
-    try {
-      const res  = await fetch(SCRIPT_URL + '?action=get_employees');
-      const json = await res.json();
-      (json.data||[]).forEach(e => { empCache[e['Employee ID']] = e; });
-      console.log('Employees cached:', Object.keys(empCache).length);
-    } catch(e) {
-      console.error('Could not load employees:', e);
-    }
-  }
+function filterSS(id) {
+  const q=document.getElementById(`ss-search-${id}`).value.toLowerCase();
+  renderSSList(id, mgrOpts, q);
+}
 
-  // Now look up in cache
-  const emp = empCache[empId];
+function renderSSList(id, opts, q) {
+  const list=document.getElementById(`ss-list-${id}`);
+  const matches=q?opts.filter(o=>o.label.toLowerCase().includes(q)):opts;
+  if(!matches.length){list.innerHTML='<div class="ss-none">No results</div>';return;}
+  list.innerHTML=matches.map(o=>{
+    const hi=q?o.label.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),'<mark>$1</mark>'):o.label;
+    return `<div class="ss-opt" onmousedown="selectSS(event,'${id}','${o.val.replace(/'/g,"\\'")}','${o.label.replace(/'/g,"\\'")}','${(o.email||'').replace(/'/g,"\\'")}')"><span>${hi}</span></div>`;
+  }).join('');
+}
+
+function selectSS(e,id,val,label,email) {
+  e.preventDefault();
+  document.getElementById(`ss-btn-${id}`).textContent=label;
+  document.getElementById(`ss-btn-${id}`).classList.add('has-value');
+  document.getElementById(id).value=val;
+  document.getElementById(`ss-dd-${id}`).classList.remove('open');
+  // Auto-fill email if manager field
+  if (id==='l-mgr') { document.getElementById('l-mgr-email').value=email; lValidate(); }
+}
+
+function buildMgrOpts() {
+  mgrOpts=[{val:'CEO',label:'CEO — Chief Executive Officer',email:'ceo@igccgroup-iq.com'}];
+  Object.values(empCache).forEach(e=>{
+    if (!e['Employee ID']||e['Employee ID']==='CEO') return;
+    mgrOpts.push({
+      val:e['Employee ID'],
+      label:`${e['Employee ID']} — ${e['Full Name']||e['Full Name (EN)']||''} (${e['Position']||'—'})`,
+      email:e['Email']||''
+    });
+  });
+  renderSSList('l-mgr', mgrOpts, '');
+}
+
+function onMgrChange() { lValidate(); }
+
+// ── EMPLOYEE LOOKUP ────────────────────────────────────────────────────────────
+async function lookupEmp(mod) {
+  const idEl=document.getElementById(mod==='leave'?'l-empid':'e-empid');
+  const stEl=document.getElementById(mod==='leave'?'l-lookup-status':'e-lookup-status');
+  const empId=idEl.value.trim().toUpperCase();
+  if (!empId){stEl.textContent='Enter an Employee ID first';stEl.className='lookup-status lookup-err';return;}
+  stEl.textContent='⟳ Looking up...';stEl.className='lookup-status';
+
+  // Load cache if empty
+  if (Object.keys(empCache).length===0) await loadEmployees();
+
+  const emp=empCache[empId];
   if (emp) {
-    fillEmpFields(mod, emp);
-    statusEl.textContent = '✓ Found: ' + (emp['Full Name']||emp['Full Name (EN)']||'');
-    statusEl.className   = 'lookup-status lookup-ok';
-  } else {
-    // Also try CEO special case
-    if (empId === 'CEO') {
-      const ceo = { 'Employee ID':'CEO','Full Name':'Chief Executive Officer','Position':'CEO','Department':'Executive','Site':'HQ','Email':'ceo@igccgroup-iq.com','Manager ID':'' };
-      empCache['CEO'] = ceo;
-      fillEmpFields(mod, ceo);
-      statusEl.textContent = '✓ Found: Chief Executive Officer';
-      statusEl.className   = 'lookup-status lookup-ok';
-    } else {
-      statusEl.textContent = '✗ Employee ID "' + empId + '" not found — check ID or fill manually';
-      statusEl.className   = 'lookup-status lookup-err';
-    }
-  }
-  if (mod==='leave') lValidate(); else eValidate();
-}
-
-function fillEmpFields(mod, emp) {
-  if (mod==='leave') {
-    document.getElementById('l-empname').textContent  = emp['Full Name']||emp['Full Name (EN)']||'—';
-    document.getElementById('l-dept').textContent     = emp['Department']||'—';
-    document.getElementById('l-jobtitle').textContent = emp['Position']||'—';
-    document.getElementById('l-site').textContent     = emp['Site']||'—';
-    // Auto-select manager from Manager ID
-    const mgrId = emp['Manager ID']||'';
-    if (mgrId) {
-      const sel = document.getElementById('l-manager-sel');
-      if (sel) {
-        sel.value = mgrId;
-        // If not found in options, add it
-        if (sel.value !== mgrId && empCache[mgrId]) {
-          const o = document.createElement('option');
-          o.value = mgrId;
-          o.dataset.email = empCache[mgrId]['Email']||'';
-          o.textContent = mgrId + ' — ' + (empCache[mgrId]['Full Name']||'');
-          sel.appendChild(o);
-          sel.value = mgrId;
+    if (mod==='leave') {
+      document.getElementById('l-empname').textContent =emp['Full Name']||emp['Full Name (EN)']||'—';
+      document.getElementById('l-dept').textContent    =emp['Department']||'—';
+      document.getElementById('l-jobtitle').textContent=emp['Position']||'—';
+      document.getElementById('l-site').textContent    =emp['Site']||'—';
+      // Auto-select manager
+      const mgrId=emp['Manager ID']||'';
+      if (mgrId && mgrOpts.length) {
+        const mgrOpt=mgrOpts.find(o=>o.val===mgrId);
+        if (mgrOpt) {
+          document.getElementById('ss-btn-l-mgr').textContent=mgrOpt.label;
+          document.getElementById('ss-btn-l-mgr').classList.add('has-value');
+          document.getElementById('l-mgr').value=mgrId;
+          document.getElementById('l-mgr-email').value=mgrOpt.email||'';
         }
-        onLeaveManagerChange();
       }
+      stEl.textContent='✓ Found: '+(emp['Full Name']||emp['Full Name (EN)']||'');
+      stEl.className='lookup-status lookup-ok';
+      lValidate();
+    } else {
+      document.getElementById('e-empname').textContent =emp['Full Name']||emp['Full Name (EN)']||'—';
+      document.getElementById('e-dept').textContent    =emp['Department']||'—';
+      document.getElementById('e-jobtitle').textContent=emp['Position']||'—';
+      document.getElementById('e-site').textContent    =emp['Site']||'—';
+      // Auto-fill manager email
+      const mgrId=emp['Manager ID']||'';
+      if (mgrId && empCache[mgrId]) {
+        document.getElementById('e-mgr-email').value=empCache[mgrId]['Email']||'';
+        document.getElementById('e-mgr-name').value=empCache[mgrId]['Full Name']||empCache[mgrId]['Full Name (EN)']||'';
+      }
+      stEl.textContent='✓ Found: '+(emp['Full Name']||emp['Full Name (EN)']||'');
+      stEl.className='lookup-status lookup-ok';
+      eValidate();
     }
   } else {
-    document.getElementById('e-empname').textContent  = emp['Full Name']||emp['Full Name (EN)']||'—';
-    document.getElementById('e-dept').textContent     = emp['Department']||'—';
-    document.getElementById('e-jobtitle').textContent = emp['Position']||'—';
-    document.getElementById('e-site').textContent     = emp['Site']||'—';
-    // Auto-fill manager email
-    if (emp['Manager ID']) {
-      fetch(SCRIPT_URL + '?action=get_employees').then(r=>r.json()).then(j=>{
-        const mgr = (j.data||[]).find(e=>e['Employee ID']===emp['Manager ID']);
-        if (mgr && mgr['Email']) {
-          document.getElementById('e-mgr-email').value = mgr['Email'];
-          document.getElementById('e-mgr-name').value  = mgr['Full Name']||mgr['Full Name (EN)']||'';
-        }
-      }).catch(()=>{});
-    }
+    stEl.textContent=`✗ "${empId}" not found — check ID`;
+    stEl.className='lookup-status lookup-err';
   }
 }
 
-// ── LEAVE DURATION ────────────────────────────────────────────────────────────
-// ── MANAGER DROPDOWN ─────────────────────────────────────────────────────────
-function populateManagerDropdown() {
-  const sel = document.getElementById('l-manager-sel');
-  if (!sel) return;
-  const prev = sel.value;
-  sel.innerHTML = '<option value="">Select manager...</option>';
-  // CEO first
-  const ceoOpt = document.createElement('option');
-  ceoOpt.value = 'CEO';
-  ceoOpt.dataset.email = 'ceo@igccgroup-iq.com';
-  ceoOpt.textContent = 'CEO — Chief Executive Officer';
-  sel.appendChild(ceoOpt);
-  // All active employees
-  Object.values(empCache).forEach(e => {
-    if (!e['Employee ID'] || e['Employee ID'] === 'CEO') return;
-    const o = document.createElement('option');
-    o.value = e['Employee ID'];
-    o.dataset.email = e['Email'] || '';
-    o.textContent = e['Employee ID'] + ' — ' + (e['Full Name']||e['Full Name (EN)']||'') + ' (' + (e['Position']||'—') + ')';
-    sel.appendChild(o);
-  });
-  if (prev) sel.value = prev;
-  document.getElementById('l-manager-status').textContent = '✓ ' + (Object.keys(empCache).length) + ' employees loaded';
+async function loadEmployees() {
+  try {
+    const res =await fetch(SCRIPT_URL+'?action=get_employees');
+    const json=await res.json();
+    (json.data||[]).forEach(e=>{empCache[e['Employee ID']]=e;});
+    buildMgrOpts();
+    console.log('Employees loaded:',Object.keys(empCache).length);
+  } catch(e){console.error('loadEmployees error:',e);}
 }
 
-function onLeaveManagerChange() {
-  const sel   = document.getElementById('l-manager-sel');
-  const email = sel.options[sel.selectedIndex]?.dataset?.email || '';
-  document.getElementById('l-manager-email').value = email;
-  lValidate();
+// ── DURATION ────────────────────────────────────────────────────────────────────
+function calcDur() {
+  const s=document.getElementById('l-start').value, e=document.getElementById('l-end').value;
+  if(!s||!e) return;
+  const diff=Math.round((new Date(e)-new Date(s))/(864e5))+1;
+  document.getElementById('l-duration').textContent=diff>0?diff:'—';
+  if(diff>0){const r=new Date(e);r.setDate(r.getDate()+1);document.getElementById('l-return').value=`${r.getFullYear()}-${pad(r.getMonth()+1)}-${pad(r.getDate())}`;}
 }
 
-function calcLeaveDuration() {
-  const s = document.getElementById('l-start').value;
-  const e = document.getElementById('l-end').value;
-  if (!s || !e) return;
-  const diff = Math.round((new Date(e)-new Date(s))/(1000*60*60*24)) + 1;
-  document.getElementById('l-duration').textContent = diff > 0 ? diff : '—';
-  // Auto-fill return date (next day after end)
-  if (diff > 0) {
-    const ret = new Date(e);
-    ret.setDate(ret.getDate()+1);
-    document.getElementById('l-return').value = `${ret.getFullYear()}-${pad(ret.getMonth()+1)}-${pad(ret.getDate())}`;
-  }
-  // Auto-fill deducted days
-  document.getElementById('l-deducted').value = diff > 0 ? diff : '';
-  calcNewBalance();
-}
-
-function calcNewBalance() {
-  const bal = parseFloat(document.getElementById('l-balance').value)||0;
-  const ded = parseFloat(document.getElementById('l-deducted').value)||0;
-  document.getElementById('l-newbalance').value = bal - ded;
-}
-document.getElementById('l-balance').addEventListener('input', calcNewBalance);
-
-// ── EXCEPTION TYPE ────────────────────────────────────────────────────────────
-function selectException(type) {
-  selectedExcType = type;
-  ['late','early','fingerprint','fullday'].forEach(t=>{
-    document.getElementById(`exc-${t}`).classList.toggle('selected', t===type);
-  });
-  document.getElementById('e-hours-field').style.display      = (type==='late'||type==='early')?'block':'none';
-  document.getElementById('e-fingerprint-field').style.display = type==='fingerprint'?'block':'none';
-  eValidate();
-}
-
-function onBehalfChange() {
-  const val  = document.getElementById('e-behalf').value;
-  const row  = document.getElementById('e-emp-lookup-row');
-  const idEl = document.getElementById('e-empid');
-  if (val==='self') {
-    // Pre-fill from submitter if possible
-    idEl.value = '';
-    document.getElementById('e-empname').textContent = '—';
-  }
+// ── EXCEPTION TYPE ──────────────────────────────────────────────────────────────
+function selExc(type) {
+  excType=type;
+  ['late','early','fingerprint','fullday'].forEach(t=>document.getElementById(`exc-${t}`).classList.toggle('selected',t===type));
+  document.getElementById('e-hours-field').classList.toggle('hidden', type!=='late'&&type!=='early');
+  document.getElementById('e-fp-field').classList.toggle('hidden', type!=='fingerprint');
   eValidate();
 }
 
 // ── VALIDATION ────────────────────────────────────────────────────────────────
-const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+const isEmail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
-function renderVal(checks, elId, btnId) {
-  document.getElementById(elId).innerHTML = checks.map(([l,p])=>`
-    <div class="val-row ${p?'pass':'fail'}">
-      <div class="val-dot ${p?'pass':'fail'}"></div>${l}
-    </div>`).join('');
-  if (btnId) document.getElementById(btnId).disabled = !checks.every(c=>c[1]);
+function renderVal(checks,elId,btnId) {
+  document.getElementById(elId).innerHTML=checks.map(([l,p])=>`<div class="val-row ${p?'pass':'fail'}"><div class="val-dot ${p?'pass':'fail'}"></div>${l}</div>`).join('');
+  if(btnId) document.getElementById(btnId).disabled=!checks.every(c=>c[1]);
 }
 
 function lValidate() {
-  const empId = document.getElementById('l-empid').value.trim();
-  const name  = document.getElementById('l-empname').textContent;
   renderVal([
-    ['Employee ID provided',          !!empId],
-    ['Employee found in system',      name!=='—'&&!!name],
-    ['Mobile number provided',        !!document.getElementById('l-mobile').value.trim()],
-    ['Leave type selected',           !!document.getElementById('l-type').value],
-    ['Reason provided',               !!document.getElementById('l-reason').value.trim()],
-    ['Start date set',                !!document.getElementById('l-start').value],
-    ['End date set',                  !!document.getElementById('l-end').value],
-    ['End date is after start date',  (()=>{ const s=document.getElementById('l-start').value, e=document.getElementById('l-end').value; return !s||!e||new Date(e)>=new Date(s); })()],
-    ['Direct manager selected',       !!document.getElementById('l-manager-sel')?.value],
-  ], 'l-val-rows', 'l-btn-submit');
+    ['Employee ID provided',      !!document.getElementById('l-empid').value.trim()],
+    ['Employee found',            document.getElementById('l-empname').textContent!=='—'],
+    ['Mobile number provided',    !!document.getElementById('l-mobile').value.trim()],
+    ['Direct manager selected',   !!document.getElementById('l-mgr').value],
+    ['Leave type selected',       !!document.getElementById('l-type').value],
+    ['Reason provided',           !!document.getElementById('l-reason').value.trim()],
+    ['Start date set',            !!document.getElementById('l-start').value],
+    ['End date set',              !!document.getElementById('l-end').value],
+    ['Dates are valid',           (()=>{const s=document.getElementById('l-start').value,e=document.getElementById('l-end').value;return !s||!e||new Date(e)>=new Date(s);})()],
+  ],'l-val-rows','l-btn-submit');
 }
 
 function lValidateMgr() {
-  const email = document.getElementById('l-mgr-email').value.trim();
-  document.getElementById('l-btn-approve').disabled = !isEmail(email);
-}
-
-function lValidateHR() {
-  const email = document.getElementById('l-hr-email').value.trim();
-  document.getElementById('l-btn-hr').disabled = !isEmail(email);
+  document.getElementById('l-btn-approve').disabled=!isEmail(document.getElementById('l-mgr-confirm-email').value.trim());
 }
 
 function eValidate() {
-  const type   = selectedExcType;
-  const hours  = document.getElementById('e-hours').value;
-  const fp     = document.getElementById('e-fingerprint-type').value;
-  const behalf = document.getElementById('e-behalf').value;
-  const empId  = document.getElementById('e-empid').value.trim();
-  const name   = document.getElementById('e-empname').textContent;
   renderVal([
-    ['Submitter email valid',          isEmail(document.getElementById('e-submitter').value.trim())],
-    ['Employee ID provided',           !!empId],
-    ['Employee found',                 name!=='—'&&!!name],
-    ['Exception type selected',        !!type],
-    ['Exception date set',             !!document.getElementById('e-date').value],
-    ['Hours provided (if applicable)', type!=='late'&&type!=='early'||!!hours],
-    ['Fingerprint type selected',      type!=='fingerprint'||!!fp],
-    ['Justification provided',         !!document.getElementById('e-justification').value.trim()],
-    ['Manager email valid',            isEmail(document.getElementById('e-mgr-email').value.trim())],
-  ], 'e-val-rows', 'e-btn-submit');
+    ['Submitter email valid',     isEmail(document.getElementById('e-submitter').value.trim())],
+    ['Employee ID provided',      !!document.getElementById('e-empid').value.trim()],
+    ['Employee found',            document.getElementById('e-empname').textContent!=='—'],
+    ['Exception type selected',   !!excType],
+    ['Exception date set',        !!document.getElementById('e-date').value],
+    ['Hours provided (if needed)',excType!=='late'&&excType!=='early'||!!document.getElementById('e-hours').value],
+    ['Fingerprint type selected', excType!=='fingerprint'||!!document.getElementById('e-fp-type').value],
+    ['Justification provided',    !!document.getElementById('e-justification').value.trim()],
+    ['Manager email valid',       isEmail(document.getElementById('e-mgr-email').value.trim())],
+  ],'e-val-rows','e-btn-submit');
 }
 
 function eValidateMgr() {
-  const email = document.getElementById('e-mgr-confirm-email').value.trim();
-  document.getElementById('e-btn-approve').disabled = !isEmail(email);
+  document.getElementById('e-btn-approve').disabled=!isEmail(document.getElementById('e-mgr-confirm-email').value.trim());
 }
 
-// ── SUBMIT LEAVE ──────────────────────────────────────────────────────────────
+// ── SUBMIT LEAVE ────────────────────────────────────────────────────────────────
 function submitLeave() {
-  const empId    = document.getElementById('l-empid').value.trim();
-  const empName  = document.getElementById('l-empname').textContent;
-  const mgrSel   = document.getElementById('l-manager-sel');
-  const mgrEmail = document.getElementById('l-manager-email').value.trim();
-  leaveData = {
-    leaveId, empId, empName,
+  leaveData={
+    leaveId,
+    empId:       document.getElementById('l-empid').value.trim(),
+    empName:     document.getElementById('l-empname').textContent,
     dept:        document.getElementById('l-dept').textContent,
     jobTitle:    document.getElementById('l-jobtitle').textContent,
     site:        document.getElementById('l-site').textContent,
     mobile:      document.getElementById('l-mobile').value.trim(),
     replacement: document.getElementById('l-replacement').value.trim(),
     workPhone:   document.getElementById('l-workphone').value.trim(),
-    mgrId:       mgrSel ? mgrSel.value : '',
-    mgrEmail:    mgrEmail,
+    mgrId:       document.getElementById('l-mgr').value,
+    mgrEmail:    document.getElementById('l-mgr-email').value.trim(),
     leaveType:   document.getElementById('l-type').value,
     reason:      document.getElementById('l-reason').value.trim(),
     startDate:   document.getElementById('l-start').value,
     endDate:     document.getElementById('l-end').value,
     returnDate:  document.getElementById('l-return').value,
     duration:    document.getElementById('l-duration').textContent,
-    status:      'Pending Manager',
     submittedAt: new Date().toISOString(),
+    status:      'Pending Manager',
   };
-  fireAndForget({ action:'leave_submit', data:leaveData });
-  leaveStep = 2;
+  fireFF({action:'leave_submit', data:leaveData});
   buildStatusBar(2,'leave');
-  activateLeaveStep(2);
-  showLeaveSuccess('📋','Leave request submitted','Manager will receive an email to review',[
+  // Show step 2 as next (will be filled by manager via email)
+  showLeaveSuccess('📋','Leave request submitted','Manager will receive an email to approve',[
     ['Leave ID',   leaveId],
-    ['Employee',   empName + ' (' + empId + ')'],
+    ['Employee',   leaveData.empName+' ('+leaveData.empId+')'],
     ['Leave type', leaveData.leaveType],
-    ['Period',     leaveData.startDate + ' → ' + leaveData.endDate],
-    ['Duration',   leaveData.duration + ' days'],
+    ['Period',     leaveData.startDate+' → '+leaveData.endDate],
+    ['Duration',   leaveData.duration+' days'],
     ['Status',     'Pending Manager Approval'],
-  ], false, true);
+  ]);
 }
 
-// ── LEAVE ACTIONS ─────────────────────────────────────────────────────────────
-function leaveAction(type) {
-  const email    = document.getElementById('l-mgr-email').value.trim();
-  const comments = document.getElementById('l-mgr-comments').value.trim();
-  if (type==='reject') {
-    const reason = document.getElementById('l-reject-reason').value.trim();
-    if (!reason) { alert('Please provide a rejection reason'); return; }
-    fireAndForget({ action:'leave_reject', leaveId, mgrEmail:email, reason });
-    showLeaveSuccess('❌','Leave request rejected','Employee has been notified',[
-      ['Leave ID','Status','Rejected'],['Rejected by',email],['Reason',reason]
-    ], true);
-  } else {
-    fireAndForget({ action:'leave_approve', leaveId, mgrEmail:email, comments });
-    leaveStep = 2;
-    buildStatusBar(2,'leave');
-    showLeaveSuccess('✅','Leave approved','HR has been notified for their records',[
-      ['Leave ID',   leaveId],
-      ['Employee',   leaveData.empName||''],
-      ['Leave type', leaveData.leaveType||''],
-      ['Period',     (leaveData.startDate||'') + ' → ' + (leaveData.endDate||'')],
-      ['Duration',   (leaveData.duration||'') + ' days'],
-      ['Approved by',email],
-      ['Status',     'Approved ✓'],
-    ]);
-  }
+// ── MANAGER ACTIONS ────────────────────────────────────────────────────────────
+function leaveApprove() {
+  const email=document.getElementById('l-mgr-confirm-email').value.trim();
+  const comments=document.getElementById('l-mgr-comments').value.trim();
+  fireFF({action:'leave_approve', leaveId, mgrEmail:email, comments});
+  showLeaveSuccess('✅','Leave approved','HR has been notified',[
+    ['Leave ID',   leaveId],
+    ['Employee',   leaveData.empName||urlP.get('ename')||''],
+    ['Leave type', leaveData.leaveType||urlP.get('ltype')||''],
+    ['Period',     (leaveData.startDate||urlP.get('start')||'')+ ' → '+(leaveData.endDate||urlP.get('end')||'')],
+    ['Duration',   (leaveData.duration||urlP.get('dur')||'')+' days'],
+    ['Approved by',email],
+    ['Status',     'Approved ✓'],
+  ]);
 }
 
-function showLeaveReject() {
-  document.getElementById('l-reject-box').classList.toggle('show');
+function leaveReject() {
+  const reason=document.getElementById('l-reject-reason').value.trim();
+  if(!reason){alert('Please provide a rejection reason');return;}
+  const email=document.getElementById('l-mgr-confirm-email').value.trim();
+  fireFF({action:'leave_reject', leaveId, mgrEmail:email, reason});
+  showLeaveSuccess('❌','Leave request rejected','Employee has been notified',[
+    ['Leave ID', leaveId],['Rejected by',email],['Reason',reason]
+  ], true);
 }
 
-function leaveHRProcess() {
-  const hrEmail = document.getElementById('l-hr-email').value.trim();
-  const paid    = document.getElementById('l-paid').value;
-  const balance = document.getElementById('l-balance').value;
-  const deducted= document.getElementById('l-deducted').value;
-  const newBal  = document.getElementById('l-newbalance').value;
-  fireAndForget({
-    action:'leave_hr_process', leaveId, hrEmail, paid,
-    balance, deducted, newBalance:newBal,
-    hrDate:document.getElementById('l-hr-date').value,
-  });
-  showLeaveSuccess('🎉','Leave processed','Record updated in HR system',[
-    ['Leave ID',    leaveId],
-    ['Employee',    leaveData.empName||''],
-    ['Leave type',  leaveData.leaveType||''],
-    ['Paid/Unpaid', paid||'—'],
-    ['Days deducted',deducted||'—'],
-    ['New balance', newBal||'—'],
-    ['Status',      'Processed'],
-  ], false, false);
+// ── SUBMIT EXCEPTION ────────────────────────────────────────────────────────────
+function submitExc() {
+  const typeLabels={late:'Late Arrival',early:'Early Departure',fingerprint:'Missing Fingerprint',fullday:'Full Day Exception'};
+  excData={
+    excId,
+    empId:         document.getElementById('e-empid').value.trim(),
+    empName:       document.getElementById('e-empname').textContent,
+    dept:          document.getElementById('e-dept').textContent,
+    jobTitle:      document.getElementById('e-jobtitle').textContent,
+    site:          document.getElementById('e-site').textContent,
+    submitter:     document.getElementById('e-submitter').value.trim(),
+    submitDate:    document.getElementById('e-submit-date').value,
+    behalf:        document.getElementById('e-behalf').value,
+    excType,
+    excTypeLabel:  typeLabels[excType]||excType,
+    excDate:       document.getElementById('e-date').value,
+    hours:         document.getElementById('e-hours').value,
+    fpType:        document.getElementById('e-fp-type').value,
+    justification: document.getElementById('e-justification').value.trim(),
+    mgrEmail:      document.getElementById('e-mgr-email').value.trim(),
+    mgrName:       document.getElementById('e-mgr-name').value.trim(),
+    submittedAt:   new Date().toISOString(),
+    status:        'Pending Manager',
+  };
+  fireFF({action:'exc_submit', data:excData});
+  buildStatusBar(2,'exception');
+  showExcSuccess('📋','Exception submitted','Manager will receive a notification',[
+    ['Exception ID', excId],
+    ['Employee',     excData.empName+' ('+excData.empId+')'],
+    ['Type',         excData.excTypeLabel],
+    ['Date',         excData.excDate],
+    ['Status',       'Pending Manager Approval'],
+  ]);
 }
 
-function activateLeaveStep(step) {
-  ['ls1','ls2','ls3'].forEach((id,i)=>{
-    const sec=document.getElementById(id); if(!sec) return;
-    const n=i+1;
-    if(n<step){sec.classList.remove('locked');sec.classList.add('readonly');}
-    else if(n===step){sec.classList.remove('locked','readonly');}
-    else{sec.classList.add('locked');sec.classList.remove('readonly');}
-  });
-  if (step===2 && leaveData.empName) {
-    document.getElementById('ls2-summary').innerHTML =
-      `📋 <strong>${leaveData.empName}</strong> · ${leaveData.leaveType} · ${leaveData.startDate} → ${leaveData.endDate} · ${leaveData.duration} days`;
-  }
-  if (step===3) {
-    document.getElementById('ls3-summary').innerHTML =
-      `✅ Manager approved · Processing leave for <strong>${leaveData.empName||''}</strong>`;
-    document.getElementById('l-deducted').value = leaveData.duration||'';
-    calcNewBalance();
-    // Auto-fill HR date
-    document.getElementById('l-hr-date').value = dateStr;
-  }
-  // Auto-fill performer email from URL
-  const emailMap={2:'l-mgr-email',3:'l-hr-email'};
-  const pemail = urlParams.get('pemail')||'';
-  if (emailMap[step] && pemail) document.getElementById(emailMap[step]).value = pemail;
-  lValidateMgr(); lValidateHR();
+function excApprove() {
+  const email=document.getElementById('e-mgr-confirm-email').value.trim();
+  fireFF({action:'exc_approve', excId, mgrEmail:email, comments:document.getElementById('e-mgr-comments').value.trim()});
+  showExcSuccess('✅','Exception approved','HR has been notified',[
+    ['Exception ID', excId],
+    ['Employee',     excData.empName||urlP.get('empname')||''],
+    ['Type',         excData.excTypeLabel||urlP.get('exctype')||''],
+    ['Approved by',  email],
+    ['Status',       'Approved ✓'],
+  ]);
 }
 
-function showLeaveSuccess(icon, title, sub, lines, isRej=false, stayOpen=false) {
-  if (stayOpen) {
-    // Show inline success then continue
-    return;
-  }
-  document.getElementById('leave-form-container').style.display='none';
-  document.getElementById('leave-success').style.display='block';
+function excReject() {
+  const reason=document.getElementById('e-reject-reason').value.trim();
+  if(!reason){alert('Please provide a rejection reason');return;}
+  const email=document.getElementById('e-mgr-confirm-email').value.trim();
+  fireFF({action:'exc_reject', excId, mgrEmail:email, reason});
+  showExcSuccess('❌','Exception rejected','',[ ['Exception ID',excId],['Rejected by',email],['Reason',reason] ],true);
+}
+
+// ── BUILD READ-ONLY SUMMARY ────────────────────────────────────────────────────
+function buildLeaveReadonly(d) {
+  return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+    ${[['Employee', d.empName+' ('+d.empId+')'],['Department',d.dept],['Job Title',d.jobTitle],
+       ['Site',d.site],['Mobile',d.mobile],['Replacement',d.replacement||'N/A']
+      ].map(([l,v])=>`<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">${l}</div><div style="font-size:13px;font-weight:500;">${v||'—'}</div></div>`).join('')}
+  </div>
+  <div style="background:var(--accent);color:#fff;border-radius:8px;padding:12px 16px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+    ${[['Leave Type',d.leaveType],['Start Date',d.startDate],['End Date',d.endDate],['Duration',d.duration+' days']]
+      .map(([l,v])=>`<div><div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.05em;">${l}</div><div style="font-size:13px;font-weight:600;">${v||'—'}</div></div>`).join('')}
+  </div>
+  ${d.reason?`<div style="margin-top:10px;font-size:12px;color:var(--muted);"><strong>Reason:</strong> ${d.reason}</div>`:''}`;
+}
+
+function buildExcReadonly(d) {
+  const typeLabels={late:'🕐 Late Arrival',early:'🚪 Early Departure',fingerprint:'👆 Missing Fingerprint',fullday:'📅 Full Day Exception'};
+  return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+    ${[['Employee',d.empName+' ('+d.empId+')'],['Department',d.dept],['Site',d.site]]
+      .map(([l,v])=>`<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">${l}</div><div style="font-size:13px;font-weight:500;">${v||'—'}</div></div>`).join('')}
+  </div>
+  <div style="background:rgba(217,119,6,.08);border:1.5px solid rgba(217,119,6,.3);border-radius:8px;padding:12px 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+    ${[['Type',typeLabels[d.excType]||d.excTypeLabel||d.excType],['Date',d.excDate],['Hours',d.hours?d.hours+' hrs':d.fpType||'—']]
+      .map(([l,v])=>`<div><div style="font-size:10px;color:var(--warning);text-transform:uppercase;letter-spacing:.05em;">${l}</div><div style="font-size:13px;font-weight:600;">${v||'—'}</div></div>`).join('')}
+  </div>
+  ${d.justification?`<div style="margin-top:10px;font-size:12px;color:var(--muted);"><strong>Justification:</strong> ${d.justification}</div>`:''}`;
+}
+
+// ── SUCCESS ────────────────────────────────────────────────────────────────────
+function showLeaveSuccess(icon,title,sub,lines,isRej=false) {
+  document.getElementById('leave-container').style.display='none';
+  const ss=document.getElementById('leave-success');
+  ss.style.display='block';
   const ic=document.getElementById('l-success-icon');
   ic.textContent=icon;
   ic.style.cssText=`background:${isRej?'rgba(220,38,38,.1)':'rgba(22,163,74,.1)'};border:2px solid ${isRej?'var(--danger)':'var(--success)'};`;
@@ -994,106 +723,10 @@ function showLeaveSuccess(icon, title, sub, lines, isRej=false, stayOpen=false) 
   document.getElementById('l-audit-box').innerHTML=lines.map(([k,v])=>`<div class="audit-line"><span class="audit-key">${k}</span><span class="audit-val">${v}</span></div>`).join('');
 }
 
-function resetLeave() {
-  document.getElementById('leave-form-container').style.display='block';
-  document.getElementById('leave-success').style.display='none';
-  leaveStep=1; leaveData={};
-  document.querySelectorAll('#ls1 input, #ls1 select').forEach(el=>el.value='');
-  document.getElementById('l-empname').textContent='—';
-  document.getElementById('l-dept').textContent='—';
-  document.getElementById('l-jobtitle').textContent='—';
-  document.getElementById('l-site').textContent='—';
-  document.getElementById('l-duration').textContent='—';
-  activateLeaveStep(1); buildStatusBar(1,'leave'); lValidate();
-}
-
-// ── SUBMIT EXCEPTION ──────────────────────────────────────────────────────────
-function submitException() {
-  const empId   = document.getElementById('e-empid').value.trim();
-  const empName = document.getElementById('e-empname').textContent;
-  excData = {
-    excId, empId, empName,
-    dept:        document.getElementById('e-dept').textContent,
-    jobTitle:    document.getElementById('e-jobtitle').textContent,
-    site:        document.getElementById('e-site').textContent,
-    submitter:   document.getElementById('e-submitter').value.trim(),
-    submitDate:  document.getElementById('e-submit-date').value,
-    behalf:      document.getElementById('e-behalf').value,
-    excType:     selectedExcType,
-    excDate:     document.getElementById('e-date').value,
-    hours:       document.getElementById('e-hours').value,
-    fpType:      document.getElementById('e-fingerprint-type').value,
-    justification:document.getElementById('e-justification').value.trim(),
-    mgrEmail:    document.getElementById('e-mgr-email').value.trim(),
-    mgrName:     document.getElementById('e-mgr-name').value.trim(),
-    status:      'Pending Manager',
-    submittedAt: new Date().toISOString(),
-  };
-  fireAndForget({ action:'exc_submit', data:excData });
-  excStep=2;
-  buildStatusBar(2,'exception');
-  activateExcStep(2);
-
-  const typeLabels = {late:'Late Arrival',early:'Early Departure',fingerprint:'Missing Fingerprint',fullday:'Full Day Exception'};
-  showExcSuccess('📋','Exception submitted','Manager will receive a notification',[
-    ['Exception ID', excId],
-    ['Employee',     empName + ' (' + empId + ')'],
-    ['Type',         typeLabels[selectedExcType]||selectedExcType],
-    ['Date',         excData.excDate],
-    ['Status',       'Pending Manager Approval'],
-  ], false, true);
-}
-
-function excAction(type) {
-  const email    = document.getElementById('e-mgr-confirm-email').value.trim();
-  const comments = document.getElementById('e-mgr-comments').value.trim();
-  if (type==='reject') {
-    const reason = document.getElementById('e-reject-reason').value.trim();
-    if (!reason) { alert('Please provide a rejection reason'); return; }
-    fireAndForget({ action:'exc_reject', excId, mgrEmail:email, reason });
-    showExcSuccess('❌','Exception rejected','Employee has been notified',[
-      ['Exception ID',excId],['Rejected by',email],['Reason',reason]
-    ], true);
-  } else {
-    fireAndForget({ action:'exc_approve', excId, mgrEmail:email, comments });
-    showExcSuccess('✅','Exception approved','HR has been informed',[
-      ['Exception ID',excId],
-      ['Employee',    excData.empName||''],
-      ['Approved by', email],
-      ['Status',      'Approved'],
-    ]);
-  }
-}
-
-function showExcReject() {
-  document.getElementById('e-reject-box').classList.toggle('show');
-}
-
-function activateExcStep(step) {
-  ['exc-main','exc-mgr'].forEach((id,i)=>{
-    const sec=document.getElementById(id); if(!sec) return;
-    const n=i+1;
-    if(n<step){sec.classList.remove('locked');sec.classList.add('readonly');}
-    else if(n===step){sec.classList.remove('locked','readonly');}
-    else{sec.classList.add('locked');sec.classList.remove('readonly');}
-  });
-  if (step===2 && excData.empName) {
-    const typeLabels={late:'Late Arrival',early:'Early Departure',fingerprint:'Missing Fingerprint',fullday:'Full Day Exception'};
-    document.getElementById('exc-mgr-summary').innerHTML =
-      `📋 <strong>${excData.empName}</strong> · ${typeLabels[excData.excType]||excData.excType} · ${excData.excDate}` +
-      (excData.hours?` · ${excData.hours} hrs`:'') +
-      (excData.fpType?` · ${excData.fpType.toUpperCase()} missing`:'') +
-      `<br><em style="font-size:12px;color:var(--muted);">Justification: ${excData.justification}</em>`;
-  }
-  const pemail = urlParams.get('pemail')||'';
-  if (step===2 && pemail) document.getElementById('e-mgr-confirm-email').value = pemail;
-  eValidateMgr();
-}
-
-function showExcSuccess(icon, title, sub, lines, isRej=false, stayOpen=false) {
-  if (stayOpen) return;
-  document.getElementById('exc-form-container').style.display='none';
-  document.getElementById('exc-success').style.display='block';
+function showExcSuccess(icon,title,sub,lines,isRej=false) {
+  document.getElementById('exc-container').style.display='none';
+  const ss=document.getElementById('exc-success');
+  ss.style.display='block';
   const ic=document.getElementById('e-success-icon');
   ic.textContent=icon;
   ic.style.cssText=`background:${isRej?'rgba(220,38,38,.1)':'rgba(22,163,74,.1)'};border:2px solid ${isRej?'var(--danger)':'var(--success)'};`;
@@ -1102,52 +735,120 @@ function showExcSuccess(icon, title, sub, lines, isRej=false, stayOpen=false) {
   document.getElementById('e-audit-box').innerHTML=lines.map(([k,v])=>`<div class="audit-line"><span class="audit-key">${k}</span><span class="audit-val">${v}</span></div>`).join('');
 }
 
-function resetException() {
-  document.getElementById('exc-form-container').style.display='block';
-  document.getElementById('exc-success').style.display='none';
-  excStep=1; excData={}; selectedExcType='';
-  ['late','early','fingerprint','fullday'].forEach(t=>document.getElementById(`exc-${t}`).classList.remove('selected'));
-  activateExcStep(1); buildStatusBar(1,'exception'); eValidate();
+function resetLeave() {
+  document.getElementById('leave-container').style.display='block';
+  document.getElementById('leave-success').style.display='none';
+  buildStatusBar(1,'leave');
+  ['ls1','ls2'].forEach((id,i)=>{ const s=document.getElementById(id); s.classList.toggle('locked',i>0); s.classList.remove('readonly'); });
+  lValidate();
 }
 
-// ── FIRE AND FORGET ───────────────────────────────────────────────────────────
-function fireAndForget(data) {
-  if (!SCRIPT_URL || SCRIPT_URL==='YOUR_LEAVE_SCRIPT_URL') {
-    console.log('Leave/Exception payload:', JSON.stringify(data));
-    return;
-  }
+function resetExc() {
+  document.getElementById('exc-container').style.display='block';
+  document.getElementById('exc-success').style.display='none';
+  buildStatusBar(1,'exception');
+  ['exc-s1','exc-s2'].forEach((id,i)=>{ const s=document.getElementById(id); s.classList.toggle('locked',i>0); s.classList.remove('readonly'); });
+  eValidate();
+}
+
+// ── FIRE AND FORGET ────────────────────────────────────────────────────────────
+function fireFF(data) {
+  if(!SCRIPT_URL||SCRIPT_URL==='YOUR_LEAVE_SCRIPT_URL'){console.log('Leave payload:',data);return;}
   try {
-    const img = document.createElement('img');
-    img.src   = SCRIPT_URL + '?payload=' + encodeURIComponent(JSON.stringify(data));
+    const img=document.createElement('img');
+    img.src=SCRIPT_URL+'?payload='+encodeURIComponent(JSON.stringify(data));
     img.style.display='none';
     document.body.appendChild(img);
-    img.onload=img.onerror=()=>{ try{document.body.removeChild(img);}catch(e){} };
-  } catch(e){ console.error('fireAndForget error:',e); }
+    img.onload=img.onerror=()=>{try{document.body.removeChild(img);}catch(e){}};
+  } catch(e){console.error(e);}
 }
 
-// ── BOOT ──────────────────────────────────────────────────────────────────────
-buildStatusBar(1, 'leave');
+// ── BOOT ────────────────────────────────────────────────────────────────────────
+buildStatusBar(1,'leave');
 lValidate();
 eValidate();
 
-// Pre-load employee list into cache on startup for fast lookups
-(async () => {
-  try {
-    const res  = await fetch(SCRIPT_URL + '?action=get_employees');
-    const json = await res.json();
-    (json.data||[]).forEach(e => { empCache[e['Employee ID']] = e; });
-    console.log('Employee cache loaded:', Object.keys(empCache).length, 'employees');
-    populateManagerDropdown();
-  } catch(e) { console.log('Pre-load failed, will load on demand'); }
-})();
+// Pre-load employees
+loadEmployees();
 
-// If opened from email link
-if (urlMod === 'exception') {
+// Handle email link
+if (urlMod==='exception') {
   switchModule('exception');
-  if (urlStep > 1) activateExcStep(urlStep);
-} else if (urlStep > 1) {
-  activateLeaveStep(urlStep);
-  buildStatusBar(urlStep, 'leave');
+  if (urlStep===2) {
+    // Load exception data from URL params
+    excData = {
+      excId,
+      empId:        urlP.get('empid')||'',
+      empName:      urlP.get('empname')||'',
+      dept:         urlP.get('dept')||'',
+      jobTitle:     urlP.get('jobtitle')||'',
+      site:         urlP.get('site')||'',
+      excType:      urlP.get('exctype')||'',
+      excTypeLabel: urlP.get('exctypelabel')||'',
+      excDate:      urlP.get('excdate')||'',
+      hours:        urlP.get('hours')||'',
+      fpType:       urlP.get('fptype')||'',
+      justification:urlP.get('just')||'',
+    };
+    // Show step 2
+    document.getElementById('exc-s1').classList.add('readonly');
+    document.getElementById('exc-s1').classList.remove('locked');
+    document.getElementById('exc-s2').classList.remove('locked','readonly');
+    document.getElementById('exc-s1-readonly').innerHTML = buildExcReadonly(excData);
+    buildStatusBar(2,'exception');
+    const pemail=urlP.get('pemail')||'';
+    if(pemail) document.getElementById('e-mgr-confirm-email').value=pemail;
+    eValidateMgr();
+  }
+} else if (urlStep===2 && urlLid) {
+  // Manager opening leave approval from email
+  document.getElementById('leave-loading').classList.remove('hidden');
+  document.getElementById('leave-container').style.display='none';
+
+  // Load data from URL params first (embedded by script)
+  leaveData = {
+    leaveId,
+    empId:       urlP.get('empid')||'',
+    empName:     urlP.get('ename')||'',
+    dept:        urlP.get('dept')||'',
+    jobTitle:    urlP.get('jobtitle')||'',
+    site:        urlP.get('site')||'',
+    mobile:      urlP.get('mobile')||'',
+    replacement: urlP.get('repl')||'',
+    leaveType:   urlP.get('ltype')||'',
+    reason:      urlP.get('reason')||'',
+    startDate:   urlP.get('start')||'',
+    endDate:     urlP.get('end')||'',
+    returnDate:  urlP.get('ret')||'',
+    duration:    urlP.get('dur')||'',
+  };
+
+  document.getElementById('leave-loading').classList.add('hidden');
+  document.getElementById('leave-container').style.display='block';
+
+  // Show step 1 readonly, activate step 2
+  document.getElementById('ls1').classList.add('readonly');
+  document.getElementById('ls1').classList.remove('locked');
+  document.getElementById('ls2').classList.remove('locked','readonly');
+  document.getElementById('ls1-readonly').innerHTML = buildLeaveReadonly(leaveData);
+  buildStatusBar(2,'leave');
+
+  // Auto-fill manager email from URL
+  const pemail=urlP.get('pemail')||'';
+  if(pemail) document.getElementById('l-mgr-confirm-email').value=pemail;
+  lValidateMgr();
+
+  // Also fetch from script in background to enrich
+  (async()=>{
+    try {
+      const res=await fetch(SCRIPT_URL+'?action=get_leave&lid='+encodeURIComponent(leaveId));
+      const json=await res.json();
+      if(json.status==='ok'&&json.data) {
+        Object.assign(leaveData, json.data);
+        document.getElementById('ls1-readonly').innerHTML=buildLeaveReadonly(leaveData);
+      }
+    } catch(e){ console.log('Background fetch failed'); }
+  })();
 }
 </script>
 </body>
