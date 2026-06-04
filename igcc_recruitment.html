@@ -326,6 +326,18 @@ input:disabled,select:disabled,textarea:disabled{background:var(--surface2);colo
 
     <div class="val-panel"><div class="val-title">Checklist</div><div id="val-rows"></div></div>
     <button class="btn-primary" id="btn-submit" onclick="submitNow()" disabled>Submit recruitment request</button>
+    <!-- Close case option — shown only when case is resubmitted back to requester -->
+    <div id="close-case-wrap" class="hidden" style="margin-top:12px;">
+      <div style="background:rgba(220,38,38,.04);border:1.5px solid rgba(220,38,38,.2);border-radius:10px;padding:16px;margin-top:4px;">
+        <div style="font-size:13px;font-weight:600;color:var(--danger);margin-bottom:10px;">Close this request</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">If you no longer wish to proceed with this candidate, you can close the case permanently.</div>
+        <div class="field" style="margin-bottom:10px;">
+          <label style="color:var(--danger);">Reason for closing <span class="required">*</span></label>
+          <textarea id="close-reason" rows="2" placeholder="Explain why you are closing this request..." style="border-color:rgba(220,38,38,.3);"></textarea>
+        </div>
+        <button class="btn-reject" onclick="closeCase()" style="margin-top:4px;">✗ Close case permanently</button>
+      </div>
+    </div>
   </div>
 
   <!-- ══════════ STEP 2: DIRECT MANAGER ══════════ -->
@@ -652,12 +664,21 @@ const urlStep = parseInt(urlParams.get('step'))||1;
 function loadDataFromURL() {
   if (!urlParams.get('name')) return null;
   return {
-    reqId, reqBy:urlParams.get('reqby')||'', reqDept:urlParams.get('dept')||'',
-    cName:urlParams.get('name')||'', cGender:urlParams.get('gender')||'',
-    cPhone:urlParams.get('phone')||'', cNationality:urlParams.get('nat')||'',
-    cPosition:urlParams.get('pos')||'', cSite:urlParams.get('site')||'',
-    cStart:urlParams.get('start')||'', notes:urlParams.get('notes')||'',
-    files:[], status:'In Review',
+    reqId,
+    reqBy:       urlParams.get('reqby')  || '',
+    reqDept:     urlParams.get('dept')   || '',
+    cName:       urlParams.get('name')   || '',
+    cGender:     urlParams.get('gender') || '',
+    cPhone:      urlParams.get('phone')  || '',
+    cNationality:urlParams.get('nat')    || '',
+    cPosition:   urlParams.get('pos')    || '',
+    cSite:       urlParams.get('site')   || '',
+    cStart:      urlParams.get('start')  || '',
+    notes:       urlParams.get('notes')  || '',
+    payRate:     urlParams.get('pay')    || '',
+    currency:    urlParams.get('cur')    || '',
+    files:       [],
+    status:      'In Review',
   };
 }
 
@@ -1231,6 +1252,27 @@ function activateStep(step) {
   if (step === 5) validate5();
   if (step === 6) validateStep6();
   if (step === 7) validateStep7();
+
+  // Auto-fill performer email from URL param (set by email link)
+  autoFillPerformerEmail(step);
+}
+
+function autoFillPerformerEmail(step) {
+  // Try to get email from URL param 'pemail' set by the email link
+  const pemail = urlParams.get('pemail') || '';
+  const emailMap = {
+    2: 'mgr-email',
+    3: 'hr-email',
+    4: 'sm-email-confirm',
+    5: 'hr2-email',
+    6: 'mgr2-email',
+    7: 'it-email',
+  };
+  const fieldId = emailMap[step];
+  if (fieldId && pemail) {
+    const el = document.getElementById(fieldId);
+    if (el && !el.value) el.value = pemail;
+  }
 }
 
 function buildSummary(step) {
@@ -1259,6 +1301,11 @@ function buildSummary(step) {
         <div style="font-size:13px;color:var(--text);">${s1.cStart||'—'}</div></div>
       <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Requested by</div>
         <div style="font-size:13px;color:var(--text);">${s1.reqBy||'—'}</div></div>
+      <div style="grid-column:span 3;background:rgba(15,23,42,.04);border:1px solid var(--border);border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:16px;">
+        <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">💰 Proposed pay rate</span>
+        <span style="font-size:15px;font-weight:700;color:var(--accent);">${s1.payRate||'—'} ${s1.currency||''}</span>
+        <span style="font-size:12px;color:var(--muted);">${s1.payType||''}</span>
+      </div>
     </div>
     ${s1.notes?`<div style="font-size:12px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;margin-top:4px;"><b>Notes:</b> ${s1.notes}</div>`:''}
     ${s1.files&&s1.files.length?`<div style="font-size:12px;color:var(--blue);border-top:1px solid var(--border);padding-top:8px;margin-top:4px;">
@@ -1278,6 +1325,30 @@ function buildSummary(step) {
     if (mgrBox) mgrBox.innerHTML += `<div style="margin-top:8px;padding:8px;background:rgba(22,163,74,.06);border-radius:6px;font-size:12px;">
       ✓ <b>Manager approved</b> · ${s2.mgrEmail||''} · ${s2.comments||'No comments'}
     </div>`;
+  }
+}
+
+// ── CLOSE CASE (requester closes resubmitted case) ──────────────────────────
+async function closeCase() {
+  const reason = document.getElementById('close-reason').value.trim();
+  if (!reason) { alert('Please provide a reason for closing'); return; }
+  const btn = document.querySelector('#close-case-wrap .btn-reject');
+  btn.disabled = true; btn.textContent = 'Closing...';
+  fireAndForget({ action:'close_case', reqId, reason, closedBy: urlParams.get('pemail')||'' });
+  addHistory('rejected', 'Requester', 'Case closed by requester', reason, '');
+  showSuccess('🚫', 'Case closed', 'The recruitment request has been permanently closed', [
+    ['Request ID', reqId],
+    ['Reason',     reason],
+    ['Status',     'Closed by requester'],
+  ], true);
+}
+
+// Show close case option when case is resubmitted back to requester
+function checkShowCloseOption() {
+  const status = caseData.step1?.status || '';
+  const wrap   = document.getElementById('close-case-wrap');
+  if (wrap && (status.toLowerCase().includes('resubmit') || urlParams.get('resubmitted') === '1')) {
+    wrap.classList.remove('hidden');
   }
 }
 
