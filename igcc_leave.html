@@ -630,7 +630,7 @@ async function lookupEmployee(mod) {
   // Load all employees into cache first if not done yet
   if (Object.keys(empCache).length === 0) {
     try {
-      const res  = await fetch(REC_SCRIPT + '?action=get_employees');
+      const res  = await fetch(SCRIPT_URL + '?action=get_employees');
       const json = await res.json();
       (json.data||[]).forEach(e => { empCache[e['Employee ID']] = e; });
       console.log('Employees cached:', Object.keys(empCache).length);
@@ -674,7 +674,7 @@ function fillEmpFields(mod, emp) {
     document.getElementById('e-site').textContent     = emp['Site']||'—';
     // Auto-fill manager email
     if (emp['Manager ID']) {
-      fetch(REC_SCRIPT + '?action=get_employees').then(r=>r.json()).then(j=>{
+      fetch(SCRIPT_URL + '?action=get_employees').then(r=>r.json()).then(j=>{
         const mgr = (j.data||[]).find(e=>e['Employee ID']===emp['Manager ID']);
         if (mgr && mgr['Email']) {
           document.getElementById('e-mgr-email').value = mgr['Email'];
@@ -1061,7 +1061,7 @@ eValidate();
 // Pre-load employee list into cache on startup for fast lookups
 (async () => {
   try {
-    const res  = await fetch(REC_SCRIPT + '?action=get_employees');
+    const res  = await fetch(SCRIPT_URL + '?action=get_employees');
     const json = await res.json();
     (json.data||[]).forEach(e => { empCache[e['Employee ID']] = e; });
     console.log('Employee cache loaded:', Object.keys(empCache).length, 'employees');
