@@ -1248,7 +1248,9 @@ function activateStep(step) {
 
   // Build summary info box for current step
   if (step >= 2 && caseData.step1) buildSummary(step);
-  if (step === 1) validate();
+  // Also refresh summary after script data loads
+
+  if (step === 1) { validate(); checkShowCloseOption(); }
   if (step === 5) validate5();
   if (step === 6) validateStep6();
   if (step === 7) validateStep7();
@@ -1276,6 +1278,7 @@ function autoFillPerformerEmail(step) {
 }
 
 function buildSummary(step) {
+  step = step || currentStep;
   const s1 = caseData.step1 || {};
   const s2 = caseData.step2 || {};
   const s3 = caseData.step3 || {};
@@ -1301,11 +1304,11 @@ function buildSummary(step) {
         <div style="font-size:13px;color:var(--text);">${s1.cStart||'—'}</div></div>
       <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Requested by</div>
         <div style="font-size:13px;color:var(--text);">${s1.reqBy||'—'}</div></div>
-      <div style="grid-column:span 3;background:rgba(15,23,42,.04);border:1px solid var(--border);border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:16px;">
+      ${step !== 7 && (s1.payRate) ? `<div style="grid-column:span 3;background:rgba(15,23,42,.04);border:1px solid var(--border);border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:16px;">
         <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">💰 Proposed pay rate</span>
-        <span style="font-size:15px;font-weight:700;color:var(--accent);">${s1.payRate||'—'} ${s1.currency||''}</span>
+        <span style="font-size:15px;font-weight:700;color:var(--accent);">${s1.payRate} ${s1.currency||''}</span>
         <span style="font-size:12px;color:var(--muted);">${s1.payType||''}</span>
-      </div>
+      </div>` : ''}
     </div>
     ${s1.notes?`<div style="font-size:12px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;margin-top:4px;"><b>Notes:</b> ${s1.notes}</div>`:''}
     ${s1.files&&s1.files.length?`<div style="font-size:12px;color:var(--blue);border-top:1px solid var(--border);padding-top:8px;margin-top:4px;">
@@ -1345,10 +1348,16 @@ async function closeCase() {
 
 // Show close case option when case is resubmitted back to requester
 function checkShowCloseOption() {
-  const status = caseData.step1?.status || '';
-  const wrap   = document.getElementById('close-case-wrap');
-  if (wrap && (status.toLowerCase().includes('resubmit') || urlParams.get('resubmitted') === '1')) {
+  const wrap = document.getElementById('close-case-wrap');
+  if (!wrap) return;
+  const status    = caseData.step1?.status || '';
+  const resubFlag = urlParams.get('resubmitted') === '1';
+  const isResub   = resubFlag || status.toLowerCase().includes('resubmit');
+  if (isResub) {
     wrap.classList.remove('hidden');
+    // Also update submit button text to reflect this is an update
+    const btn = document.getElementById('btn-submit');
+    if (btn) btn.textContent = 'Resubmit updated request';
   }
 }
 
@@ -1516,6 +1525,7 @@ if (urlStep > 1) {
         caseData   = json.data;
         history    = json.history || [];
         console.log('Script data loaded:', caseData.step1.cName);
+        if (urlStep === 1) checkShowCloseOption();
       }
     } catch(e) {
       console.log('Script fetch failed:', e.message);
