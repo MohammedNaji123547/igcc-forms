@@ -220,6 +220,20 @@ input[readonly],input:disabled,select:disabled{background:var(--surface2);color:
         <input type="text" id="l-workphone" placeholder="Extension or N/A">
       </div>
     </div>
+    <div class="field-row cols-2">
+      <div class="field">
+        <label>Direct Manager — المدير المباشر <span class="required">*</span></label>
+        <select id="l-manager-sel" onchange="onLeaveManagerChange()">
+          <option value="">Select manager...</option>
+        </select>
+        <span class="field-hint" id="l-manager-status">Loaded from employee list</span>
+      </div>
+      <div class="field">
+        <label>Manager Email — سيتم ملؤه تلقائياً</label>
+        <input type="email" id="l-manager-email" placeholder="Auto-filled from selection" readonly
+          style="background:var(--surface2);color:var(--muted);">
+      </div>
+    </div>
 
     <div class="divider"></div>
 
@@ -623,6 +637,7 @@ async function lookupEmployee(mod) {
     fillEmpFields(mod, empCache[empId]);
     statusEl.textContent = '✓ Found: ' + (empCache[empId]['Full Name']||empCache[empId]['Full Name (EN)']||'');
     statusEl.className   = 'lookup-status lookup-ok';
+    if (Object.keys(empCache).length > 1) populateManagerDropdown();
     if (mod==='leave') lValidate(); else eValidate();
     return;
   }
@@ -667,6 +682,24 @@ function fillEmpFields(mod, emp) {
     document.getElementById('l-dept').textContent     = emp['Department']||'—';
     document.getElementById('l-jobtitle').textContent = emp['Position']||'—';
     document.getElementById('l-site').textContent     = emp['Site']||'—';
+    // Auto-select manager from Manager ID
+    const mgrId = emp['Manager ID']||'';
+    if (mgrId) {
+      const sel = document.getElementById('l-manager-sel');
+      if (sel) {
+        sel.value = mgrId;
+        // If not found in options, add it
+        if (sel.value !== mgrId && empCache[mgrId]) {
+          const o = document.createElement('option');
+          o.value = mgrId;
+          o.dataset.email = empCache[mgrId]['Email']||'';
+          o.textContent = mgrId + ' — ' + (empCache[mgrId]['Full Name']||'');
+          sel.appendChild(o);
+          sel.value = mgrId;
+        }
+        onLeaveManagerChange();
+      }
+    }
   } else {
     document.getElementById('e-empname').textContent  = emp['Full Name']||emp['Full Name (EN)']||'—';
     document.getElementById('e-dept').textContent     = emp['Department']||'—';
@@ -686,6 +719,38 @@ function fillEmpFields(mod, emp) {
 }
 
 // ── LEAVE DURATION ────────────────────────────────────────────────────────────
+// ── MANAGER DROPDOWN ─────────────────────────────────────────────────────────
+function populateManagerDropdown() {
+  const sel = document.getElementById('l-manager-sel');
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">Select manager...</option>';
+  // CEO first
+  const ceoOpt = document.createElement('option');
+  ceoOpt.value = 'CEO';
+  ceoOpt.dataset.email = 'ceo@igccgroup-iq.com';
+  ceoOpt.textContent = 'CEO — Chief Executive Officer';
+  sel.appendChild(ceoOpt);
+  // All active employees
+  Object.values(empCache).forEach(e => {
+    if (!e['Employee ID'] || e['Employee ID'] === 'CEO') return;
+    const o = document.createElement('option');
+    o.value = e['Employee ID'];
+    o.dataset.email = e['Email'] || '';
+    o.textContent = e['Employee ID'] + ' — ' + (e['Full Name']||e['Full Name (EN)']||'') + ' (' + (e['Position']||'—') + ')';
+    sel.appendChild(o);
+  });
+  if (prev) sel.value = prev;
+  document.getElementById('l-manager-status').textContent = '✓ ' + (Object.keys(empCache).length) + ' employees loaded';
+}
+
+function onLeaveManagerChange() {
+  const sel   = document.getElementById('l-manager-sel');
+  const email = sel.options[sel.selectedIndex]?.dataset?.email || '';
+  document.getElementById('l-manager-email').value = email;
+  lValidate();
+}
+
 function calcLeaveDuration() {
   const s = document.getElementById('l-start').value;
   const e = document.getElementById('l-end').value;
@@ -756,6 +821,7 @@ function lValidate() {
     ['Start date set',                !!document.getElementById('l-start').value],
     ['End date set',                  !!document.getElementById('l-end').value],
     ['End date is after start date',  (()=>{ const s=document.getElementById('l-start').value, e=document.getElementById('l-end').value; return !s||!e||new Date(e)>=new Date(s); })()],
+    ['Direct manager selected',       !!document.getElementById('l-manager-sel')?.value],
   ], 'l-val-rows', 'l-btn-submit');
 }
 
@@ -796,8 +862,10 @@ function eValidateMgr() {
 
 // ── SUBMIT LEAVE ──────────────────────────────────────────────────────────────
 function submitLeave() {
-  const empId   = document.getElementById('l-empid').value.trim();
-  const empName = document.getElementById('l-empname').textContent;
+  const empId    = document.getElementById('l-empid').value.trim();
+  const empName  = document.getElementById('l-empname').textContent;
+  const mgrSel   = document.getElementById('l-manager-sel');
+  const mgrEmail = document.getElementById('l-manager-email').value.trim();
   leaveData = {
     leaveId, empId, empName,
     dept:        document.getElementById('l-dept').textContent,
@@ -806,6 +874,8 @@ function submitLeave() {
     mobile:      document.getElementById('l-mobile').value.trim(),
     replacement: document.getElementById('l-replacement').value.trim(),
     workPhone:   document.getElementById('l-workphone').value.trim(),
+    mgrId:       mgrSel ? mgrSel.value : '',
+    mgrEmail:    mgrEmail,
     leaveType:   document.getElementById('l-type').value,
     reason:      document.getElementById('l-reason').value.trim(),
     startDate:   document.getElementById('l-start').value,
@@ -1067,6 +1137,7 @@ eValidate();
     const json = await res.json();
     (json.data||[]).forEach(e => { empCache[e['Employee ID']] = e; });
     console.log('Employee cache loaded:', Object.keys(empCache).length, 'employees');
+    populateManagerDropdown();
   } catch(e) { console.log('Pre-load failed, will load on demand'); }
 })();
 
