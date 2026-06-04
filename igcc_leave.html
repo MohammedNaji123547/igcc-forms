@@ -612,37 +612,51 @@ function buildStatusBar(step, mod) {
 async function lookupEmployee(mod) {
   const idEl     = document.getElementById(mod==='leave'?'l-empid':'e-empid');
   const statusEl = document.getElementById(mod==='leave'?'l-lookup-status':'e-lookup-status');
-  const empId    = idEl.value.trim();
-  if (!empId) return;
+  const empId    = idEl.value.trim().toUpperCase();
+  if (!empId) { statusEl.textContent='Enter an Employee ID first'; statusEl.className='lookup-status lookup-err'; return; }
 
   statusEl.textContent = '⟳ Looking up...';
   statusEl.className   = 'lookup-status';
 
-  // Check cache first
+  // Check cache
   if (empCache[empId]) {
     fillEmpFields(mod, empCache[empId]);
-    statusEl.textContent = '✓ Employee found';
+    statusEl.textContent = '✓ Found: ' + (empCache[empId]['Full Name']||empCache[empId]['Full Name (EN)']||'');
     statusEl.className   = 'lookup-status lookup-ok';
     if (mod==='leave') lValidate(); else eValidate();
     return;
   }
 
-  try {
-    const res  = await fetch(REC_SCRIPT + '?action=get_employees');
-    const json = await res.json();
-    const emp  = (json.data||[]).find(e=>e['Employee ID']===empId);
-    if (emp) {
-      empCache[empId] = emp;
-      fillEmpFields(mod, emp);
-      statusEl.textContent = '✓ Employee found';
+  // Load all employees into cache first if not done yet
+  if (Object.keys(empCache).length === 0) {
+    try {
+      const res  = await fetch(REC_SCRIPT + '?action=get_employees');
+      const json = await res.json();
+      (json.data||[]).forEach(e => { empCache[e['Employee ID']] = e; });
+      console.log('Employees cached:', Object.keys(empCache).length);
+    } catch(e) {
+      console.error('Could not load employees:', e);
+    }
+  }
+
+  // Now look up in cache
+  const emp = empCache[empId];
+  if (emp) {
+    fillEmpFields(mod, emp);
+    statusEl.textContent = '✓ Found: ' + (emp['Full Name']||emp['Full Name (EN)']||'');
+    statusEl.className   = 'lookup-status lookup-ok';
+  } else {
+    // Also try CEO special case
+    if (empId === 'CEO') {
+      const ceo = { 'Employee ID':'CEO','Full Name':'Chief Executive Officer','Position':'CEO','Department':'Executive','Site':'HQ','Email':'ceo@igccgroup-iq.com','Manager ID':'' };
+      empCache['CEO'] = ceo;
+      fillEmpFields(mod, ceo);
+      statusEl.textContent = '✓ Found: Chief Executive Officer';
       statusEl.className   = 'lookup-status lookup-ok';
     } else {
-      statusEl.textContent = '✗ Employee ID not found';
+      statusEl.textContent = '✗ Employee ID "' + empId + '" not found — check ID or fill manually';
       statusEl.className   = 'lookup-status lookup-err';
     }
-  } catch(e) {
-    statusEl.textContent = '✗ Lookup failed — fill manually';
-    statusEl.className   = 'lookup-status lookup-err';
   }
   if (mod==='leave') lValidate(); else eValidate();
 }
@@ -1043,6 +1057,16 @@ function fireAndForget(data) {
 buildStatusBar(1, 'leave');
 lValidate();
 eValidate();
+
+// Pre-load employee list into cache on startup for fast lookups
+(async () => {
+  try {
+    const res  = await fetch(REC_SCRIPT + '?action=get_employees');
+    const json = await res.json();
+    (json.data||[]).forEach(e => { empCache[e['Employee ID']] = e; });
+    console.log('Employee cache loaded:', Object.keys(empCache).length, 'employees');
+  } catch(e) { console.log('Pre-load failed, will load on demand'); }
+})();
 
 // If opened from email link
 if (urlMod === 'exception') {
