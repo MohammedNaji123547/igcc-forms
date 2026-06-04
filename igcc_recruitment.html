@@ -1065,31 +1065,48 @@ async function completeOnboarding() {
   document.getElementById('btn-complete').disabled=true;
   document.getElementById('btn-complete').textContent='Processing...';
 
-  let contractB64='';
-  if (contractFile) contractB64 = await fileToBase64(contractFile);
-
+  // Build payload WITHOUT contract file first — keep it small for GET request
   const payload = {
     action:'step5_complete', reqId,
-    hrEmail:document.getElementById('hr2-email').value.trim(),
-    contractDate:document.getElementById('contract-date').value,
-    empId:document.getElementById('emp-id').value.trim(),
-    nameAr:document.getElementById('emp-name-ar').value.trim(),
-    dob:document.getElementById('emp-dob').value,
-    nid:document.getElementById('emp-nid').value.trim(),
-    contract:document.getElementById('emp-contract').value,
-    endDate:document.getElementById('emp-end').value,
-    ecName:document.getElementById('ec-name').value.trim(),
-    ecPhone:document.getElementById('ec-phone').value.trim(),
+    hrEmail:       document.getElementById('hr2-email').value.trim(),
+    contractDate:  document.getElementById('contract-date').value,
+    empId:         document.getElementById('emp-id').value.trim(),
+    nameAr:        document.getElementById('emp-name-ar').value.trim(),
+    dob:           document.getElementById('emp-dob').value,
+    nid:           document.getElementById('emp-nid').value.trim(),
+    contract:      document.getElementById('emp-contract').value,
+    endDate:       document.getElementById('emp-end').value,
+    ecName:        document.getElementById('ec-name').value.trim(),
+    ecPhone:       document.getElementById('ec-phone').value.trim(),
     onboardingNotes:document.getElementById('onboarding-notes').value.trim(),
-    contractFile:contractB64,
-    contractFileName:contractFile?.name||'',
+    contractFile:  '',
+    contractFileName: contractFile ? contractFile.name : '',
   };
-  fireAndForget(payload);
+
+  // Show success immediately
   showSuccess('🎉','Onboarding complete!','Employee is now active in the registry',[
-    ['Request ID',reqId],['Employee ID',payload.empId],
-    ['Contract type',document.getElementById('emp-contract').value],
-    ['Contract date',payload.contractDate],['Status','Active — Onboarding Complete']
+    ['Request ID',   reqId],
+    ['Employee ID',  payload.empId],
+    ['Contract type',payload.contract],
+    ['Contract date',payload.contractDate],
+    ['Status','Active — Onboarding Complete']
   ], false, true);
+
+  // Fire step5 metadata (no file — fits in GET URL)
+  fireAndForget(payload);
+
+  // Send contract file separately if exists (in background)
+  if (contractFile) {
+    try {
+      const b64 = await fileToBase64(contractFile);
+      fireAndForget({
+        action: 'step5_contract_file',
+        reqId,
+        contractFile:     b64,
+        contractFileName: contractFile.name,
+      });
+    } catch(e) { console.error('Contract file send error:', e); }
+  }
 }
 
 // ── HISTORY ───────────────────────────────────────────────────────────────────
