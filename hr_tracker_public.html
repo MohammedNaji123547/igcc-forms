@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR Daily Tracker — Monitoring Dashboard</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; color: #1e293b; }
+
+  .header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+    color: white; padding: 20px 28px; display: flex;
+    justify-content: space-between; align-items: center;
+  }
+  .header-title { font-size: 1.3rem; font-weight: 700; }
+  .header-meta  { font-size: 0.76rem; opacity: .75; margin-top: 4px; }
+  .reload-btn {
+    background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.4);
+    color: white; padding: 7px 14px; border-radius: 8px; cursor: pointer;
+    font-size: 0.82rem; white-space: nowrap;
+  }
+  .reload-btn:hover { background: rgba(255,255,255,0.3); }
+
+  .body { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+
+  #loading { display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 70vh; gap: 14px; }
+  .spinner { width: 42px; height: 42px; border: 4px solid #e2e8f0;
+    border-top-color: #2563eb; border-radius: 50%; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #status-msg { color: #64748b; font-size: 0.88rem; }
+
+  .error-box { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px;
+    padding: 20px; margin: 24px auto; max-width: 800px; }
+  .error-box strong { color: #dc2626; }
+  .error-box pre { font-size: 0.71rem; color: #7f1d1d; margin-top: 10px; white-space: pre-wrap; word-break: break-all; }
+
+  .conclusion {
+    border-radius: 10px; padding: 14px 20px; margin-top: 18px;
+    font-size: 0.93rem; font-weight: 600; display: flex; align-items: flex-start; gap: 10px;
+  }
+  .conclusion.green { background: #f0fdf4; border: 1.5px solid #86efac; color: #15803d; }
+  .conclusion.amber { background: #fffbeb; border: 1.5px solid #fcd34d; color: #92400e; }
+  .conclusion.red   { background: #fef2f2; border: 1.5px solid #fca5a5; color: #b91c1c; }
+  .conclusion .icon { font-size: 1.15rem; flex-shrink: 0; }
+
+  .metrics { display: flex; flex-wrap: wrap; gap: 12px; margin: 14px 0; }
+  .metric { background: white; border-radius: 10px; padding: 13px 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.07); flex: 1; min-width: 120px; }
+  .metric-val { font-size: 1.55rem; font-weight: 700; line-height: 1; }
+  .metric-lbl { font-size: 0.7rem; color: #64748b; margin-top: 4px; }
+
+  .section-title { font-size: 0.86rem; font-weight: 700; color: #475569;
+    text-transform: uppercase; letter-spacing: .04em; margin: 22px 0 10px;
+    border-left: 3px solid #2563eb; padding-left: 10px; }
+
+  .compliance-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .comp-card { background: white; border-radius: 10px; padding: 12px 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.07); min-width: 155px; flex: 1; }
+  .comp-dept { font-weight: 600; font-size: 0.86rem; margin-bottom: 6px; }
+  .comp-today { font-size: 0.72rem; font-weight: 600; padding: 2px 8px;
+    border-radius: 20px; display: inline-block; margin-bottom: 8px; }
+  .comp-today.ok   { background: #dcfce7; color: #15803d; }
+  .comp-today.miss { background: #fef2f2; color: #dc2626; }
+  .comp-bar-wrap { background: #e2e8f0; border-radius: 3px; height: 6px; overflow: hidden; margin-bottom: 4px; }
+  .comp-bar { height: 100%; border-radius: 3px; }
+  .comp-pct { font-size: 0.71rem; color: #64748b; }
+
+  .matrix-wrap { overflow-x: auto; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+  table.matrix { border-collapse: collapse; background: white; font-size: 0.68rem; }
+  table.matrix th, table.matrix td { border: 1px solid #e2e8f0; white-space: nowrap; }
+  table.matrix thead th { background: #f8fafc; font-weight: 600; color: #475569; padding: 5px 6px; }
+  table.matrix td.dept-cell { font-weight: 600; background: #f8fafc; padding: 4px 8px; position: sticky; left: 0; z-index: 1; }
+  table.matrix td.cell { width: 22px; height: 20px; padding: 0; }
+  table.matrix td.submitted { background: #22c55e; }
+  table.matrix td.missing   { background: #fee2e2; }
+
+  /* Fix tracking */
+  .fix-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+  .fix-card { background: white; border-radius: 10px; padding: 14px 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.07); min-width: 195px; flex: 1; }
+  .fix-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+  .fix-dept { font-weight: 700; font-size: 0.86rem; }
+  .fix-badge { font-size: 0.68rem; font-weight: 700; padding: 2px 8px;
+    border-radius: 20px; background: #fef3c7; color: #92400e; }
+  .fix-forms { font-size: 0.73rem; color: #475569; margin-bottom: 9px; }
+  .fix-forms span { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 4px;
+    padding: 1px 6px; margin-right: 4px; color: #b91c1c; font-family: monospace; }
+  .fix-trend { display: flex; gap: 3px; align-items: flex-end; height: 32px; }
+  .fix-trend-bar { flex: 1; border-radius: 2px; min-height: 2px; }
+  .fix-trend-lbl { font-size: 0.63rem; color: #94a3b8; margin-top: 4px;
+    display: flex; gap: 3px; }
+  .fix-trend-lbl span { flex: 1; text-align: center; overflow: hidden; white-space: nowrap; }
+
+  .tabs { display: flex; gap: 8px; margin: 10px 0; }
+  .tab { padding: 5px 13px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; border: 1.5px solid #e2e8f0; background: white; color: #64748b; }
+  .tab.active { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+  .issues-section { display: none; }
+  .issues-section.active { display: block; }
+  .issues-table { overflow-x: auto; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+  .issues-table table { border-collapse: collapse; background: white; font-size: 0.76rem; width: 100%; }
+  .issues-table th, .issues-table td { padding: 7px 10px; border-bottom: 1px solid #f1f5f9; text-align: left; }
+  .issues-table thead th { background: #f8fafc; font-weight: 600; color: #475569; }
+  tr.issue-warn td:nth-child(2) { color: #d97706; font-weight: 600; }
+  tr.issue-err  td:nth-child(2) { color: #dc2626; font-weight: 600; }
+
+  .last-updated { font-size: 0.7rem; color: #94a3b8; text-align: right; padding: 12px 0 28px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">📋 HR Daily Tracker — Monitoring Dashboard</div>
+    <div class="header-meta" id="header-meta">Loading data…</div>
+  </div>
+  <button class="reload-btn" onclick="location.reload()">⟳ Refresh</button>
+</div>
+
+<div class="body">
+  <div id="loading">
+    <div class="spinner"></div>
+    <div id="status-msg">Connecting to Google Sheets…</div>
+  </div>
+  <div id="dashboard" style="display:none"></div>
+  <div id="error"    style="display:none"></div>
+</div>
+
+<script>
+// ── Configuration — edit here if the sheet ID changes ───────────────────────
+const SHEET_ID     = '1bjNfBkp0hCdF0t3psrJV-daJU9CFyJPqtczxUl71XYo';
+const CUTOFF       = new Date('2026-04-01T00:00:00Z');
+const VALID_RT     = new Set(['IGCC','Subcontractor']);
+const VALID_IC     = new Set(['PWRI2.IC.PRJM','PWRI2.IC.HSE','PWRI2.IC.QAQC','PWRI2.IC.SCRTY']);
+const EXP_DIRECT   = ['Civil','E&I','Lifting','Mechanical','Scaffolding'];
+const EXP_INDIRECT = ['Comercial','E&I','HSE','Lifting','Mechanical','QA/QC','Scaffolding','Security','Store','logistic'];
+const DEPT_ALIASES = { 'Insulation': 'Mechanical' };
+
+// ── CSV fetch & parse ────────────────────────────────────────────────────────
+function gvizURL(sheetName) {
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+}
+
+async function fetchCSV(sheetName) {
+  setStatus(`Fetching "${sheetName}" sheet…`);
+  const resp = await fetch(gvizURL(sheetName));
+  if (!resp.ok) throw new Error(`HTTP ${resp.status} fetching sheet: ${sheetName}`);
+  return await resp.text();
+}
+
+function parseCSV(text) {
+  const rows = [];
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const cells = [];
+    let cell = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQ && line[i+1] === '"') { cell += '"'; i++; }
+        else inQ = !inQ;
+      } else if (ch === ',' && !inQ) {
+        cells.push(cell.trim());
+        cell = '';
+      } else {
+        cell += ch;
+      }
+    }
+    cells.push(cell.trim());
+    rows.push(cells);
+  }
+  return rows;
+}
+
+// Google Sheets gviz CSV exports dates in the spreadsheet locale format.
+// We handle ISO (2026-01-06), US MM/DD/YYYY, and EU DD/MM/YYYY.
+function parseDate(s) {
+  if (!s) return null;
+  s = s.trim().replace(/\s+\d+:\d+.*$/, ''); // strip time part if present
+  // ISO: 2026-01-06
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s + 'T00:00:00Z');
+  // M/D/YYYY or D/M/YYYY
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) {
+    const [, a, b, yr] = m.map(Number);
+    // If first part > 12 it must be the day (DD/MM/YYYY)
+    if (a > 12) return new Date(Date.UTC(yr, b - 1, a));
+    // Default: MM/DD/YYYY (Google Sheets US locale default)
+    return new Date(Date.UTC(yr, a - 1, b));
+  }
+  return null;
+}
+
+async function loadData() {
+  const [cfgText, dirText, indText] = await Promise.all([
+    fetchCSV('Config'),
+    fetchCSV('HR_Daily_Tracker_Direct'),
+    fetchCSV('HR_Daily_Tracker_Indirect')
+  ]);
+  setStatus('Parsing data…');
+  return {
+    configRows:   parseCSV(cfgText),
+    directRows:   parseCSV(dirText),
+    indirectRows: parseCSV(indText)
+  };
+}
+
+// ── Data processing ──────────────────────────────────────────────────────────
+function extractValidCTRs(configRows) {
+  const set = new Set();
+  for (const row of configRows.slice(1)) {
+    const v = (row[0] ?? '').trim();
+    if (v.startsWith('CN')) set.add(v);
+  }
+  return set;
+}
+
+function canonDept(raw, expList) {
+  const d = DEPT_ALIASES[raw] ?? raw;
+  for (const e of expList)
+    if (e.toLowerCase() === d.trim().toLowerCase()) return e;
+  return d.trim();
+}
+
+function dateKey(d) {
+  if (!d || !(d instanceof Date) || isNaN(d)) return '';
+  return d.toISOString().slice(0, 10);
+}
+
+function isWorkDay(d) { return d.getDay() !== 5; }
+
+function workDaysBetween(from, to) {
+  const days = [];
+  const cur  = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()));
+  while (cur <= to) {
+    if (isWorkDay(cur)) days.push(dateKey(cur));
+    cur.setUTCDate(cur.getUTCDate() + 1);
+  }
+  return days;
+}
+
+function processData({ configRows, directRows, indirectRows }) {
+  setStatus('Running validations…');
+  const validCTRs = extractValidCTRs(configRows);
+  const today     = new Date(); today.setUTCHours(0,0,0,0);
+  const subDirect   = new Map();
+  const subIndirect = new Map();
+  const issues      = [];
+
+  function ensure(map, key) { if (!map.has(key)) map.set(key, new Set()); }
+
+  for (let i = 1; i < directRows.length; i++) {
+    const row = directRows[i];
+    const date = parseDate(row[0]);
+    if (!date || isNaN(date) || date < CUTOFF) continue;
+    const rawDept = (row[1] ?? '').trim();
+    if (!rawDept) continue;
+    const canon = canonDept(rawDept, EXP_DIRECT);
+    const dk    = dateKey(date);
+    ensure(subDirect, canon);
+    subDirect.get(canon).add(dk);
+
+    if (DEPT_ALIASES[rawDept]) {
+      issues.push({ sheet:'Direct', type:'alias', date:dk, dept:canon,
+        msg:`"${rawDept}" should be "${canon}"` });
+    } else if (EXP_DIRECT.includes(canon) && rawDept !== canon) {
+      issues.push({ sheet:'Direct', type:'case',  date:dk, dept:canon,
+        msg:`"${rawDept}" → should be "${canon}"` });
+    } else if (!EXP_DIRECT.map(e=>e.toLowerCase()).includes(rawDept.toLowerCase())) {
+      issues.push({ sheet:'Direct', type:'unknown_dept', date:dk, dept:rawDept,
+        msg:`"${rawDept}" not in expected dept list` });
+    }
+
+    const ctr = (row[4] ?? '').trim();
+    if (ctr && !validCTRs.has(ctr))
+      issues.push({ sheet:'Direct', type:'invalid_ctr', date:dk, dept:canon,
+        msg:`CTR# "${ctr}" not in Config` });
+
+    const rt = (row[5] ?? '').trim();
+    if (rt && !VALID_RT.has(rt))
+      issues.push({ sheet:'Direct', type:'invalid_rt', date:dk, dept:canon,
+        msg:`Resource Type "${rt}" is invalid` });
+  }
+
+  for (let i = 1; i < indirectRows.length; i++) {
+    const row = indirectRows[i];
+    const date = parseDate(row[0]);
+    if (!date || isNaN(date) || date < CUTOFF) continue;
+    const rawDept = (row[1] ?? '').trim();
+    if (!rawDept) continue;
+    const canon = canonDept(rawDept, EXP_INDIRECT);
+    const dk    = dateKey(date);
+    ensure(subIndirect, canon);
+    subIndirect.get(canon).add(dk);
+
+    if (DEPT_ALIASES[rawDept]) {
+      issues.push({ sheet:'Indirect', type:'alias', date:dk, dept:canon,
+        msg:`"${rawDept}" should be "${canon}"` });
+    } else if (EXP_INDIRECT.includes(canon) && rawDept !== canon) {
+      issues.push({ sheet:'Indirect', type:'case',  date:dk, dept:canon,
+        msg:`"${rawDept}" → should be "${canon}"` });
+    } else if (!EXP_INDIRECT.map(e=>e.toLowerCase()).includes(rawDept.toLowerCase())) {
+      issues.push({ sheet:'Indirect', type:'unknown_dept', date:dk, dept:rawDept,
+        msg:`"${rawDept}" not in expected dept list` });
+    }
+
+    const code = (row[4] ?? '').trim();
+    if (code.includes('.IC.') && !VALID_IC.has(code))
+      issues.push({ sheet:'Indirect', type:'invalid_ic', date:dk, dept:canon,
+        msg:`IGCC code "${code}" is not valid` });
+  }
+
+  const workDays = workDaysBetween(CUTOFF, today);
+
+  let refDay = dateKey(today);
+  if (!isWorkDay(today)) {
+    const prev = new Date(today);
+    while (!isWorkDay(prev)) prev.setUTCDate(prev.getUTCDate() - 1);
+    refDay = dateKey(prev);
+  }
+
+  return { validCTRs, subDirect, subIndirect, issues, workDays, refDay };
+}
+
+// ── Fix tracking ─────────────────────────────────────────────────────────────
+function buildFixTracking(issues, workDays) {
+  const caseIssues = issues.filter(i => i.type === 'case' || i.type === 'alias');
+
+  function weekStart(dk) {
+    const d = new Date(dk + 'T00:00:00Z');
+    const day = d.getUTCDay();
+    d.setUTCDate(d.getUTCDate() + (day === 0 ? -6 : 1 - day));
+    return d.toISOString().slice(0, 10);
+  }
+
+  const deptIssueMap = {};
+  for (const i of caseIssues) {
+    const key = i.dept + '|' + i.sheet;
+    if (!deptIssueMap[key]) deptIssueMap[key] = { wrongForms: {}, byWeek: {} };
+    const entry = deptIssueMap[key];
+    const match = i.msg.match(/"([^"]+)" →/);
+    if (match) entry.wrongForms[match[1]] = (entry.wrongForms[match[1]] || 0) + 1;
+    const wk = weekStart(i.date);
+    entry.byWeek[wk] = (entry.byWeek[wk] || 0) + 1;
+  }
+
+  const lastDay = workDays[workDays.length - 1];
+  const wkBase  = new Date(weekStart(lastDay) + 'T00:00:00Z');
+  const weeks   = [];
+  for (let w = 7; w >= 0; w--) {
+    const d = new Date(wkBase);
+    d.setUTCDate(d.getUTCDate() - w * 7);
+    weeks.push(d.toISOString().slice(0, 10));
+  }
+
+  return { deptIssueMap, weeks };
+}
+
+// ── Render helpers ───────────────────────────────────────────────────────────
+function pct(set, days) {
+  if (!days.length) return 0;
+  return Math.round(days.filter(d => (set ?? new Set()).has(d)).length * 100 / days.length);
+}
+
+function statusColor(p) {
+  return p >= 90 ? '#22c55e' : p >= 70 ? '#f59e0b' : '#ef4444';
+}
+
+function renderCompCards(depts, subMap, workDays, refDay) {
+  return depts.map(dept => {
+    const set = subMap.get(dept) ?? new Set();
+    const p   = pct(set, workDays);
+    const ok  = set.has(refDay);
+    return `<div class="comp-card">
+      <div class="comp-dept">${dept}</div>
+      <div class="comp-today ${ok?'ok':'miss'}">${ok ? '✓ Submitted' : '✗ Missing'}</div>
+      <div class="comp-bar-wrap"><div class="comp-bar" style="width:${p}%;background:${statusColor(p)}"></div></div>
+      <div class="comp-pct">${p}% &nbsp;(${set.size} / ${workDays.length} days)</div>
+    </div>`;
+  }).join('');
+}
+
+function renderMatrix(depts, subMap, days) {
+  const labels = days.map(d => d.slice(5));
+  return `<div class="matrix-wrap"><table class="matrix">
+    <thead><tr><th>Dept</th>${labels.map(l=>`<th>${l}</th>`).join('')}</tr></thead>
+    <tbody>${depts.map(dept => {
+      const set = subMap.get(dept) ?? new Set();
+      return `<tr><td class="dept-cell">${dept}</td>${
+        days.map(d=>`<td class="cell ${set.has(d)?'submitted':'missing'}"></td>`).join('')
+      }</tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+function renderFixTracking(deptIssueMap, weeks) {
+  const entries = Object.entries(deptIssueMap);
+  if (!entries.length)
+    return `<p style="color:#64748b;font-size:.85rem;padding:10px 4px">All departments submitting names correctly ✓</p>`;
+
+  return `<div class="fix-grid">${entries.map(([key, info]) => {
+    const [dept, sheet] = key.split('|');
+    const total   = Object.values(info.wrongForms).reduce((a,b)=>a+b, 0);
+    const maxW    = Math.max(...weeks.map(w => info.byWeek[w]||0), 1);
+    const recent4 = weeks.slice(-4).map(w => info.byWeek[w]||0);
+    const trend   = recent4[3] < recent4[0] ? '↓ improving' :
+                    recent4[3] > recent4[0] ? '↑ getting worse' : '→ no change';
+    const tClr    = trend.startsWith('↓') ? '#15803d' : trend.startsWith('↑') ? '#dc2626' : '#64748b';
+
+    const chips = Object.entries(info.wrongForms).sort((a,b)=>b[1]-a[1])
+      .map(([f, n]) => `<span>"${f}" ×${n}</span>`).join('');
+
+    const bars = weeks.map(w => {
+      const n = info.byWeek[w]||0;
+      const h = Math.max(2, Math.round((n/maxW)*28));
+      const c = n===0?'#dcfce7': n<5?'#fde68a':'#fca5a5';
+      return `<div class="fix-trend-bar" style="height:${h}px;background:${c}" title="${w}: ${n}"></div>`;
+    }).join('');
+
+    const lbls = weeks.filter((_,i)=>i%2===0).map(w=>`<span>${w.slice(5)}</span>`).join('');
+
+    return `<div class="fix-card">
+      <div class="fix-card-header">
+        <div class="fix-dept">${dept} <span style="color:#94a3b8;font-size:.7rem;font-weight:400">(${sheet})</span></div>
+        <div class="fix-badge">${total} rows</div>
+      </div>
+      <div class="fix-forms">${chips||'—'}</div>
+      <div class="fix-trend">${bars}</div>
+      <div class="fix-trend-lbl">${lbls}</div>
+      <div style="font-size:.71rem;color:${tClr};font-weight:700;margin-top:5px">${trend} (last 4 wks)</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderIssueTable(issues, filterFn, label) {
+  const rows = issues.filter(filterFn);
+  if (!rows.length)
+    return `<p style="color:#64748b;font-size:.83rem;padding:10px 4px">No ${label} issues ✓</p>`;
+  const trs = rows.slice(0,300).map(i =>
+    `<tr class="${i.type==='case'||i.type==='alias'?'issue-warn':'issue-err'}">
+      <td>${i.sheet}</td><td>${i.type}</td><td>${i.dept}</td><td>${i.date}</td><td>${i.msg}</td>
+    </tr>`).join('');
+  const more = rows.length > 300
+    ? `<tr><td colspan="5" style="color:#94a3b8;font-size:.72rem">… and ${rows.length-300} more</td></tr>` : '';
+  return `<div class="issues-table"><table>
+    <thead><tr><th>Sheet</th><th>Type</th><th>Department</th><th>Date</th><th>Detail</th></tr></thead>
+    <tbody>${trs}${more}</tbody>
+  </table></div>`;
+}
+
+// ── Main render ──────────────────────────────────────────────────────────────
+function render(data) {
+  const { validCTRs, subDirect, subIndirect, issues, workDays, refDay } = data;
+  const recent28 = workDays.slice(-28);
+
+  const missDirect   = EXP_DIRECT.filter(d   => !subDirect.get(d)?.has(refDay));
+  const missIndirect = EXP_INDIRECT.filter(d  => !subIndirect.get(d)?.has(refDay));
+  const allOK        = !missDirect.length && !missIndirect.length;
+
+  const avgD = Math.round(EXP_DIRECT.reduce((s,d)=>s+pct(subDirect.get(d),workDays),0)/EXP_DIRECT.length);
+  const avgI = Math.round(EXP_INDIRECT.reduce((s,d)=>s+pct(subIndirect.get(d),workDays),0)/EXP_INDIRECT.length);
+
+  const caseIssues = issues.filter(i=>i.type==='case'||i.type==='alias');
+  const critIssues = issues.filter(i=>i.type!=='case'&&i.type!=='alias');
+
+  const cls  = allOK ? 'green' : missDirect.length < EXP_DIRECT.length ? 'amber' : 'red';
+  const icon = allOK ? '✅' : cls==='amber' ? '⚠️' : '🔴';
+  const msg  = allOK
+    ? 'All departments have submitted their reports today.'
+    : [
+        missDirect.length   ? `<b>Direct missing:</b> ${missDirect.join(', ')}` : '',
+        missIndirect.length ? `<b>Indirect missing:</b> ${missIndirect.join(', ')}` : ''
+      ].filter(Boolean).join('&nbsp;&nbsp;|&nbsp;&nbsp;');
+
+  document.getElementById('header-meta').textContent =
+    `Reference: ${refDay}  •  Working days since Apr 1: ${workDays.length}  •  Valid CTRs: ${validCTRs.size}`;
+
+  const { deptIssueMap, weeks } = buildFixTracking(issues, workDays);
+
+  document.getElementById('dashboard').innerHTML = `
+    <div class="conclusion ${cls}">
+      <span class="icon">${icon}</span><span>${msg}</span>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-val">${EXP_DIRECT.length-missDirect.length}/${EXP_DIRECT.length}</div>
+        <div class="metric-lbl">Direct Depts Submitted</div>
+      </div>
+      <div class="metric">
+        <div class="metric-val">${EXP_INDIRECT.length-missIndirect.length}/${EXP_INDIRECT.length}</div>
+        <div class="metric-lbl">Indirect Depts Submitted</div>
+      </div>
+      <div class="metric">
+        <div class="metric-val" style="color:${statusColor(avgD)}">${avgD}%</div>
+        <div class="metric-lbl">Avg Direct Compliance</div>
+      </div>
+      <div class="metric">
+        <div class="metric-val" style="color:${statusColor(avgI)}">${avgI}%</div>
+        <div class="metric-lbl">Avg Indirect Compliance</div>
+      </div>
+      <div class="metric">
+        <div class="metric-val" style="color:${critIssues.length>0?'#ef4444':'#22c55e'}">${critIssues.length}</div>
+        <div class="metric-lbl">Critical Issues</div>
+      </div>
+      <div class="metric">
+        <div class="metric-val" style="color:${caseIssues.length>0?'#f59e0b':'#22c55e'}">${caseIssues.length}</div>
+        <div class="metric-lbl">Case Warnings</div>
+      </div>
+    </div>
+
+    <div class="section-title">Compliance — Direct Sheet (since Apr 1)</div>
+    <div class="compliance-grid">${renderCompCards(EXP_DIRECT, subDirect, workDays, refDay)}</div>
+
+    <div class="section-title">Compliance — Indirect Sheet (since Apr 1)</div>
+    <div class="compliance-grid">${renderCompCards(EXP_INDIRECT, subIndirect, workDays, refDay)}</div>
+
+    <div class="section-title">Submission Matrix — Last 28 Working Days (Direct)</div>
+    ${renderMatrix(EXP_DIRECT, subDirect, recent28)}
+
+    <div class="section-title">Submission Matrix — Last 28 Working Days (Indirect)</div>
+    ${renderMatrix(EXP_INDIRECT, subIndirect, recent28)}
+
+    <div class="section-title">Department Fix Tracking — Wrong-Case Submissions</div>
+    ${renderFixTracking(deptIssueMap, weeks)}
+
+    <div class="section-title">Data Quality Issues (Apr 1+) — ${issues.length} total</div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('critical')">🔴 Critical (${critIssues.length})</div>
+      <div class="tab"        onclick="switchTab('warnings')">⚠️ Case Warnings (${caseIssues.length})</div>
+    </div>
+    <div id="tab-critical" class="issues-section active">
+      ${renderIssueTable(issues, i=>i.type!=='case'&&i.type!=='alias', 'critical')}
+    </div>
+    <div id="tab-warnings" class="issues-section">
+      ${renderIssueTable(issues, i=>i.type==='case'||i.type==='alias', 'warning')}
+    </div>
+
+    <div class="last-updated">Last loaded: ${new Date().toLocaleString()}</div>
+  `;
+}
+
+window.switchTab = function(which) {
+  document.querySelectorAll('.tab').forEach((t,i) =>
+    t.classList.toggle('active', (which==='critical'&&i===0)||(which==='warnings'&&i===1)));
+  ['critical','warnings'].forEach(id =>
+    document.getElementById('tab-'+id).classList.toggle('active', id===which));
+};
+
+// ── Utilities ────────────────────────────────────────────────────────────────
+function setStatus(msg) {
+  const el = document.getElementById('status-msg');
+  if (el) el.textContent = msg;
+}
+
+// ── Entry point ──────────────────────────────────────────────────────────────
+async function main() {
+  try {
+    const sheets = await loadData();
+    const data   = processData(sheets);
+    document.getElementById('loading').style.display   = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    render(data);
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').style.display   = 'block';
+    document.getElementById('error').innerHTML =
+      `<div class="error-box">
+        <strong>Could not load dashboard.</strong>
+        <br><br>
+        <b>Most likely cause:</b> The Google Sheet may not be published to the web yet.
+        Ask the sheet owner to go to <em>File → Share → Publish to web</em> and publish all sheets.
+        <br><br>
+        <b>Error:</b> ${err.message}
+        <pre>${err.stack||''}</pre>
+      </div>`;
+  }
+}
+
+main();
+</script>
+</body>
+</html>
