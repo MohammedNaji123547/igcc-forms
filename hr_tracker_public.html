@@ -76,7 +76,6 @@
   table.matrix td.submitted { background: #22c55e; }
   table.matrix td.missing   { background: #fee2e2; }
 
-  /* Fix tracking */
   .fix-grid { display: flex; flex-wrap: wrap; gap: 12px; }
   .fix-card { background: white; border-radius: 10px; padding: 14px 16px;
     box-shadow: 0 1px 4px rgba(0,0,0,.07); min-width: 195px; flex: 1; }
@@ -129,7 +128,7 @@
 </div>
 
 <script>
-// ── Configuration — edit here if the sheet ID changes ───────────────────────
+// ── Configuration ────────────────────────────────────────────────────────────
 const SHEET_ID     = '1bjNfBkp0hCdF0t3psrJV-daJU9CFyJPqtczxUl71XYo';
 const CUTOFF       = new Date('2026-04-01T00:00:00Z');
 const VALID_RT     = new Set(['IGCC','Subcontractor']);
@@ -138,84 +137,110 @@ const EXP_DIRECT   = ['Civil','E&I','Lifting','Mechanical','Scaffolding'];
 const EXP_INDIRECT = ['Comercial','E&I','HSE','Lifting','Mechanical','QA/QC','Scaffolding','Security','Store','logistic'];
 const DEPT_ALIASES = { 'Insulation': 'Mechanical' };
 
-// ── CSV fetch & parse ────────────────────────────────────────────────────────
-function gvizURL(sheetName) {
-  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-}
+// ── JSONP data fetcher (bypasses CORS, works from any domain) ────────────────
+// Fetches only the columns we need to keep response small.
+// Direct  → SELECT A (Date), B (Dept), E (CTR#), F (Resource Type)
+// Indirect → SELECT A (Date), B (Dept), E (Cost_Code)
+// Config  → SELECT A (CTR# list)
+function fetchGvizTable(sheetName, tqQuery) {
+  return new Promise((resolve, reject) => {
+    // Unique callback name per request
+    const cbName = '__gviz_' + sheetName.replace(/\W+/g, '_') + '_' + Date.now();
+    const timer   = setTimeout(() => {
+      delete window[cbName];
+      reject(new Error(`Timeout fetching sheet "${sheetName}" — check the sheet is published to the web.`));
+    }, 40000);
 
-async function fetchCSV(sheetName) {
-  setStatus(`Fetching "${sheetName}" sheet…`);
-  const resp = await fetch(gvizURL(sheetName));
-  if (!resp.ok) throw new Error(`HTTP ${resp.status} fetching sheet: ${sheetName}`);
-  return await resp.text();
-}
-
-function parseCSV(text) {
-  const rows = [];
-  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-  for (const line of lines) {
-    if (!line.trim()) continue;
-    const cells = [];
-    let cell = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') {
-        if (inQ && line[i+1] === '"') { cell += '"'; i++; }
-        else inQ = !inQ;
-      } else if (ch === ',' && !inQ) {
-        cells.push(cell.trim());
-        cell = '';
+    window[cbName] = function (response) {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (response.status === 'error') {
+        const msg = response.errors?.[0]?.message || JSON.stringify(response.errors);
+        reject(new Error(`Sheet "${sheetName}" returned error: ${msg}`));
       } else {
-        cell += ch;
+        resolve(response.table);
       }
-    }
-    cells.push(cell.trim());
-    rows.push(cells);
+    };
+
+    const params = new URLSearchParams({ tqx: `responseHandler:${cbName}`, sheet: sheetName });
+    if (tqQuery) params.set('tq', tqQuery);
+
+    const script   = document.createElement('script');
+    script.src     = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?${params}`;
+    script.onerror = () => {
+      clearTimeout(timer);
+      delete window[cbName];
+      reject(new Error(
+        `Could not load sheet "${sheetName}".\n` +
+        `Make sure the spreadsheet is published: File → Share → Publish to web → All sheets.`
+      ));
+    };
+    document.head.appendChild(script);
+  });
+}
+
+// Convert a gviz table object → array of rows (header + data).
+// Dates arrive as JS Date objects (local time) from the JSONP eval.
+function tableToRows(table) {
+  const rows = [(table.cols || []).map(c => c.label || c.id || '')];
+  for (const row of (table.rows || [])) {
+    rows.push((row.c || []).map(cell => (cell == null ? null : (cell.v ?? null))));
   }
   return rows;
 }
 
-// Google Sheets gviz CSV exports dates in the spreadsheet locale format.
-// We handle ISO (2026-01-06), US MM/DD/YYYY, and EU DD/MM/YYYY.
-function parseDate(s) {
-  if (!s) return null;
-  s = s.trim().replace(/\s+\d+:\d+.*$/, ''); // strip time part if present
-  // ISO: 2026-01-06
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s + 'T00:00:00Z');
-  // M/D/YYYY or D/M/YYYY
-  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (m) {
-    const [, a, b, yr] = m.map(Number);
-    // If first part > 12 it must be the day (DD/MM/YYYY)
-    if (a > 12) return new Date(Date.UTC(yr, b - 1, a));
-    // Default: MM/DD/YYYY (Google Sheets US locale default)
-    return new Date(Date.UTC(yr, a - 1, b));
+async function loadData() {
+  setStatus('Fetching Config sheet…');
+  const cfgTable  = await fetchGvizTable('Config', 'SELECT A');
+  setStatus('Fetching Direct sheet (this may take a few seconds)…');
+  const dirTable  = await fetchGvizTable('HR_Daily_Tracker_Direct',   'SELECT A,B,E,F');
+  setStatus('Fetching Indirect sheet…');
+  const indTable  = await fetchGvizTable('HR_Daily_Tracker_Indirect', 'SELECT A,B,E');
+  setStatus('Parsing data…');
+  return {
+    configRows:   tableToRows(cfgTable),   // cols: [CTR#]
+    directRows:   tableToRows(dirTable),   // cols: [Date, Dept, CTR#, Resource Type]
+    indirectRows: tableToRows(indTable)    // cols: [Date, Dept, Cost_Code]
+  };
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function asDate(v) {
+  if (!v) return null;
+  if (v instanceof Date) return isNaN(v) ? null : v;
+  // Fallback: parse string dates
+  if (typeof v === 'string') {
+    const s = v.trim().replace(/\s+\d+:\d+.*$/, '');
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s + 'T00:00:00Z');
+    const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (m) {
+      const [,a,b,yr] = m.map(Number);
+      return new Date(Date.UTC(yr, a > 12 ? b-1 : a-1, a > 12 ? a : b));
+    }
   }
   return null;
 }
 
-async function loadData() {
-  const [cfgText, dirText, indText] = await Promise.all([
-    fetchCSV('Config'),
-    fetchCSV('HR_Daily_Tracker_Direct'),
-    fetchCSV('HR_Daily_Tracker_Indirect')
-  ]);
-  setStatus('Parsing data…');
-  return {
-    configRows:   parseCSV(cfgText),
-    directRows:   parseCSV(dirText),
-    indirectRows: parseCSV(indText)
-  };
+function dateKey(d) {
+  if (!d || !(d instanceof Date) || isNaN(d)) return '';
+  // Use local date components (gviz returns local-time Date objects)
+  const yr  = d.getFullYear();
+  const mo  = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${yr}-${mo}-${day}`;
 }
 
-// ── Data processing ──────────────────────────────────────────────────────────
-function extractValidCTRs(configRows) {
-  const set = new Set();
-  for (const row of configRows.slice(1)) {
-    const v = (row[0] ?? '').trim();
-    if (v.startsWith('CN')) set.add(v);
+function isWorkDay(d) { return d.getDay() !== 5; }
+
+function workDaysBetween(from, to) {
+  const days = [];
+  const cur  = new Date(from); cur.setHours(0,0,0,0);
+  const end  = new Date(to);   end.setHours(0,0,0,0);
+  while (cur <= end) {
+    if (isWorkDay(cur)) days.push(dateKey(cur));
+    cur.setDate(cur.getDate() + 1);
   }
-  return set;
+  return days;
 }
 
 function canonDept(raw, expList) {
@@ -225,38 +250,34 @@ function canonDept(raw, expList) {
   return d.trim();
 }
 
-function dateKey(d) {
-  if (!d || !(d instanceof Date) || isNaN(d)) return '';
-  return d.toISOString().slice(0, 10);
-}
-
-function isWorkDay(d) { return d.getDay() !== 5; }
-
-function workDaysBetween(from, to) {
-  const days = [];
-  const cur  = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()));
-  while (cur <= to) {
-    if (isWorkDay(cur)) days.push(dateKey(cur));
-    cur.setUTCDate(cur.getUTCDate() + 1);
-  }
-  return days;
-}
+// ── Data processing ──────────────────────────────────────────────────────────
+// Column indices after SELECT queries:
+//   configRows:   [0]=CTR#
+//   directRows:   [0]=Date  [1]=Dept  [2]=CTR#  [3]=ResourceType
+//   indirectRows: [0]=Date  [1]=Dept  [2]=CostCode
 
 function processData({ configRows, directRows, indirectRows }) {
   setStatus('Running validations…');
-  const validCTRs = extractValidCTRs(configRows);
-  const today     = new Date(); today.setUTCHours(0,0,0,0);
+
+  // Valid CTR list from Config col 0
+  const validCTRs = new Set();
+  for (const row of configRows.slice(1)) {
+    const v = (row[0] ?? '').toString().trim();
+    if (v.startsWith('CN')) validCTRs.add(v);
+  }
+
+  const today = new Date(); today.setHours(0,0,0,0);
   const subDirect   = new Map();
   const subIndirect = new Map();
   const issues      = [];
-
   function ensure(map, key) { if (!map.has(key)) map.set(key, new Set()); }
 
+  // Direct rows
   for (let i = 1; i < directRows.length; i++) {
-    const row = directRows[i];
-    const date = parseDate(row[0]);
-    if (!date || isNaN(date) || date < CUTOFF) continue;
-    const rawDept = (row[1] ?? '').trim();
+    const row  = directRows[i];
+    const date = asDate(row[0]);
+    if (!date || date < CUTOFF) continue;
+    const rawDept = (row[1] ?? '').toString().trim();
     if (!rawDept) continue;
     const canon = canonDept(rawDept, EXP_DIRECT);
     const dk    = dateKey(date);
@@ -264,32 +285,28 @@ function processData({ configRows, directRows, indirectRows }) {
     subDirect.get(canon).add(dk);
 
     if (DEPT_ALIASES[rawDept]) {
-      issues.push({ sheet:'Direct', type:'alias', date:dk, dept:canon,
-        msg:`"${rawDept}" should be "${canon}"` });
+      issues.push({ sheet:'Direct', type:'alias',  date:dk, dept:canon, msg:`"${rawDept}" should be "${canon}"` });
     } else if (EXP_DIRECT.includes(canon) && rawDept !== canon) {
-      issues.push({ sheet:'Direct', type:'case',  date:dk, dept:canon,
-        msg:`"${rawDept}" → should be "${canon}"` });
+      issues.push({ sheet:'Direct', type:'case',   date:dk, dept:canon, msg:`"${rawDept}" → should be "${canon}"` });
     } else if (!EXP_DIRECT.map(e=>e.toLowerCase()).includes(rawDept.toLowerCase())) {
-      issues.push({ sheet:'Direct', type:'unknown_dept', date:dk, dept:rawDept,
-        msg:`"${rawDept}" not in expected dept list` });
+      issues.push({ sheet:'Direct', type:'unknown_dept', date:dk, dept:rawDept, msg:`"${rawDept}" not in expected list` });
     }
 
-    const ctr = (row[4] ?? '').trim();
+    const ctr = (row[2] ?? '').toString().trim();
     if (ctr && !validCTRs.has(ctr))
-      issues.push({ sheet:'Direct', type:'invalid_ctr', date:dk, dept:canon,
-        msg:`CTR# "${ctr}" not in Config` });
+      issues.push({ sheet:'Direct', type:'invalid_ctr', date:dk, dept:canon, msg:`CTR# "${ctr}" not in Config` });
 
-    const rt = (row[5] ?? '').trim();
+    const rt = (row[3] ?? '').toString().trim();
     if (rt && !VALID_RT.has(rt))
-      issues.push({ sheet:'Direct', type:'invalid_rt', date:dk, dept:canon,
-        msg:`Resource Type "${rt}" is invalid` });
+      issues.push({ sheet:'Direct', type:'invalid_rt', date:dk, dept:canon, msg:`Resource Type "${rt}" is invalid` });
   }
 
+  // Indirect rows
   for (let i = 1; i < indirectRows.length; i++) {
-    const row = indirectRows[i];
-    const date = parseDate(row[0]);
-    if (!date || isNaN(date) || date < CUTOFF) continue;
-    const rawDept = (row[1] ?? '').trim();
+    const row  = indirectRows[i];
+    const date = asDate(row[0]);
+    if (!date || date < CUTOFF) continue;
+    const rawDept = (row[1] ?? '').toString().trim();
     if (!rawDept) continue;
     const canon = canonDept(rawDept, EXP_INDIRECT);
     const dk    = dateKey(date);
@@ -297,28 +314,25 @@ function processData({ configRows, directRows, indirectRows }) {
     subIndirect.get(canon).add(dk);
 
     if (DEPT_ALIASES[rawDept]) {
-      issues.push({ sheet:'Indirect', type:'alias', date:dk, dept:canon,
-        msg:`"${rawDept}" should be "${canon}"` });
+      issues.push({ sheet:'Indirect', type:'alias', date:dk, dept:canon, msg:`"${rawDept}" should be "${canon}"` });
     } else if (EXP_INDIRECT.includes(canon) && rawDept !== canon) {
-      issues.push({ sheet:'Indirect', type:'case',  date:dk, dept:canon,
-        msg:`"${rawDept}" → should be "${canon}"` });
+      issues.push({ sheet:'Indirect', type:'case',  date:dk, dept:canon, msg:`"${rawDept}" → should be "${canon}"` });
     } else if (!EXP_INDIRECT.map(e=>e.toLowerCase()).includes(rawDept.toLowerCase())) {
-      issues.push({ sheet:'Indirect', type:'unknown_dept', date:dk, dept:rawDept,
-        msg:`"${rawDept}" not in expected dept list` });
+      issues.push({ sheet:'Indirect', type:'unknown_dept', date:dk, dept:rawDept, msg:`"${rawDept}" not in expected list` });
     }
 
-    const code = (row[4] ?? '').trim();
+    const code = (row[2] ?? '').toString().trim();
     if (code.includes('.IC.') && !VALID_IC.has(code))
-      issues.push({ sheet:'Indirect', type:'invalid_ic', date:dk, dept:canon,
-        msg:`IGCC code "${code}" is not valid` });
+      issues.push({ sheet:'Indirect', type:'invalid_ic', date:dk, dept:canon, msg:`IGCC code "${code}" is not valid` });
   }
 
-  const workDays = workDaysBetween(CUTOFF, today);
+  const cutoffLocal = new Date(CUTOFF); cutoffLocal.setHours(0,0,0,0);
+  const workDays    = workDaysBetween(cutoffLocal, today);
 
   let refDay = dateKey(today);
   if (!isWorkDay(today)) {
     const prev = new Date(today);
-    while (!isWorkDay(prev)) prev.setUTCDate(prev.getUTCDate() - 1);
+    while (!isWorkDay(prev)) prev.setDate(prev.getDate() - 1);
     refDay = dateKey(prev);
   }
 
@@ -330,10 +344,9 @@ function buildFixTracking(issues, workDays) {
   const caseIssues = issues.filter(i => i.type === 'case' || i.type === 'alias');
 
   function weekStart(dk) {
-    const d = new Date(dk + 'T00:00:00Z');
-    const day = d.getUTCDay();
-    d.setUTCDate(d.getUTCDate() + (day === 0 ? -6 : 1 - day));
-    return d.toISOString().slice(0, 10);
+    const d = new Date(dk); d.setHours(0,0,0,0);
+    d.setDate(d.getDate() + (d.getDay() === 0 ? -6 : 1 - d.getDay()));
+    return dateKey(d);
   }
 
   const deptIssueMap = {};
@@ -347,13 +360,11 @@ function buildFixTracking(issues, workDays) {
     entry.byWeek[wk] = (entry.byWeek[wk] || 0) + 1;
   }
 
-  const lastDay = workDays[workDays.length - 1];
-  const wkBase  = new Date(weekStart(lastDay) + 'T00:00:00Z');
-  const weeks   = [];
+  const wkBase = new Date(weekStart(workDays[workDays.length - 1]));
+  const weeks  = [];
   for (let w = 7; w >= 0; w--) {
-    const d = new Date(wkBase);
-    d.setUTCDate(d.getUTCDate() - w * 7);
-    weeks.push(d.toISOString().slice(0, 10));
+    const d = new Date(wkBase); d.setDate(d.getDate() - w * 7);
+    weeks.push(dateKey(d));
   }
 
   return { deptIssueMap, weeks };
@@ -376,7 +387,7 @@ function renderCompCards(depts, subMap, workDays, refDay) {
     const ok  = set.has(refDay);
     return `<div class="comp-card">
       <div class="comp-dept">${dept}</div>
-      <div class="comp-today ${ok?'ok':'miss'}">${ok ? '✓ Submitted' : '✗ Missing'}</div>
+      <div class="comp-today ${ok?'ok':'miss'}">${ok?'✓ Submitted':'✗ Missing'}</div>
       <div class="comp-bar-wrap"><div class="comp-bar" style="width:${p}%;background:${statusColor(p)}"></div></div>
       <div class="comp-pct">${p}% &nbsp;(${set.size} / ${workDays.length} days)</div>
     </div>`;
@@ -403,25 +414,19 @@ function renderFixTracking(deptIssueMap, weeks) {
 
   return `<div class="fix-grid">${entries.map(([key, info]) => {
     const [dept, sheet] = key.split('|');
-    const total   = Object.values(info.wrongForms).reduce((a,b)=>a+b, 0);
-    const maxW    = Math.max(...weeks.map(w => info.byWeek[w]||0), 1);
-    const recent4 = weeks.slice(-4).map(w => info.byWeek[w]||0);
-    const trend   = recent4[3] < recent4[0] ? '↓ improving' :
-                    recent4[3] > recent4[0] ? '↑ getting worse' : '→ no change';
-    const tClr    = trend.startsWith('↓') ? '#15803d' : trend.startsWith('↑') ? '#dc2626' : '#64748b';
-
-    const chips = Object.entries(info.wrongForms).sort((a,b)=>b[1]-a[1])
-      .map(([f, n]) => `<span>"${f}" ×${n}</span>`).join('');
-
-    const bars = weeks.map(w => {
-      const n = info.byWeek[w]||0;
-      const h = Math.max(2, Math.round((n/maxW)*28));
-      const c = n===0?'#dcfce7': n<5?'#fde68a':'#fca5a5';
+    const total   = Object.values(info.wrongForms).reduce((a,b)=>a+b,0);
+    const maxW    = Math.max(...weeks.map(w=>info.byWeek[w]||0), 1);
+    const r4      = weeks.slice(-4).map(w=>info.byWeek[w]||0);
+    const trend   = r4[3]<r4[0]?'↓ improving': r4[3]>r4[0]?'↑ getting worse':'→ no change';
+    const tClr    = trend.startsWith('↓')?'#15803d': trend.startsWith('↑')?'#dc2626':'#64748b';
+    const chips   = Object.entries(info.wrongForms).sort((a,b)=>b[1]-a[1])
+      .map(([f,n])=>`<span>"${f}" ×${n}</span>`).join('');
+    const bars    = weeks.map(w=>{
+      const n=info.byWeek[w]||0, h=Math.max(2,Math.round((n/maxW)*28));
+      const c=n===0?'#dcfce7':n<5?'#fde68a':'#fca5a5';
       return `<div class="fix-trend-bar" style="height:${h}px;background:${c}" title="${w}: ${n}"></div>`;
     }).join('');
-
     const lbls = weeks.filter((_,i)=>i%2===0).map(w=>`<span>${w.slice(5)}</span>`).join('');
-
     return `<div class="fix-card">
       <div class="fix-card-header">
         <div class="fix-dept">${dept} <span style="color:#94a3b8;font-size:.7rem;font-weight:400">(${sheet})</span></div>
@@ -443,7 +448,7 @@ function renderIssueTable(issues, filterFn, label) {
     `<tr class="${i.type==='case'||i.type==='alias'?'issue-warn':'issue-err'}">
       <td>${i.sheet}</td><td>${i.type}</td><td>${i.dept}</td><td>${i.date}</td><td>${i.msg}</td>
     </tr>`).join('');
-  const more = rows.length > 300
+  const more = rows.length>300
     ? `<tr><td colspan="5" style="color:#94a3b8;font-size:.72rem">… and ${rows.length-300} more</td></tr>` : '';
   return `<div class="issues-table"><table>
     <thead><tr><th>Sheet</th><th>Type</th><th>Department</th><th>Date</th><th>Detail</th></tr></thead>
@@ -454,25 +459,21 @@ function renderIssueTable(issues, filterFn, label) {
 // ── Main render ──────────────────────────────────────────────────────────────
 function render(data) {
   const { validCTRs, subDirect, subIndirect, issues, workDays, refDay } = data;
-  const recent28 = workDays.slice(-28);
-
-  const missDirect   = EXP_DIRECT.filter(d   => !subDirect.get(d)?.has(refDay));
-  const missIndirect = EXP_INDIRECT.filter(d  => !subIndirect.get(d)?.has(refDay));
-  const allOK        = !missDirect.length && !missIndirect.length;
-
+  const recent28   = workDays.slice(-28);
+  const missDirect = EXP_DIRECT.filter(d   => !subDirect.get(d)?.has(refDay));
+  const missInd    = EXP_INDIRECT.filter(d  => !subIndirect.get(d)?.has(refDay));
+  const allOK      = !missDirect.length && !missInd.length;
   const avgD = Math.round(EXP_DIRECT.reduce((s,d)=>s+pct(subDirect.get(d),workDays),0)/EXP_DIRECT.length);
   const avgI = Math.round(EXP_INDIRECT.reduce((s,d)=>s+pct(subIndirect.get(d),workDays),0)/EXP_INDIRECT.length);
-
-  const caseIssues = issues.filter(i=>i.type==='case'||i.type==='alias');
-  const critIssues = issues.filter(i=>i.type!=='case'&&i.type!=='alias');
-
-  const cls  = allOK ? 'green' : missDirect.length < EXP_DIRECT.length ? 'amber' : 'red';
-  const icon = allOK ? '✅' : cls==='amber' ? '⚠️' : '🔴';
+  const caseIss = issues.filter(i=>i.type==='case'||i.type==='alias');
+  const critIss = issues.filter(i=>i.type!=='case'&&i.type!=='alias');
+  const cls  = allOK?'green': missDirect.length<EXP_DIRECT.length?'amber':'red';
+  const icon = allOK?'✅': cls==='amber'?'⚠️':'🔴';
   const msg  = allOK
     ? 'All departments have submitted their reports today.'
     : [
-        missDirect.length   ? `<b>Direct missing:</b> ${missDirect.join(', ')}` : '',
-        missIndirect.length ? `<b>Indirect missing:</b> ${missIndirect.join(', ')}` : ''
+        missDirect.length ? `<b>Direct missing:</b> ${missDirect.join(', ')}` : '',
+        missInd.length    ? `<b>Indirect missing:</b> ${missInd.join(', ')}` : ''
       ].filter(Boolean).join('&nbsp;&nbsp;|&nbsp;&nbsp;');
 
   document.getElementById('header-meta').textContent =
@@ -484,14 +485,13 @@ function render(data) {
     <div class="conclusion ${cls}">
       <span class="icon">${icon}</span><span>${msg}</span>
     </div>
-
     <div class="metrics">
       <div class="metric">
         <div class="metric-val">${EXP_DIRECT.length-missDirect.length}/${EXP_DIRECT.length}</div>
         <div class="metric-lbl">Direct Depts Submitted</div>
       </div>
       <div class="metric">
-        <div class="metric-val">${EXP_INDIRECT.length-missIndirect.length}/${EXP_INDIRECT.length}</div>
+        <div class="metric-val">${EXP_INDIRECT.length-missInd.length}/${EXP_INDIRECT.length}</div>
         <div class="metric-lbl">Indirect Depts Submitted</div>
       </div>
       <div class="metric">
@@ -503,11 +503,11 @@ function render(data) {
         <div class="metric-lbl">Avg Indirect Compliance</div>
       </div>
       <div class="metric">
-        <div class="metric-val" style="color:${critIssues.length>0?'#ef4444':'#22c55e'}">${critIssues.length}</div>
+        <div class="metric-val" style="color:${critIss.length>0?'#ef4444':'#22c55e'}">${critIss.length}</div>
         <div class="metric-lbl">Critical Issues</div>
       </div>
       <div class="metric">
-        <div class="metric-val" style="color:${caseIssues.length>0?'#f59e0b':'#22c55e'}">${caseIssues.length}</div>
+        <div class="metric-val" style="color:${caseIss.length>0?'#f59e0b':'#22c55e'}">${caseIss.length}</div>
         <div class="metric-lbl">Case Warnings</div>
       </div>
     </div>
@@ -529,8 +529,8 @@ function render(data) {
 
     <div class="section-title">Data Quality Issues (Apr 1+) — ${issues.length} total</div>
     <div class="tabs">
-      <div class="tab active" onclick="switchTab('critical')">🔴 Critical (${critIssues.length})</div>
-      <div class="tab"        onclick="switchTab('warnings')">⚠️ Case Warnings (${caseIssues.length})</div>
+      <div class="tab active" onclick="switchTab('critical')">🔴 Critical (${critIss.length})</div>
+      <div class="tab"        onclick="switchTab('warnings')">⚠️ Case Warnings (${caseIss.length})</div>
     </div>
     <div id="tab-critical" class="issues-section active">
       ${renderIssueTable(issues, i=>i.type!=='case'&&i.type!=='alias', 'critical')}
@@ -538,7 +538,6 @@ function render(data) {
     <div id="tab-warnings" class="issues-section">
       ${renderIssueTable(issues, i=>i.type==='case'||i.type==='alias', 'warning')}
     </div>
-
     <div class="last-updated">Last loaded: ${new Date().toLocaleString()}</div>
   `;
 }
@@ -550,7 +549,6 @@ window.switchTab = function(which) {
     document.getElementById('tab-'+id).classList.toggle('active', id===which));
 };
 
-// ── Utilities ────────────────────────────────────────────────────────────────
 function setStatus(msg) {
   const el = document.getElementById('status-msg');
   if (el) el.textContent = msg;
@@ -567,16 +565,11 @@ async function main() {
   } catch (err) {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('error').style.display   = 'block';
-    document.getElementById('error').innerHTML =
-      `<div class="error-box">
-        <strong>Could not load dashboard.</strong>
-        <br><br>
-        <b>Most likely cause:</b> The Google Sheet may not be published to the web yet.
-        Ask the sheet owner to go to <em>File → Share → Publish to web</em> and publish all sheets.
-        <br><br>
-        <b>Error:</b> ${err.message}
-        <pre>${err.stack||''}</pre>
-      </div>`;
+    document.getElementById('error').innerHTML = `<div class="error-box">
+      <strong>Could not load dashboard.</strong><br><br>
+      ${err.message}
+      <pre>${err.stack||''}</pre>
+    </div>`;
   }
 }
 
