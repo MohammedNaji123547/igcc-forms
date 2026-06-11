@@ -191,16 +191,16 @@ function tableToRows(table) {
 
 async function loadData() {
   setStatus('Fetching Config sheet…');
-  const cfgTable  = await fetchGvizTable('Config', 'SELECT A');
+  const cfgTable  = await fetchGvizTable('Config', null);
   setStatus('Fetching Direct sheet (this may take a few seconds)…');
-  const dirTable  = await fetchGvizTable('HR_Daily_Tracker_Direct',   'SELECT A,B,E,F');
+  const dirTable  = await fetchGvizTable('HR_Daily_Tracker_Direct',   null);
   setStatus('Fetching Indirect sheet…');
-  const indTable  = await fetchGvizTable('HR_Daily_Tracker_Indirect', 'SELECT A,B,E');
+  const indTable  = await fetchGvizTable('HR_Daily_Tracker_Indirect', null);
   setStatus('Parsing data…');
   return {
-    configRows:   tableToRows(cfgTable),   // cols: [CTR#]
-    directRows:   tableToRows(dirTable),   // cols: [Date, Dept, CTR#, Resource Type]
-    indirectRows: tableToRows(indTable)    // cols: [Date, Dept, Cost_Code]
+    configRows:   tableToRows(cfgTable),   // original cols: A=CTR#, …
+    directRows:   tableToRows(dirTable),   // original cols: A=Date B=Dept C=Pos D=QTY E=CTR# F=RT …
+    indirectRows: tableToRows(indTable)    // original cols: A=Date B=Dept C=Pos D=QTY E=CostCode …
   };
 }
 
@@ -251,10 +251,10 @@ function canonDept(raw, expList) {
 }
 
 // ── Data processing ──────────────────────────────────────────────────────────
-// Column indices after SELECT queries:
+// Original sheet column indices (no SELECT — all columns fetched):
 //   configRows:   [0]=CTR#
-//   directRows:   [0]=Date  [1]=Dept  [2]=CTR#  [3]=ResourceType
-//   indirectRows: [0]=Date  [1]=Dept  [2]=CostCode
+//   directRows:   [0]=Date  [1]=Dept  [2]=Position  [3]=QTY  [4]=CTR#  [5]=ResourceType
+//   indirectRows: [0]=Date  [1]=Dept  [2]=Position  [3]=QTY  [4]=CostCode
 
 function processData({ configRows, directRows, indirectRows }) {
   setStatus('Running validations…');
@@ -292,11 +292,11 @@ function processData({ configRows, directRows, indirectRows }) {
       issues.push({ sheet:'Direct', type:'unknown_dept', date:dk, dept:rawDept, msg:`"${rawDept}" not in expected list` });
     }
 
-    const ctr = (row[2] ?? '').toString().trim();
+    const ctr = (row[4] ?? '').toString().trim();
     if (ctr && !validCTRs.has(ctr))
       issues.push({ sheet:'Direct', type:'invalid_ctr', date:dk, dept:canon, msg:`CTR# "${ctr}" not in Config` });
 
-    const rt = (row[3] ?? '').toString().trim();
+    const rt = (row[5] ?? '').toString().trim();
     if (rt && !VALID_RT.has(rt))
       issues.push({ sheet:'Direct', type:'invalid_rt', date:dk, dept:canon, msg:`Resource Type "${rt}" is invalid` });
   }
@@ -321,7 +321,7 @@ function processData({ configRows, directRows, indirectRows }) {
       issues.push({ sheet:'Indirect', type:'unknown_dept', date:dk, dept:rawDept, msg:`"${rawDept}" not in expected list` });
     }
 
-    const code = (row[2] ?? '').toString().trim();
+    const code = (row[4] ?? '').toString().trim();
     if (code.includes('.IC.') && !VALID_IC.has(code))
       issues.push({ sheet:'Indirect', type:'invalid_ic', date:dk, dept:canon, msg:`IGCC code "${code}" is not valid` });
   }
