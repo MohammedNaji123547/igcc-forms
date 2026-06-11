@@ -162,11 +162,15 @@ function fetchGvizTable(sheetName, tqQuery) {
       }
     };
 
-    const params = new URLSearchParams({ tqx: `responseHandler:${cbName}`, sheet: sheetName });
-    if (tqQuery) params.set('tq', tqQuery);
+    // Build URL manually — URLSearchParams encodes the colon in responseHandler:cb
+    // which breaks gviz/tq parsing. The colon MUST be a literal character.
+    let url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`
+            + `?tqx=responseHandler:${cbName}`
+            + `&sheet=${encodeURIComponent(sheetName)}`;
+    if (tqQuery) url += `&tq=${encodeURIComponent(tqQuery)}`;
 
     const script   = document.createElement('script');
-    script.src     = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?${params}`;
+    script.src     = url;
     script.onerror = () => {
       clearTimeout(timer);
       delete window[cbName];
